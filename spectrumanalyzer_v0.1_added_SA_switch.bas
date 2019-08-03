@@ -7872,7 +7872,7 @@ end sub
         'Marker Find Maximum Button 'verOK2FKU added this
     markFindLeft=markMiscLeft+70
     button #handle.markFindMax, "Find Max", mFindMaxMarker, LL, markFindLeft, -6, 54, 18
-    button #handle.markFindMax, "Find Min", mFindMaxMarker, LL, markFindLeft, -24, 54, 18
+    button #handle.markFindMax, "Find Min", mFindMinMarker, LL, markFindLeft, -24, 54, 18
 
         'Test Setup Button 'ver115-1g added this and deleted go/save config
     configLeft=markFindLeft+59
@@ -12100,6 +12100,14 @@ sub IncDecPoint btn$   'Button to increment or decrement frequency was clicked
     end if
 
     leftstep=markPoint-1     'Make leftstep a step number, not point number, for [preupdatevar] ver115-1a
+end sub
+
+sub mFindMaxMarker btn$
+    call mAddMarker "P+", 1, "2"
+end sub
+
+sub mFindMinMarker btn$
+    call mAddMarker "P-", 1, "2"
 end sub
 
 sub mEnterMarker btn$    'Marker Enter button was clicked
