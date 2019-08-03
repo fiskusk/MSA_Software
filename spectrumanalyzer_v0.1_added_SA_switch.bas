@@ -4,7 +4,7 @@
 
 
     global msaVersion$, msaRevision$  'Version and revision numbers of this release
-    msaVersion$="118"   'ver118..
+    msaVersion$="OK2FKU"   'OK2FKU..
     msaRevision$=" 0"  'ver118 rev 0
 
 '------Changes and additions from version 117 Rev B to version 118 Rev 0_
@@ -847,6 +847,9 @@
     switchFR=0  'default for Spectrum Analyzer or VNA is "forward", moved here in ver117c31
     global switchTR 'VNA Reflection Bridge state, transmission/reflection (0=transmission) 'ver117c31
     switchTR=0  'default for VNA is "transmission", moved here in ver117c31
+
+    global switchSA 'VNA / SA switch state (0=SA) 'verOK2FKU
+    switchSA=0 'default state is SA 'verOK2FKU
 
     'Globals used to remember state info to allow detection of user changes; added by ver114-6e
     'See RememberState and DetectChanges
@@ -8893,6 +8896,7 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 
 [GoSAmode] 'Switch to MSA mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
+    switchSA=0 : call SelectLatchedSwitches freqBand 'Set SA/VNA switch to SA 'verOK2FKU
     if graphBox$="" then 'See if window is created yet ver115-5d
         gosub [CreateGraphWindow]   'Note msaMode$ is new mode; menuMode$ is old mode
     else
@@ -8927,6 +8931,7 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 
 [GoTransmissionMode] 'Switch to Transmission mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
+    switchSA=1 'verOK2FKU
     spurcheck = 0 'this assures Spur Test is OFF. ver116-1b
     switchTR=0 : call SelectLatchedSwitches freqBand 'Set transmission/reflection switch to transmission 'ver116-1b ver116-4s
     if graphBox$="" then 'See if window is created yet ver115-5d
@@ -8972,6 +8977,7 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 
 [GoReflectionMode] 'Switch to Reflection mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
+    switchSA=1 'verOK2FKU
     spurcheck = 0 'this assures Spur Test is OFF. ver116-1b
     switchTR=1 : call SelectLatchedSwitches freqBand 'Set transmission/reflection switch to reflection 'ver116-1b ver116-4s
     if graphBox$="" then 'See if window is created yet ver115-5d
@@ -12249,7 +12255,7 @@ sub SelectLatchedSwitches desiredFreqBand  'ver116-1b ver116-4s. change 'ver117c
     'control is not a global, so we have to recreate it here
     control=globalPort+2
 'ver117c35 was   switchData=switchLatchBits(desiredFreqBand)    'All bits, with latch pulse set high ver116-4s
-    switchData=videoFilterAddress + 4*desiredFreqBand + 16*switchFR + 32*switchTR + 128 'now 'ver117c35
+    switchData=videoFilterAddress + 4*desiredFreqBand + 16*switchFR + 32*switchTR + 64*switchSA + 128 'now 'ver117c35 'verOK2FKU'
         'We output the required bits with the pulse line high (128), then briefly bring the pulse line low,
         'then back high. The pulse is about 100 usec for LPT and somewhere between 75 us and 200 us for USB.
     select case cb
