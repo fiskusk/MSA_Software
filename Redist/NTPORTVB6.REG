@@ -1,0 +1,13 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\zntport]
+"Type"=dword:00000001
+"Start"=dword:00000002
+"ImagePath"="\\SystemRoot\\System32\\drivers\\zntport.sys"
+"ErrorControl"=dword:00000001
+"DisplayName"="NTPort Library Driver"
+
+
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup]
+"Configuring Data Access"=""
+

@@ -1,0 +1,7 @@
+*Calibration over frequency
+*Calibrated 03/08/19 at -zz dBm.
+CalVersion= 1.03
+FreqTable=
+*    MHz        dB   in increasing order of MHz
+0           0
+1000        0

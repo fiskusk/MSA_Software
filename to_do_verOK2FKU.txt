@@ -1,0 +1,2 @@
+save state of box "Display Sweep Time"
+OK after click OK in Sweep Parameters (x axis) continue sweeping

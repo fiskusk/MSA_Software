@@ -1,0 +1,219 @@
+; Copyright (C) Dave Roberts G8KBB 2010
+; derived from Cypress example inf file
+;
+[Version]
+Signature="$WINDOWS NT$"
+Class=USB
+ClassGUID={36FC9E60-C465-11CF-8056-444553540000}
+provider=%CYUSB_Provider%
+CatalogFile=n2pk-usb-100C-cyUSB-XP.cat
+DriverVer=03/28/2010,6.2.0002.0
+
+
+[SourceDisksNames]
+1=%CYUSB_Install%,,,
+
+[SourceDisksFiles]
+CYUSBxp32.sys = 1
+CYUSBxp64.sys = 1
+n2pk_vna_usb_v5_500_pid100D_0.22.spt = 1
+
+[ControlFlags]
+ExcludeFromSelect = *
+
+[Manufacturer]
+;%CYUSB_Provider%=Device,NT,NTx86.5.1,NTamd64.5.1
+%CYUSB_Provider%=Device,NTx86.5.1,NTamd64.5.1
+;for windows XP 32 and 64 bit
+
+[Device.NTx86.5.1]
+; this entry contains the VID/PID in the final firmware
+%VID_0547&PID_100D.DeviceDesc%=CyUsb.NTx86.5.1, USB\VID_0547&PID_100D
+
+
+; this entry contains the VID/PID programmed into the EEPROM
+%VID_0547&PID_100C.DeviceDesc%=CyFwLoadx86, USB\VID_0547&PID_100C
+
+[Device.NTamd64.5.1]
+; this entry contains the VID/PID in the final firmware
+%VID_0547&PID_100D.DeviceDesc%=CyUsb.NTamd64.5.1, USB\VID_0547&PID_100D
+
+
+; this entry contains the VID/PID programmed into the EEPROM
+%VID_0547&PID_100C.DeviceDesc%=CyFwLoad, USB\VID_0547&PID_100C
+
+[DestinationDirs]
+CYUSB.NTx86.5.1.Files.Ext = 10,System32\Drivers
+CYUSB.NTamd64.5.1.Files.Ext = 10,System32\Drivers
+CyFwLoadFW.Files = 10,System32
+; to do - uncomment one entry above this line
+;============================================================================
+;This section of code is for scripting in 32 bit environment
+;============================================================================
+
+[CyFwLoadx86.Files]
+%CyFwLoad.SCRIPTFILE%
+
+[CyFwLoadx86.NT]
+CopyFiles=CYUSB.NTx86.5.1.Files.Ext, CyFwLoadx86.Files
+AddReg=CYUSB.AddReg
+
+[CyFwLoadx86.NT.HW]
+AddReg=CyFwLoadx86.AddReg.Guid
+
+[CyFwLoadx86.NT.Services]
+Addservice = CYUSB.NTx86.5.1, 0x00000002, CYUSB.NTx86.5.1.AddService
+
+[CyFwLoadx86.AddReg.Guid]
+HKR,,DriverGUID,,%CYUSB.GUID%
+HKR,,DriverEXECSCRIPT,,%CyFwLoad.SCRIPTDIR%%CyFwLoad.SCRIPTFILE%
+
+;[CYUSB.NTx86.5.1.Files.Ext.Files]
+
+[CYUSB.AddReg]
+
+;=============================================================================
+;This section of code is for scripting in 64 bit environment
+;=============================================================================
+
+;[CyFwLoad]
+;CopyFiles=CyFwLoadFW.Files
+
+;[CyFwLoad.HW]
+;AddReg=CyFwLoad.AddReg.Guid
+
+;[CyFwLoad.NT]
+;;CopyFiles=CyFwLoad.Files
+;CopyFiles=CyFwLoadFW.Files
+;AddReg=CyFwLoad.AddReg
+
+;[CyFwLoad.NT.HW]
+;AddReg=CyFwLoad.AddReg.Guid
+
+[CyFwLoad.NTAMD64]
+;CopyFiles=CyFwLoad.Files
+CopyFiles=CyFwLoadFW.Files,CYUSB.NTamd64.5.1.Files.Ext
+AddReg=CyFwLoad.AddReg
+
+[CyFwLoad.NTAMD64.HW]
+AddReg=CyFwLoad.AddReg.Guid
+
+;[CyFwLoad.NT.Services]
+;Addservice = CyFwLoad, 0x00000002, CyFwLoad.AddService
+
+[CyFwLoad.NTAMD64.Services]
+Addservice = CyFwLoad, 0x00000002, CyFwLoad.AddService
+
+[CyFwLoad.AddService]
+DisplayName    = %CyFwLoad.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %10%\System32\Drivers\CYUSBxp64.sys
+LoadOrderGroup = Base
+
+[CyFwLoad.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,CyUsb.sys
+
+[CyFwLoadFW.Files]
+%CyFwLoad.SCRIPTFILE%
+
+[CyFwLoad.AddReg.Guid]
+HKR,,DriverGUID,,%CYUSB.GUID%
+HKR,,DriverEXECSCRIPT,,%CyFwLoad.SCRIPTDIR%%CyFwLoad.SCRIPTFILE%
+
+;=============================================================================
+;This section of code is for Windows Xp 32 and 64 bit device
+;=============================================================================
+
+[CYUSB.NTx86.5.1]
+CopyFiles=CYUSB.NTx86.5.1.Files.Ext
+AddReg=CyUsb.NTx86.5.1.AddReg
+[CYUSB.NTx86.5.1.HW]
+AddReg=CYUSB.NTx86.5.1.AddReg.Guid
+[CYUSB.NTx86.5.1.Services]
+Addservice = CYUSB.NTx86.5.1,2,CYUSB.NTx86.5.1.AddService
+
+[CYUSB.NTamd64.5.1]
+CopyFiles=CYUSB.NTamd64.5.1.Files.Ext
+AddReg=CyUsb.NTamd64.5.1.AddReg
+[CYUSB.NTamd64.5.1.HW]
+AddReg=CYUSB.NTamd64.5.1.AddReg.Guid
+[CYUSB.NTamd64.5.1.Services]
+Addservice = CYUSB.NTamd64.5.1,2,CYUSB.NTamd64.5.1.AddService
+
+
+[CYUSB.NTx86.5.1.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,CYUSBxp32.sys
+HKR,,DriverBase,,CYUSBxp32.sys
+HKR,"Parameters","MaximumTransferSize",0x10001,4096
+HKR,"Parameters","DebugLevel",0x10001,2
+HKR,,FriendlyName,,%CYUSB_Description_XP32%
+
+[CYUSB.NTamd64.5.1.AddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,CYUSBxp64.sys
+HKR,,DriverBase,,CYUSBxp64.sys
+HKR,"Parameters","MaximumTransferSize",0x10001,4096
+HKR,"Parameters","DebugLevel",0x10001,2
+HKR,,FriendlyName,,%CYUSB_Description_XP64%
+
+
+[CYUSB.NTx86.5.1.AddService]
+DisplayName = %CYUSB_Description_XP32%
+ServiceType = 1 ; SERVICE_KERNEL_DRIVER
+StartType = 3 ; SERVICE_DEMAND_START
+ErrorControl = 1 ; SERVICE_ERROR_NORMAL
+ServiceBinary = %10%\System32\Drivers\CYUSBxp32.sys
+AddReg = CYUSB.NTx86.5.1.AddReg
+LoadOrderGroup = Base
+
+[CYUSB.NTamd64.5.1.AddService]
+DisplayName = %CYUSB_Description_XP64%
+ServiceType = 1 ; SERVICE_KERNEL_DRIVER
+StartType = 3 ; SERVICE_DEMAND_START
+ErrorControl = 1 ; SERVICE_ERROR_NORMAL
+ServiceBinary = %10%\System32\Drivers\CYUSBxp64.sys
+AddReg = CYUSB.NTamd64.5.1.AddReg
+LoadOrderGroup = Base
+
+
+[CYUSB.NTx86.5.1.Files.Ext]
+CYUSBxp32.sys
+[CYUSB.NTamd64.5.1.Files.Ext]
+CYUSBxp64.sys
+
+[CYUSB.NTx86.5.1.AddReg.Guid]
+HKR,,DriverGUID,,%CYUSB.GUID%
+[CYUSB.NTamd64.5.1.AddReg.Guid]
+HKR,,DriverGUID,,%CYUSB.GUID%
+
+;================================================================================
+;This section of code is common for Windows Xp 32 and 64 bit device and scripting
+;================================================================================
+
+
+[Strings]
+CYUSB_Provider = "G8KBB"
+CYUSB_Company = "Dave Roberts G8KBB"
+CYUSB_Description_XP32 = "Cypress Generic USB Driver in XP32"
+CYUSB_Description_XP64 = "Cypress Generic USB Driver in XP64"
+CYUSB_DisplayName = "Cypress USB Generic"
+CYUSB_Install = "G8KBB N2PK VNA USB USB Driver Installation Disk"
+
+VID_0547&PID_100C.DeviceDesc="G8KBB N2PK USB i/f before download"
+VID_0547&PID_100D.DeviceDesc="G8KBB N2PK V5 USB i/f 500mA v0.22"
+
+; cypress GUID for cyUSB
+;CYUSB.GUID="{AE18AA60-7F6A-11d4-97DD-00010229B959}"
+; my GUID for N2PK USB Interface using cyUSB
+CYUSB.GUID="{C63859BD-5C4B-474d-9572-CE604E611D73}"
+
+CyFwLoad.SCRIPTDIR  = "\systemroot\system32\"
+CyFwLoad.SCRIPTFILE = "n2pk_vna_usb_v5_500_pid100D_0.22.spt"
+
+;------------MOdify these strings to match your device-------------------------------;
+CyFwLoad_INSTALL    = "G8KBB N2PK VNA USB USB Driver Installation Disk"
+CyFwLoad.SvcDesc = "G8KBB N2PK VNA USB Fwload"
