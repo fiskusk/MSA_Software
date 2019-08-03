@@ -4,7 +4,7 @@
 
 
     global msaVersion$, msaRevision$  'Version and revision numbers of this release
-    msaVersion$="OK2FKU"   'verOK2FKU..
+    msaVersion$="118"   'ver118..
     msaRevision$=" 0"  'ver118 rev 0
 
 '------Changes and additions from version 117 Rev B to version 118 Rev 0_
@@ -847,9 +847,6 @@
     switchFR=0  'default for Spectrum Analyzer or VNA is "forward", moved here in ver117c31
     global switchTR 'VNA Reflection Bridge state, transmission/reflection (0=transmission) 'ver117c31
     switchTR=0  'default for VNA is "transmission", moved here in ver117c31
-
-    global switchSA 'VNA / SA switch state (0=SA) 'verOK2FKU
-    switchSA=0 'default state is SA 'verOK2FKU
 
     'Globals used to remember state info to allow detection of user changes; added by ver114-6e
     'See RememberState and DetectChanges
@@ -7869,13 +7866,8 @@ end sub
     button #handle.mMarkToCenter, "Mark->Cent", mMarkToCenter,LL, markMiscLeft, -24,65,18 'ver117c36 was -22 'ver117c44 was -27
     'ver114-7b deleted buttons for IncDecRef
 
-        'Marker Find Maximum Button 'verOK2FKU added this
-    markFindLeft=markMiscLeft+70
-    button #handle.markFindMax, "Find Max", mFindMaxMarker, LL, markFindLeft, -6, 54, 18
-    button #handle.markFindMax, "Find Min", [ManageTestSetups], LL, markFindLeft, -24, 54, 18
-
-        'Test Setup Button 'ver115-1g added this and deleted go/save config
-    configLeft=markFindLeft+59
+            'Test Setup Button 'ver115-1g added this and deleted go/save config
+    configLeft=markMiscLeft+70
     stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
     button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -6, 50, 35 'ver117c36 was -5 'ver117c44 was -8
 
@@ -8901,7 +8893,6 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 
 [GoSAmode] 'Switch to MSA mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
-    switchSA=0 : call SelectLatchedSwitches freqBand 'Set SA/VNA switch to SA 'verOK2FKU
     if graphBox$="" then 'See if window is created yet ver115-5d
         gosub [CreateGraphWindow]   'Note msaMode$ is new mode; menuMode$ is old mode
     else
@@ -8937,7 +8928,6 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 [GoTransmissionMode] 'Switch to Transmission mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
     spurcheck = 0 'this assures Spur Test is OFF. ver116-1b
-    switchSA=1 'verok2FKU
     switchTR=0 : call SelectLatchedSwitches freqBand 'Set transmission/reflection switch to transmission 'ver116-1b ver116-4s
     if graphBox$="" then 'See if window is created yet ver115-5d
         gosub [CreateGraphWindow]   'Note msaMode$ is new mode; menuMode$ is old mode
@@ -8983,7 +8973,6 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 [GoReflectionMode] 'Switch to Reflection mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
     spurcheck = 0 'this assures Spur Test is OFF. ver116-1b
-    switchSA=1 'verOK2FKU
     switchTR=1 : call SelectLatchedSwitches freqBand 'Set transmission/reflection switch to reflection 'ver116-1b ver116-4s
     if graphBox$="" then 'See if window is created yet ver115-5d
         gosub [CreateGraphWindow]   'Note msaMode$ is new mode; menuMode$ is old mode
@@ -9177,8 +9166,7 @@ end sub 'return to: Assign HW Configuration values(2001),[axisXFinished](globalS
     'If in midsweep, continue scan. Note that a subroutine called above may have set
     'continueCode to cause a halt or restart.
     if haltsweep=1 then goto [PostScan]
-    'wait 'comented by for continue sweeping verOK2FKU
-    GOTO [Continue] 'verOK2FKU
+    wait
 
 [preupdatevar] 'ver111-36h
     remember = thisstep
@@ -10815,8 +10803,7 @@ end sub
     if needRestart=1 then gosub [PartialRestart]
     continueCode=0  'signal to keep going ver115-8d
 '117cM    if multiscanIsOpen then call multiscanSaveContexts 0 'zero means main graph  ver115-8d
-    'wait 'entered from: [LeftButDouble],[menuFreqAxisPreference]
-    GOTO [Continue]
+    wait 'entered from: [LeftButDouble],[menuFreqAxisPreference]
 
 function DisplayAxisXPreference()   'Display dialog to select axis preferences
     'Returns 1 if a restart is needed--only if frequency points or direction changed
@@ -12102,21 +12089,6 @@ sub IncDecPoint btn$   'Button to increment or decrement frequency was clicked
     leftstep=markPoint-1     'Make leftstep a step number, not point number, for [preupdatevar] ver115-1a
 end sub
 
-sub mFindMaxMarker btn$
-    if twoPortWinHndl$="" then  'ver116-4a
-        #handle.markFreq, "!contents? markFreq$"    'get frequency from proper box
-    else
-        #twoPortWin.markFreq, "!contents? markFreq$"
-    end if
-    markFreq=val(markFreq$)
-    markPoint=gPointNumOfX(markFreq)   'Find point number matching this frequency.
-    if msaMode$="SA" then markPoint=int(0.5+markPoint)  'Round to integral point in SA mode ver115-2d
-    if markPoint <1 then markPoint=1
-    maxPoint=gPointCount()      'ver114-4a
-    if markPoint>maxPoint then markPoint=maxPoint
-    markFreq=gGetPointXVal(markPoint)
-end sub
-
 sub mEnterMarker btn$    'Marker Enter button was clicked
     'Enter new marker info based on the frequency. If the point num was changed,
     'the frequency was updated, but the user may have changed the frequency so
@@ -12277,7 +12249,7 @@ sub SelectLatchedSwitches desiredFreqBand  'ver116-1b ver116-4s. change 'ver117c
     'control is not a global, so we have to recreate it here
     control=globalPort+2
 'ver117c35 was   switchData=switchLatchBits(desiredFreqBand)    'All bits, with latch pulse set high ver116-4s
-    switchData=videoFilterAddress + 4*desiredFreqBand + 16*switchFR + 32*switchTR + 64*switchSA + 128 'now 'ver117c35 'verOK2FKU'
+    switchData=videoFilterAddress + 4*desiredFreqBand + 16*switchFR + 32*switchTR + 128 'now 'ver117c35
         'We output the required bits with the pulse line high (128), then briefly bring the pulse line low,
         'then back high. The pulse is about 100 usec for LPT and somewhere between 75 us and 200 us for USB.
     select case cb
