@@ -7869,8 +7869,13 @@ end sub
     button #handle.mMarkToCenter, "Mark->Cent", mMarkToCenter,LL, markMiscLeft, -24,65,18 'ver117c36 was -22 'ver117c44 was -27
     'ver114-7b deleted buttons for IncDecRef
 
-            'Test Setup Button 'ver115-1g added this and deleted go/save config
-    configLeft=markMiscLeft+70
+        'Marker Find Maximum Button 'verOK2FKU added this
+    markFindLeft=markMiscLeft+70
+    button #handle.markFindMax, "Find Max", mFindMaxMarker, LL, markFindLeft, -6, 54, 18
+    button #handle.markFindMax, "Find Min", mFindMaxMarker, LL, markFindLeft, -24, 54, 18
+
+        'Test Setup Button 'ver115-1g added this and deleted go/save config
+    configLeft=markFindLeft+59
     stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
     button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -6, 50, 35 'ver117c36 was -5 'ver117c44 was -8
 
