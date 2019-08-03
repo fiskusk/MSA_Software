@@ -9172,7 +9172,8 @@ end sub 'return to: Assign HW Configuration values(2001),[axisXFinished](globalS
     'If in midsweep, continue scan. Note that a subroutine called above may have set
     'continueCode to cause a halt or restart.
     if haltsweep=1 then goto [PostScan]
-    wait
+    'wait 'comented by for continue sweeping verOK2FKU
+    GOTO [Continue] 'verOK2FKU
 
 [preupdatevar] 'ver111-36h
     remember = thisstep
@@ -10809,7 +10810,8 @@ end sub
     if needRestart=1 then gosub [PartialRestart]
     continueCode=0  'signal to keep going ver115-8d
 '117cM    if multiscanIsOpen then call multiscanSaveContexts 0 'zero means main graph  ver115-8d
-    wait 'entered from: [LeftButDouble],[menuFreqAxisPreference]
+    'wait 'entered from: [LeftButDouble],[menuFreqAxisPreference]
+    GOTO [Continue]
 
 function DisplayAxisXPreference()   'Display dialog to select axis preferences
     'Returns 1 if a restart is needed--only if frequency points or direction changed
