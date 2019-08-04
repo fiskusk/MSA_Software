@@ -7870,12 +7870,16 @@ end sub
     'ver114-7b deleted buttons for IncDecRef
 
         'Marker Find Maximum Button 'verOK2FKU added this
-    markFindLeft=markMiscLeft+70
-    button #handle.markFindMax, "Find Max", mFindMaxMarker, LL, markFindLeft, -6, 54, 18
-    button #handle.markFindMax, "Find Min", mFindMinMarker, LL, markFindLeft, -24, 54, 18
+    markFindMaxMinLeft=markMiscLeft+70
+    button #handle.markFindMax, "Find Max", mFindMaxMarker, LL, markFindMaxMinLeft, -6, 54, 18
+    button #handle.markFindMin, "Find Min", mFindMinMarker, LL, markFindMaxMinLeft, -24, 54, 18
+
+        'Marker Find Next maximum Button 'verOK2FKU added this
+    markFindNextLeft=markFindMaxMinLeft+59
+    button #handle.markFindNext, "Next Peak", mFindNextMarker, LL, markFindNextLeft, -6, 58, 18
 
         'Test Setup Button 'ver115-1g added this and deleted go/save config
-    configLeft=markFindLeft+59
+    configLeft=markFindNextLeft+63
     stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
     button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -6, 50, 35 'ver117c36 was -5 'ver117c44 was -8
 
@@ -11748,6 +11752,10 @@ sub mDeleteMarker markID$
     end if
 end sub
 
+' notes by OK2FKU:
+' markID$ is string describes specific marker (1,2,P+,P-, etc.)
+' pointNum is position on x axis
+' trace$ is number of trace in the graph
 sub mAddMarker markID$, pointNum, trace$     'Add specified marker at specified point
     markTrace$=trace$
     markStyle$="LabeledWedge"
@@ -12109,6 +12117,10 @@ end sub
 sub mFindMinMarker btn$
     call mAddMarker "P-", 1, "2"
 end sub
+
+'sub mFindNextMarker btn$
+'    call mAddMarker "P2", 1, "2"
+'end sub
 
 sub mEnterMarker btn$    'Marker Enter button was clicked
     'Enter new marker info based on the frequency. If the point num was changed,
@@ -28620,7 +28632,7 @@ end function
 sub gSetMarkerNum markNum, pointNum, ID$, trace$, style$ 'set marker by position in the list
     'Enter marker data and update gNumMarkers to have the max entryNum of any entered marker
     if markNum<1 or markNum>20 then notice "Invalid marker number" : exit sub 'for debugging
-    gMarkerPoints(markNum,0)=pointNum
+    gMarkerPoints(markNum,0)=pointNum 'note by OK2FKU: 'Up to 20 markers(markNum); point number (0) and frequency (1)
     gMarkerPoints(markNum,1)=gGetPointXVal(pointNum) 'Copy current x value (freq)
     gMarkers$(markNum,0)=ID$
     gMarkers$(markNum,1)=trace$ :gMarkers$(markNum,2)=style$
