@@ -477,7 +477,7 @@
     global smithLastWindowHeight, smithLastWindowWidth  'Determines size of smith chart; initialized and later adjusted when resizing
     global graphMarLeft, graphMarRight, graphMarTop, graphMarBot    'margins from graph box edge to grid
     global haltAtEnd    'Flag set to 1 to cause a halt at end of current sweep  'SEWgraph
-    global hasMarkPeakPos, hasMarkPeakNeg, hasMarkL, hasMarkR, hasAnyMark       'Marker flags
+    global hasMarkPeakPos, hasMarkPeakNeg, hasMarkPeakNext, hasMarkL, hasMarkR, hasAnyMark       'Marker flags
     dim markerIDs$(9)    'IDs of markers, used to fill combo box. marker numbers run from 1 so ID of marker N is markerIDs$(N-1)
     'fill markerIDs$ array with defaults. Moved here ver117c32
     markerIDs$(0)="1" : markerIDs$(1)="2" : markerIDs$(2)="3" : markerIDs$(3)="4"  'SEWgraph
@@ -11655,6 +11655,11 @@ sub mUpdateMarkerLocations   'Find point numbers for peak markers and for L and 
         if hasMarkPeakPos then call gUpdateMarkerPointNum mMarkerNum("P+"),maxNum
         if hasMarkPeakNeg then call gUpdateMarkerPointNum mMarkerNum("P-"),minNum
     end if
+    if hasMarkPeakNext then
+        pStart=maxNum : pEnd=gPointCount()
+        call gFindNextPeak primaryAxisNum,pStart, pEnd, maxNum, maxY
+        if hasMarkPeakNext then call gUpdateMarkerPointNum mMarkerNum("P1"),maxNum
+    end if
     if doLRRelativeTo$<>"" then  'Locate LR relative to another marker
         markNum=mMarkerNum(doLRRelativeTo$)
         if markNum<1 then notice "Invalid Marker Number"    'For debugging
@@ -11700,6 +11705,7 @@ function mMarkerNum(markID$) 'Return ordinal marker number for this marker ID$
     'arbitrary storage locations. When marker info is printed, it is
     'printed in the same order as the ordinal marker numbers. This is the only place
     'that ID's are tied to specific ordinals, to make it easy to change.
+    'Marker P1-5 for next peaks find 'verOK2FKU added this
     select case markID$
         case "Halt"       'ver114-4c added Halt and renumbered
             mMarkerNum=1
@@ -11723,6 +11729,16 @@ function mMarkerNum(markID$) 'Return ordinal marker number for this marker ID$
             mMarkerNum=10
         case "6"
             mMarkerNum=11
+        case "P1"
+            mMarkerNum=12
+        case "P2"
+            mMarkerNum=13
+        case "P3"
+            mMarkerNum=14
+        case "P4"
+            mMarkerNum=15
+        case "P5"
+            mMarkerNum=16
         case else
             mMarkerNum=-1
     end select
@@ -11741,6 +11757,8 @@ sub mDeleteMarker markID$
             hasMarkPeakPos=0
         case "P-"
             hasMarkPeakNeg=0
+        case "P1", "P2", "P3", "P4", "P5"   'verOK2FKU'
+            hasMarkPeakNext=0
         case "1", "2","3","4","5", "6", "Halt"  'ver114-4c
             'valid markers but nothing special to do
         case else
@@ -11776,6 +11794,9 @@ sub mAddMarker markID$, pointNum, trace$     'Add specified marker at specified 
             hasMarkPeakNeg=1
             markTrace$=str$(primaryAxisNum)   'Always do peak markers on primary trace
             markStyle$="LabeledInvertedWedge"
+        case "P1", "P2", "P3", "P4", "P5"       'verOK2FKU
+            hasMarkPeakNext=1
+            markTrace$=str$(primaryAxisNum)   'Always do peak markers on primary trace
         case "Halt"   'ver114-4c
             markTrace$="Xaxis"  'ver114-6d
             markStyle$="HaltPointer"    'ver114-5m
@@ -11815,7 +11836,7 @@ end sub
 wait
 
 sub mClearMarkers
-    hasMarkL=0 : hasMarkR=0 : hasMarkPeakPos=0 : hasMarkPeakNeg=0 : hasAnyMark=0
+    hasMarkL=0 : hasMarkR=0 : hasMarkPeakPos=0 : hasMarkPeakNeg=0 : hasMarkPeakNext=0 : hasAnyMark=0
     call gClearMarkers
     call gDrawMarkerInfo    'to clear info area ver114-7n
     call mMarkSelect ""  'ver114-5L
@@ -12118,9 +12139,9 @@ sub mFindMinMarker btn$
     call mAddMarker "P-", 1, "2"
 end sub
 
-'sub mFindNextMarker btn$
-'    call mAddMarker "P2", 1, "2"
-'end sub
+sub mFindNextMarker btn$
+    call mAddMarker "P1", 1, "2"
+end sub
 
 sub mEnterMarker btn$    'Marker Enter button was clicked
     'Enter new marker info based on the frequency. If the point num was changed,
@@ -25847,7 +25868,7 @@ end sub
 [TwoPortSaveImage]     'Save graph image to file
     filter$="Bitmap files" + chr$(0) + "*.bmp" + chr$(0) + "All files" + chr$(0) + "*.*" 'ver115-6b
     defaultExt$="bmp"
-    initialDir$=imageSaveLastFolder$+"\"
+    initialDir$=imageSaveLastFolder$+"\" '"
     initialFile$=""
     graphFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Image To File")
     if graphFileName$<>"" then   'blank means cancelled
@@ -26364,7 +26385,7 @@ sub TwoPortTermAutoMatch btn$  'Calculate independent or simultaneous conjugate 
             loadR=TwoPortZ0 : loadI=0
             call TwoPortSingleConjugateMatch TwoPortArray(TwoPortTermCalcStep, 1), _
                                     TwoPortArray(TwoPortTermCalcStep, 2), srcR, srcI    'call with S11
-        case "#twoPortTermWin.AutoMatchOut"
+        case "#twoPortTermWin.AutoMatchOut" '"
             'source termination will change S22, so we can't have any
             srcR=TwoPortZ0 : srcI=0
             call TwoPortSingleConjugateMatch TwoPortArray(TwoPortTermCalcStep, 7), _
@@ -27209,6 +27230,48 @@ sub gFindPeaks traceNum, p1, p2, byRef minNum, byref maxNum, byref minY, byref m
     'the actual peak to be in the middle.
     maxNum=int((maxNumEnd+maxNumStart)/2)   'ver115-4b
     minNum=int((minNumEnd+minNumStart)/2)   'ver115-4b
+end sub
+
+' Added by OK2FKU to find next peak behind maximum peak
+sub gFindNextPeak traceNum, p1, p2, byref maxNum, byref maxY    'find positive and negative peak
+    'Search includes points from p1 to p2, inclusive. traceNum(1 or 2) indicates which trace to examine.
+    'maxNum will be set to the point number (1...gDynamicSteps+1) where the peaks occur;
+    'maxY will be the peak value
+    call gGetMinMaxPointNum pMin, pMax    'ver114-6d
+    if p2>pMax then p2=pMax
+    maxPeakEnded=1
+    fallSection=1
+    fallSectionEnded=0
+    for i=p1 to p2
+        y=gGraphVal(i,traceNum)
+        if i=p1 then
+            maxNumStart=p1
+            maxNumEnd=p1
+            prevY=y
+        ' Start with value at first point, that indicates maximum (main peak)
+        ' first we need to track fall trace stage
+        ' than we can find next maximum
+        else
+            if fallSectionEnded=0 then
+                if fallSection=1 and y<prevY then
+                    fallSection=1
+                    prevY=y ' falling section
+                else
+                    fallSection=0
+                    fallSectionEnded=1
+                    maxY=y
+                end if
+            else
+                'See if peak is found. Once found, so long as we remain at that level, continue
+                'to record maxPeakEnded
+                if y>maxY then maxY=y : maxNumStart=i : maxPeakEnded=0
+                if maxPeakEnded=0 and y>=maxY then maxNumEnd=i else maxPeakEnded=1
+            end if
+        end if
+    next i
+    'Here the min or max start and end numbers indicate where the peak started and ended; we consider
+    'the actual peak to be in the middle.
+    maxNum=int((maxNumEnd+maxNumStart)/2)   'ver115-4b
 end sub
 
 sub gGetGridCorner corner$,byref xPix, byref yPix    'Get pixel coord of specified corner
