@@ -1282,6 +1282,7 @@
     global gXAxisMin, gXAxisMax     'Axis max and min are the values at the end of each axis
     global gY1AxisMin, gY1AxisMax   'and are used for automatic calculation of axis and
     global gY2AxisMin, gY2AxisMax   'grid characteristics
+    global gY2AxisMinDef, gY2AxisMaxDef  'grid characteristics
     global gGraphColorPreset$  'Last selected graph color preset; may have been partially overridden since ver114-2a
     global gGraphTextPreset$   'Last selected graph text preset; may have been partially overridden since ver114-2a
     global gTrace1Width, gTrace2Width  'Width of graph trace (0,1,2 or 3)
@@ -9057,7 +9058,7 @@ sub GetDefaultGraphData axisNum, byref axisType, byref axisMin, byref axisMax 'g
             end if
         case else   ' "SA"
             if primaryAxisNum=axisNum then
-                axisType=constMagDBM : axisMin=-100 : axisMax=0
+                axisType=constMagDBM : axisMin=gY2AxisMinDef : axisMax=gY2AxisMaxDef
             else
                 axisType=constNoGraph : axisMin=-1 : axisMax=0
             end if
@@ -16260,7 +16261,7 @@ end sub
                 "Parameter files" + chr$(0) + "*.s1p" + chr$(0) + _
                 "Text files" + chr$(0) + "*.txt"   'ver115-6b
     defaultExt$="s1p"
-    initialDir$=touchLastFolder$+"\"
+    initialDir$=touchLastFolder$+"\" '"
     initialFile$=""
     dataFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Data To File")
     if dataFileName$="" then wait 'blank means cancelled
@@ -16430,7 +16431,7 @@ return
                 "CSV files" + chr$(0) + "*.csv" + chr$(0) + _
                 "All files" + chr$(0) + "*.*" 'ver115-6b
     defaultExt$="s1p"
-    initialDir$=touchLastFolder$+"\"
+    initialDir$=touchLastFolder$+"\" '"
     initialFile$=""
     dataFileName$=uOpenFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Open Data File")
     if dataFileName$="" then wait   'user cancelled
@@ -21013,7 +21014,7 @@ function calFileName$(pathNum)   'Return file name for the specified pathNum
 end function
 
 function calFilePath$()   'Return path name for cal files, ending in "\"
-     calFilePath$=DefaultDir$ + "\MSA_Info\MSA_Cal\"
+     calFilePath$=DefaultDir$ + "\MSA_Info\MSA_Cal\" '"
 end function
 
 function calLoadFromEditor$(editor$,pathNum) 'Read data from text editor. Return error message
@@ -22990,7 +22991,7 @@ sub uParsePath fullPath$, byref folder$, byref file$ 'Parse full path name of fi
     slashPos=0
     for i=L to 1 step -1  'scan character by character from end
         thisChar$=Mid$(fullPath$,i, 1)
-        if thisChar$="\" then slashPos=i : exit for  'looking for backslash
+        if thisChar$="\" then slashPos=i : exit for  '"looking for backslash
     next i
     if slashPos=0 then folder$=fullPath$ : file$="" : exit sub 'No slash found; entire name must be folder
     folder$=Left$(fullPath$,slashPos-1)     'Everything left of slash is folder name
@@ -23015,7 +23016,7 @@ function uAddExtension$(name$, exten$)    'Add extension to path or file name if
     for i=L to 1 step -1  'scan character by character from end
         thisChar$=Mid$(name$,i, 1)
         if thisChar$="." then dotPos=i : exit for 'looking for dot
-        if thisChar$="\" then exit for  'looking for backslash--indicates there is no extension
+        if thisChar$="\" then exit for  '"looking for backslash--indicates there is no extension
     next i
     if dotPos>0 then uAddExtension$=name$ : exit function   'There already is an extension
     uAddExtension$=name$;".";exten$  'append dot and exten$
@@ -23961,7 +23962,7 @@ end sub
                 "Parameter files" + chr$(0) + "*.s1p" + chr$(0) + _
                 "Text files" + chr$(0) + "*.txt"   'ver115-6b
     defaultExt$="s1p"
-    initialDir$=touchLastFolder$+"\"
+    initialDir$=touchLastFolder$+"\" '"
     initialFile$=""
     dataFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Data To File")
     if dataFileName$="" then wait 'blank means cancelled
@@ -24028,7 +24029,7 @@ wait
                 "Parameter files" + chr$(0) + "*.s2p" + chr$(0) + _
                 "Text files" + chr$(0) + "*.txt"
     defaultExt$="s2p"   'ver116-4e
-    initialDir$=touchLastFolder$+"\"
+    initialDir$=touchLastFolder$+"\" '"
     initialFile$=""
     dataFileName$=uSaveFileDialog$(fileFilter$, defaultExt$, initialDir$, initialFile$, "Save Data To File")
     if dataFileName$="" then wait 'blank means cancelled
@@ -24051,7 +24052,7 @@ end sub
                 "CSV files" + chr$(0) + "*.csv" + chr$(0) + _
                 "All files" + chr$(0) + "*.*" 'ver116-4a
     defaultExt$="s2p"
-    initialDir$=touchLastFolder$+"\"
+    initialDir$=touchLastFolder$+"\" '"
     initialFile$=""
     dataFileName$=uOpenFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Open Data File")
     if dataFileName$="" then wait   'user cancelled
@@ -27394,7 +27395,7 @@ function gGridBoundaryLabel$(v, form$)  'Format number for grid line label
 end function
 
 sub gPrintText t$, x,y     'Print text t$ at position x,y on graph; font and color are preset
-    cmd$="backcolor ";gBackColor$;";place ";x;" ";y; ";down";";\";t$
+    cmd$="backcolor ";gBackColor$;";place ";x;" ";y; ";down";";\";t$ '"
     #gGraphHandle$, cmd$
 end sub
 
@@ -29473,6 +29474,8 @@ function gSweepContext$() 'Return string with context info on trace graphing
     s1$= s1$; newLine$; "SweepDir="; gSweepDir    'Sweep direction ver114-4k
     'Note gMode$ is handled by saving msaMode$ ver114-6f
     gSweepContext$=s1$
+    gY2AxisMinDef=gY2AxisMin
+    gY2AxisMaxDef=gY2AxisMax
 end function
 
 function gRestoreGridContext$(byref s$, byref startPos, isValidation) 'Restore info on grid size and appearance from string s$
@@ -29999,7 +30002,7 @@ sub smithDrawSliderMarker N 'Draw slider box at point N    'Note color and size 
 end sub
 
 sub smithPrintText t$, x,y     'Print text t$ at position x,y on graph; font and color are preset
-    cmd$="backcolor ";smithBackColor$;";place ";x;" ";y; ";down";";\";t$
+    cmd$="backcolor ";smithBackColor$;";place ";x;" ";y; ";down";";\";t$ '"
     #smithHndl$, cmd$
 end sub
 
@@ -30089,7 +30092,7 @@ sub smithDrawReact react, doLabel       'Draw reactance arc for value react; lab
     else
         #smithHndl$, "place ";labX; " "; arcEndY-4
     end if
-    if doLabel then print #smithHndl$, "\";reactText$
+    if doLabel then print #smithHndl$, "\";reactText$ '"
 end sub
 
 sub smithDrawSusceptance suscept, doLabel       'Draw susceptance arc for value suscept; label it if doLabel=1
@@ -30134,7 +30137,7 @@ sub smithDrawSusceptance suscept, doLabel       'Draw susceptance arc for value 
     else
         #smithHndl$, "place ";labX; " "; arcEndY-4
     end if
-    if doLabel then print #smithHndl$, "\";reactText$
+    if doLabel then print #smithHndl$, "\";reactText$ '"
 end sub
 
 sub smithReactArc rad, endY  'Draw Reactance arc from right edge to specified end
@@ -30172,7 +30175,7 @@ sub smithDrawResist resist, doLabel       'Draw resistance circle for value resi
 
     #smithHndl$, "place ";smithRightX-2*arcRadius+4; " "; smithCenterY-2
     R=val(using("####.#",resist))
-    if doLabel then print #smithHndl$, "\";str$(R)    'Print label
+    if doLabel then print #smithHndl$, "\";str$(R)    '"rint label
 end sub
 
 sub smithDrawPolarCircle R, doLabel       'Draw circle of radius R*smithRadius; label it if doLabel=1
@@ -30186,7 +30189,7 @@ sub smithDrawPolarCircle R, doLabel       'Draw circle of radius R*smithRadius; 
 
     #smithHndl$, "place ";smithCenterX-10; " "; smithCenterY+arcRadius+1
     R$=str$(val(using("#.###",R)))
-    if doLabel then print #smithHndl$, "\";R$    'Print label
+    if doLabel then print #smithHndl$, "\";R$    '"Print label
 end sub
 
 sub smithDrawConductance conduct, doLabel       'Draw resistance circle for value resist; label it if doLabel=1
@@ -30210,7 +30213,7 @@ sub smithDrawConductance conduct, doLabel       'Draw resistance circle for valu
     #smithHndl$, "circle ";arcRadius
 
     #smithHndl$, "place ";smithLeftX+2*arcRadius+4; " "; smithCenterY-2
-    if doLabel then print #smithHndl$, "\";str$(C)    'Print label
+    if doLabel then print #smithHndl$, "\";str$(C)    '"Print label
 end sub
 
 sub smithS11DBtoPix S11DB, S11Ang, byref xPix, byref yPix  'Convert reflection coefficient to pixel coords
@@ -30443,7 +30446,7 @@ end sub
 sub smithSaveImage   'Save graph image to file
     filter$="Bitmap files" + chr$(0) + "*.bmp" + chr$(0) + "All files" + chr$(0) + "*.*" 'ver115-6b
     defaultExt$="bmp"
-    initialDir$=imageSaveLastFolder$+"\"
+    initialDir$=imageSaveLastFolder$+"\" '"
     initialFile$=""
     graphFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Image To File")
     if graphFileName$<>"" then   'blank means cancelled

@@ -1,2 +1,5 @@
 save state of box "Display Sweep Time"
+OK after change mode, memory y axis settings
+OK after change in Axis Y2 settings menu Graph Data, it work with Prefs.txt file value for Top Ref and Bot Ref
 OK after click OK in Sweep Parameters (x axis) continue sweeping
+
