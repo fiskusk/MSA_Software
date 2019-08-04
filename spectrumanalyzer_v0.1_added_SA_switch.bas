@@ -12000,6 +12000,11 @@ sub mUpdateMarkerEditButtons     'Enable/disable buttons based on selected marke
     end if
     if selMarkerID$="P+" or selMarkerID$="P-" then notManual=1 else notManual=0  'ver114-4a
     if twoPortWinHndl$="" then    'main graph window
+        if hasMarkPeakPos=0 then
+            #handle.markFindNext, "!disable"
+        else
+            #handle.markFindNext, "!enable"
+        end if
         if noMarker or notManual then   'ver114-4a
             #handle.markInc, "!disable"
             #handle.markDec, "!disable"
@@ -12134,6 +12139,7 @@ end sub
 
 sub mFindMaxMarker btn$
     call mAddMarker "P+", 1, "2"
+    call mUpdateMarkerEditButtons
 end sub
 
 sub mFindMinMarker btn$
