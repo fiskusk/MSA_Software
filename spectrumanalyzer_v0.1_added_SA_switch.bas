@@ -11672,14 +11672,14 @@ sub mUpdateMarkerLocations   'Find point numbers for peak markers and for L and 
             firstPeakP1Search=0 : pStart=maxNum : pEnd=gPointCount()    ' set borders from main peak to end'
         else
             if peakP1FindNext then  ' if second and other pressed of Next button
-                pStart=NextPeakP1Num : pEnd=gPointCount() : peakP1FindNext=0
+                pStart=nextPeakP1Num : pEnd=gPointCount() : peakP1FindNext=0
             else
                 pStart=oldPeakP1Num ' if doesnt push next butten, recall old border
             end if
         end if
         oldPeakP1Num = pStart ' backup current starting border
-        call gFindNextPeak primaryAxisNum,pStart, pEnd, NextPeakP1Num, NextPeakP1Y
-        if hasMarkPeakNext then call gUpdateMarkerPointNum mMarkerNum(selMarkerID$),NextPeakP1Num
+        call gFindNextPeak primaryAxisNum,pStart, pEnd, nextPeakP1Num, nextPeakP1Y
+        if hasMarkPeakNext then call gUpdateMarkerPointNum mMarkerNum(selMarkerID$),nextPeakP1Num
     end if
     if doLRRelativeTo$<>"" then  'Locate LR relative to another marker
         markNum=mMarkerNum(doLRRelativeTo$)
