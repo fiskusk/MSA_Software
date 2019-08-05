@@ -27255,18 +27255,23 @@ sub gFindNextPeak traceNum, p1, p2, byref maxNum, byref maxY    'find positive a
             maxNumStart=p1
             maxNumEnd=p1
             prevY=y
+            sizeOfFall=0
         ' Start with value at first point, that indicates maximum (main peak)
-        ' first we need to track fall trace stage
+        ' first we need to track fall trace stage, and when rise for minumum +1dB,
         ' than we can find next maximum
         else
             if fallSectionEnded=0 then
-                if fallSection=1 and y<prevY then
+                if fallSection=1 and y<=prevY then
+                    sizeOfFall=0
                     fallSection=1
-                    prevY=y ' falling section
+                    prevY=y
                 else
-                    fallSection=0
-                    fallSectionEnded=1
-                    maxY=y
+                    if y>prevY then sizeOfFall = amoutOfRise + y - prevY
+                    if sizeOfFall>1 then
+                        fallSection=0
+                        fallSectionEnded=1
+                        maxY=y
+                    end if
                 end if
             else
                 'See if peak is found. Once found, so long as we remain at that level, continue
