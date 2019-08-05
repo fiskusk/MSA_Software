@@ -11660,10 +11660,10 @@ sub mUpdateMarkerLocations   'Find point numbers for peak markers and for L and 
         if hasMarkPeakPos then call gUpdateMarkerPointNum mMarkerNum("P+"),maxNum
         if hasMarkPeakNeg then call gUpdateMarkerPointNum mMarkerNum("P-"),minNum
     end if
-    if hasMarkPeakNext then
+    if hasMarkPeakNext  and selMarkerID$="P1" then
         pStart=maxNum : pEnd=gPointCount()
         call gFindNextPeak primaryAxisNum,pStart, pEnd, maxNum, maxY
-        if hasMarkPeakNext then call gUpdateMarkerPointNum mMarkerNum("P1"),maxNum
+        if hasMarkPeakNext then call gUpdateMarkerPointNum mMarkerNum(selMarkerID$),maxNum
     end if
     if doLRRelativeTo$<>"" then  'Locate LR relative to another marker
         markNum=mMarkerNum(doLRRelativeTo$)
@@ -12151,7 +12151,12 @@ sub mFindMinMarker btn$
 end sub
 
 sub mFindNextMarker btn$
-    call mAddMarker "P1", 1, "2"
+    if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
+        call mAddMarker selMarkerID$, 1, "2"
+    else
+        message$="Invalid marker to do next Peak. Select P1-P5 only."
+        call PrintMessage
+    end if
 end sub
 
 sub mEnterMarker btn$    'Marker Enter button was clicked
