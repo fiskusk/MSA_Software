@@ -478,11 +478,15 @@
     global graphMarLeft, graphMarRight, graphMarTop, graphMarBot    'margins from graph box edge to grid
     global haltAtEnd    'Flag set to 1 to cause a halt at end of current sweep  'SEWgraph
     global hasMarkPeakPos, hasMarkPeakNeg, hasMarkPeakNext, hasMarkL, hasMarkR, hasAnyMark       'Marker flags
-    dim markerIDs$(9)    'IDs of markers, used to fill combo box. marker numbers run from 1 so ID of marker N is markerIDs$(N-1)
+    global numMarkers
+    numMarkers=14
+    dim markerIDs$(numMarkers)    'IDs of markers, used to fill combo box. marker numbers run from 1 so ID of marker N is markerIDs$(N-1)
     'fill markerIDs$ array with defaults. Moved here ver117c32
     markerIDs$(0)="1" : markerIDs$(1)="2" : markerIDs$(2)="3" : markerIDs$(3)="4"  'SEWgraph
     markerIDs$(4)="5" : markerIDs$(5)="6" : markerIDs$(6)="L" : markerIDs$(7)="R"  'SEWgraph
-    markerIDs$(8)="P+" : markerIDs$(9)="P-"   'SEWgraph
+    markerIDs$(8)="P+" : markerIDs$(9)="P-" : markerIDs$(10)="P1" : markerIDs$(11)="P2"
+    markerIDs$(12)="P3" : markerIDs$(13)="P4" : markerIDs$(14)="P5"  'SEWgraph
+    dim selMarkIDs$(numMarkers+1)
     global selMarkerID$  'ID of marker selected by user
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
@@ -7851,7 +7855,7 @@ end sub
     markTop=currGraphBoxHeight+12     'This isn't the top of anything in particular, just a reference point ver115-1b
     markSelLeft=5
     statictext #handle.selMarkLab "Marker", markSelLeft+3, markTop-11, 40, 14
-    selMarkIDs$(0)="None" : for i=0 to 9 : selMarkIDs$(i+1)=markerIDs$(i) : next i
+    selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i
     combobox #handle.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+3, 50, 180
 
         'Marker Editing Items ver114-4a changed marker edit buttons so none need to be hidden
@@ -17421,7 +17425,7 @@ function mMarkerContext$()     'Return marker context as string
     s$=","  'comma to separate items
     j$=""
     s1$=""
-    for i=0 to 9
+    for i=0 to numMarkers
         id$=markerIDs$(i) :markNum=mMarkerNum(id$)
         call gGetMarkerByNum markNum, pointNum, id$, trace$, style$
         if pointNum>0 then
@@ -24655,7 +24659,7 @@ end sub
     markTop=TwoPortGraphBoxHeight+12     'This isn't the top of anything in particular, just a reference point ver115-1b
     markSelLeft=5
     statictext #twoPortWin.selMarkLab "Marker", markSelLeft+3, markTop-9, 40, 14    'ver116-4b
-    selMarkIDs$(0)="None" : for i=0 to 9 : selMarkIDs$(i+1)=markerIDs$(i) : next i
+    selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i
     'Stylebits #twoPortWin.selMark, _CBS_DROPDOWNLIST, 0, 0, 0   'ver115-1a del115_1a so box generates click event
     combobox #twoPortWin.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+5, 50, 180   'ver116-4b
 
