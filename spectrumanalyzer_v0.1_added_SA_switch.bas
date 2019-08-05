@@ -11662,8 +11662,8 @@ sub mUpdateMarkerLocations   'Find point numbers for peak markers and for L and 
     end if
     if hasMarkPeakNext  and selMarkerID$="P1" then
         pStart=maxNum : pEnd=gPointCount()
-        call gFindNextPeak primaryAxisNum,pStart, pEnd, maxNum, maxY
-        if hasMarkPeakNext then call gUpdateMarkerPointNum mMarkerNum(selMarkerID$),maxNum
+        call gFindNextPeak primaryAxisNum,pStart, pEnd, NextPeak1Num, NextPeak1Y
+        if hasMarkPeakNext then call gUpdateMarkerPointNum mMarkerNum(selMarkerID$),NextPeak1Num
     end if
     if doLRRelativeTo$<>"" then  'Locate LR relative to another marker
         markNum=mMarkerNum(doLRRelativeTo$)
@@ -27275,7 +27275,7 @@ sub gFindNextPeak traceNum, p1, p2, byref maxNum, byref maxY    'find positive a
                     fallSection=1
                     prevY=y
                 else
-                    if y>prevY then sizeOfFall = amoutOfRise + y - prevY
+                    if y>prevY then sizeOfFall = sizeOfFall + y - prevY
                     if sizeOfFall>1 then
                         fallSection=0
                         fallSectionEnded=1
