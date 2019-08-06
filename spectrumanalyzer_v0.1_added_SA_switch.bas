@@ -477,7 +477,8 @@
     global smithLastWindowHeight, smithLastWindowWidth  'Determines size of smith chart; initialized and later adjusted when resizing
     global graphMarLeft, graphMarRight, graphMarTop, graphMarBot    'margins from graph box edge to grid
     global haltAtEnd    'Flag set to 1 to cause a halt at end of current sweep  'SEWgraph
-    global hasMarkPeakPos, hasMarkPeakNeg, hasMarkPeakNext, hasMarkL, hasMarkR, hasAnyMark       'Marker flags
+    global hasMarkPeakPos, hasMarkPeakNeg, hasMarkL, hasMarkR, hasAnyMark       'Marker flags
+    global hasMarkPeakRight, hasMarkNextMax     ' Marker flags verOK2FKU
     global numMarkers   'add by OK2FKU to easier initialize default markers. verOK2FKU
     numMarkers=14   ' Count of markers verOK2FKU
     dim markerIDs$(numMarkers)    'IDs of markers, used to fill combo box. marker numbers run from 1 so ID of marker N is markerIDs$(N-1)
@@ -487,13 +488,15 @@
     markerIDs$(8)="P+" : markerIDs$(9)="P-" : markerIDs$(10)="P1" : markerIDs$(11)="P2" ' add Markers for peaks P1-P5 verOK2FKU
     markerIDs$(12)="P3" : markerIDs$(13)="P4" : markerIDs$(14)="P5"
     dim selMarkIDs$(numMarkers+1) ' We must initialize array for more than 11 items. Array must have numMarkers+1 items (plus item "none") 'verOK2FKU
-    global selMarkerID$  'ID of marker selected by user
-    global firstPeakP1Search    ' set/clean for state if next Peak P1 is first or other peak
-    firstPeakP1Search=1  ' default set for indicate that first searching must do
-    global peakP1FindNext ' indicate if we push Next button for next Peak
-    peakP1FindNext=0    ' def not pressed'
-    global oldPeakP1Num 'backup previous number of x peak
-    global nextPeakP1Num    ' actual next peak number value of x
+    global selMarkerID$  ' ID of marker selected by user
+    global markNextMaxID$   ' ID of marker for next maximum peak verOK2FKU
+    global markNextRightID$ ' ID of marker for next closest right peak verOK2FKU
+    global firstPeakP1Search    ' set/clean for state if next Peak P1 is first or other peak verOK2FKU
+    firstPeakP1Search=1  ' default set for indicate that first searching must do verOK2FKU
+    global peakP1FindNext ' indicate if we push Next button for next Peak verOK2FKU
+    peakP1FindNext=0    ' def not pressed' verOK2FKU
+    global oldPeakP1Num 'backup previous number of x peak verOK2FKU
+    global nextPeakP1Num    ' actual next peak number value of x verOK2FKU
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
     global doPeaksBounded   '=1 to limit peak search between L and R markers; otherwise 0
@@ -7880,17 +7883,22 @@ end sub
     button #handle.mMarkToCenter, "Mark->Cent", mMarkToCenter,LL, markMiscLeft, -24,65,18 'ver117c36 was -22 'ver117c44 was -27
     'ver114-7b deleted buttons for IncDecRef
 
-        'Marker Find Maximum Button 'verOK2FKU added this
+        'Marker Find Maximum/Minimum Button 'verOK2FKU added this
     markFindMaxMinLeft=markMiscLeft+70
-    button #handle.markFindMax, "Find Max", mFindMaxMarker, LL, markFindMaxMinLeft, -6, 54, 18
+    button #handle.markFindMax, "Find Peak", mFindMaxMarker, LL, markFindMaxMinLeft, -6, 54, 18
     button #handle.markFindMin, "Find Min", mFindMinMarker, LL, markFindMaxMinLeft, -24, 54, 18
 
-        'Marker Find Next maximum Button 'verOK2FKU added this
-    markFindNextLeft=markFindMaxMinLeft+59
-    button #handle.markFindNext, "Next Peak", mFindNextMarker, LL, markFindNextLeft, -6, 58, 18
+        'Marker Find Next peak maximum Button 'verOK2FKU added this
+    markFindNextPeakLeft=markFindMaxMinLeft+59
+    button #handle.markFindNextMax, "Next Peak", mFindNextMaxMarker, LL, markFindNextPeakLeft, -6, 56, 18
+
+        'Marker Find Next right/left peak Button 'verOK2FKU added this
+    markFindNextLRLeft=markFindNextPeakLeft+61
+    button #handle.markFindNextRight, "Next Pk Right", mFindNextRightMarker, LL, markFindNextLRLeft, -6, 75, 18
+    button #handle.markFindNextLeft, "Next Pk Left", mFindNextLeftMarker, LL, markFindNextLRLeft, -24, 75, 18
 
         'Test Setup Button 'ver115-1g added this and deleted go/save config
-    configLeft=markFindNextLeft+63
+    configLeft=markFindNextLRLeft+80
     stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
     button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -6, 50, 35 'ver117c36 was -5 'ver117c44 was -8
 
@@ -11666,8 +11674,8 @@ sub mUpdateMarkerLocations   'Find point numbers for peak markers and for L and 
         if hasMarkPeakPos then call gUpdateMarkerPointNum mMarkerNum("P+"),maxNum
         if hasMarkPeakNeg then call gUpdateMarkerPointNum mMarkerNum("P-"),minNum
     end if
-    ' find Next peak right Added by OK2FKU verOK2FKU
-    if hasMarkPeakNext  and selMarkerID$="P1" then ' if pressed Next Button and if sellected P1
+    ' find Next Right peak Added by OK2FKU verOK2FKU
+    if hasMarkPeakRight  then ' if pressed Next Right Peak
         if firstPeakP1Search then   ' if first finding in progress
             firstPeakP1Search=0 : pStart=maxNum : pEnd=gPointCount()    ' set borders from main peak to end'
         else
@@ -11678,8 +11686,13 @@ sub mUpdateMarkerLocations   'Find point numbers for peak markers and for L and 
             end if
         end if
         oldPeakP1Num = pStart ' backup current starting border
-        call gFindNextPeak primaryAxisNum,pStart, pEnd, nextPeakP1Num, nextPeakP1Y
-        if hasMarkPeakNext then call gUpdateMarkerPointNum mMarkerNum(selMarkerID$),nextPeakP1Num
+        call gFindNextRightPeak primaryAxisNum,pStart, pEnd, nextPeakP1Num, nextPeakP1Y
+        call gUpdateMarkerPointNum mMarkerNum(markNextRightID$),nextPeakP1Num
+    end if
+    if hasMarkNextMax  then ' if pressed Next Max Peak
+        pStart=maxNum : pEnd=gPointCount()
+        call gFindNextPeak primaryAxisNum,pStart, pEnd, nextMaxNum, nextMaxY
+        call gUpdateMarkerPointNum mMarkerNum(markNextMaxID$), nextMaxNum
     end if
     if doLRRelativeTo$<>"" then  'Locate LR relative to another marker
         markNum=mMarkerNum(doLRRelativeTo$)
@@ -11779,7 +11792,7 @@ sub mDeleteMarker markID$
         case "P-"
             hasMarkPeakNeg=0
         case "P1", "P2", "P3", "P4", "P5"   'verOK2FKU'
-            hasMarkPeakNext=0
+            hasMarkPeakRight=0
         case "1", "2","3","4","5", "6", "Halt"  'ver114-4c
             'valid markers but nothing special to do
         case else
@@ -11816,7 +11829,6 @@ sub mAddMarker markID$, pointNum, trace$     'Add specified marker at specified 
             markTrace$=str$(primaryAxisNum)   'Always do peak markers on primary trace
             markStyle$="LabeledInvertedWedge"
         case "P1", "P2", "P3", "P4", "P5"       'verOK2FKU
-            hasMarkPeakNext=1
             markTrace$=str$(primaryAxisNum)   'Always do peak markers on primary trace
         case "Halt"   'ver114-4c
             markTrace$="Xaxis"  'ver114-6d
@@ -11857,7 +11869,7 @@ end sub
 wait
 
 sub mClearMarkers
-    hasMarkL=0 : hasMarkR=0 : hasMarkPeakPos=0 : hasMarkPeakNeg=0 : hasMarkPeakNext=0 : hasAnyMark=0 : firstPeakP1Search=1  ' firstPeakP1Search added verOK2FKU
+    hasMarkL=0 : hasMarkR=0 : hasMarkPeakPos=0 : hasMarkPeakNeg=0 : hasMarkPeakRight=0 : hasMarkNextMax=0 : hasAnyMark=0 : firstPeakP1Search=1  ' firstPeakP1Search added verOK2FKU
     call gClearMarkers
     call gDrawMarkerInfo    'to clear info area ver114-7n
     call mMarkSelect ""  'ver114-5L
@@ -12018,12 +12030,16 @@ sub mUpdateMarkerEditButtons     'Enable/disable buttons based on selected marke
         pointNum=gMarkerPointNum(mMarkerNum(selMarkerID$))
         if pointNum<0 then noMarker=1 else noMarker=0
     end if
-    if selMarkerID$="P+" or selMarkerID$="P-" then notManual=1 else notManual=0  'ver114-4a
+    if selMarkerID$="P+" or selMarkerID$="P-" or selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then notManual=1 else notManual=0  'ver114-4a
     if twoPortWinHndl$="" then    'main graph window
-        if hasMarkPeakPos=0 then
-            #handle.markFindNext, "!disable"
+        if hasMarkPeakPos=0 then   ' verOK2FKU
+            #handle.markFindNextRight, "!disable"
+            #handle.markFindNextLeft, "!disable"
+            #handle.markFindNextMax, "!disable"
         else
-            #handle.markFindNext, "!enable"
+            #handle.markFindNextRight, "!enable"
+            #handle.markFindNextLeft, "!enable"
+            #handle.markFindNextMax, "!enable"
         end if
         if noMarker or notManual then   'ver114-4a
             #handle.markInc, "!disable"
@@ -12157,27 +12173,47 @@ sub IncDecPoint btn$   'Button to increment or decrement frequency was clicked
     leftstep=markPoint-1     'Make leftstep a step number, not point number, for [preupdatevar] ver115-1a
 end sub
 
-' verOK2FKU added this
+' verOK2FKU added this. Find Maximum Peak
 sub mFindMaxMarker btn$
     call mAddMarker "P+", 1, "2"
     call mUpdateMarkerEditButtons
 end sub
 
-' verOK2FKU added this
-sub mFindMinMarker btn$
-    call mAddMarker "P-", 1, "2"
-end sub
-
-' verOK2FKU added this
-sub mFindNextMarker btn$
+' verOK2FKU added this. Find Next maximum peak
+sub mFindNextMaxMarker btn$
+    hasMarkNextMax=1
+    if selMarkerID$="" then selMarkerID$="P1" : markNextMaxID$=selMarkerID$
     if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
+        markNextMaxID$=selMarkerID$
         if firstPeakP1Search then
-            call mAddMarker selMarkerID$, 1, "2"
+            call mAddMarker markNextMaxID$, 1, "2"
         else
             peakP1FindNext=1 ' button pressed
         end if
     else
-        message$="Invalid marker to do next Peak. Select P1-P5 only."
+        message$="Invalid marker to detect peak. Select P1-P5 only."
+        call PrintMessage
+    end if
+end sub
+
+' verOK2FKU added this. Find Minimum Peak
+sub mFindMinMarker btn$
+    call mAddMarker "P-", 1, "2"
+end sub
+
+' verOK2FKU added this. FInd next peak from right
+sub mFindNextRightMarker btn$
+    hasMarkPeakRight=1
+    if selMarkerID$="" then selMarkerID$="P1" : markNextRightID$=selMarkerID$
+    if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
+        markNextRightID$=selMarkerID$
+        if firstPeakP1Search then
+            call mAddMarker markNextRightID$, 1, "2"
+        else
+            peakP1FindNext=1 ' button pressed
+        end if
+    else
+        message$="Invalid marker to detect peak. Select P1-P5 only."
         call PrintMessage
     end if
 end sub
@@ -27272,7 +27308,7 @@ sub gFindPeaks traceNum, p1, p2, byRef minNum, byref maxNum, byref minY, byref m
 end sub
 
 ' Added by OK2FKU to find next peak behind maximum peak
-sub gFindNextPeak traceNum, p1, p2, byref maxNum, byref maxY    'find next possible peak
+sub gFindNextRightPeak traceNum, p1, p2, byref maxNum, byref maxY    'find next possible peak
     'Search includes points from p1 to p2, inclusive. traceNum(1 or 2) indicates which trace to examine.
     'maxNum will be set to the point number (1...gDynamicSteps+1) where the peaks occur;
     'maxY will be the peak value
@@ -27334,6 +27370,48 @@ sub gFindNextPeak traceNum, p1, p2, byref maxNum, byref maxY    'find next possi
     'Here the min or max start and end numbers indicate where the peak started and ended; we consider
     'the actual peak to be in the middle.
     'maxNum=int((maxNumEnd+maxNumStart)/2)   'ver115-4b
+end sub
+
+' Added by OK2FKU to find next peak behind maximum peak
+sub gFindNextPeak traceNum, p1, p2, byref maxNum, byref maxY    'find positive and negative peak
+    'Search includes points from p1 to p2, inclusive. traceNum(1 or 2) indicates which trace to examine.
+    'maxNum will be set to the point number (1...gDynamicSteps+1) where the peaks occur;
+    'maxY will be the peak value
+    call gGetMinMaxPointNum pMin, pMax    'ver114-6d
+    if p2>pMax then p2=pMax
+    maxPeakEnded=1
+    fallSection=1
+    fallSectionEnded=0
+    for i=p1 to p2
+        y=gGraphVal(i,traceNum)
+        if i=p1 then
+            maxNumStart=p1
+            maxNumEnd=p1
+            prevY=y
+        ' Start with value at first point, that indicates maximum (main peak)
+        ' first we need to track fall trace stage
+        ' than we can find next maximum
+        else
+            if fallSectionEnded=0 then
+                if fallSection=1 and y<prevY then
+                    fallSection=1
+                    prevY=y ' falling section
+                else
+                    fallSection=0
+                    fallSectionEnded=1
+                    maxY=y
+                end if
+            else
+                'See if peak is found. Once found, so long as we remain at that level, continue
+                'to record maxPeakEnded
+                if y>maxY then maxY=y : maxNumStart=i : maxPeakEnded=0
+                if maxPeakEnded=0 and y>=maxY then maxNumEnd=i else maxPeakEnded=1
+            end if
+        end if
+    next i
+    'Here the min or max start and end numbers indicate where the peak started and ended; we consider
+    'the actual peak to be in the middle.
+    maxNum=int((maxNumEnd+maxNumStart)/2)   'ver115-4b
 end sub
 
 sub gGetGridCorner corner$,byref xPix, byref yPix    'Get pixel coord of specified corner
