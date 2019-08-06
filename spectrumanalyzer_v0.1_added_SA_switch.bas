@@ -11793,12 +11793,13 @@ sub mDeleteMarker markID$
             hasMarkPeakNeg=0
         case "P1", "P2", "P3", "P4", "P5"   'verOK2FKU'
             hasMarkPeakRight=0
+            hasMarkNextMax=0
         case "1", "2","3","4","5", "6", "Halt"  'ver114-4c
             'valid markers but nothing special to do
         case else
             exit sub    'Not valid marker ID
     end select
-    if gValidMarkerCount>0 then hasAnyMark=1 else hasAnyMark=0
+    if gValidMarkerCount()>0 then hasAnyMark=1 else hasAnyMark=0
     if markID$=selMarkerID$ then
         call mMarkSelect ""  'ver114-5L
     end if
