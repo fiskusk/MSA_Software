@@ -11800,9 +11800,9 @@ sub mDeleteMarker markID$
             exit sub    'Not valid marker ID
     end select
     if gValidMarkerCount()>0 then hasAnyMark=1 else hasAnyMark=0
-    if markID$=selMarkerID$ then
-        call mMarkSelect ""  'ver114-5L
-    end if
+'    'if markID$=selMarkerID$ then
+    ''    call mMarkSelect ""  'ver114-5L
+    'end if
 end sub
 
 ' notes by OK2FKU:
@@ -12184,9 +12184,10 @@ end sub
 sub mFindNextMaxMarker btn$
     if selMarkerID$="" then selMarkerID$="P1" : markNextMaxID$=selMarkerID$
     if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
+        call mDeleteMarker markNextMaxID$
         markNextMaxID$=selMarkerID$
-        hasMarkNextMax=1
         call mAddMarker markNextMaxID$, 1, "2"
+        hasMarkNextMax=1
     else
         message$="Invalid marker to detect peak. Select P1-P5 only." : call PrintMessage
     end if
