@@ -12187,8 +12187,7 @@ sub mFindNextMaxMarker btn$
         hasMarkNextMax=1
         call mAddMarker markNextMaxID$, 1, "2"
     else
-        message$="Invalid marker to detect peak. Select P1-P5 only."
-        call PrintMessage
+        message$="Invalid marker to detect peak. Select P1-P5 only." : call PrintMessage
     end if
 end sub
 
@@ -12209,8 +12208,7 @@ sub mFindNextRightMarker btn$
             findNextRightBtnPressed=1 ' button pressed
         end if
     else
-        message$="Invalid marker to detect peak. Select P1-P5 only."
-        call PrintMessage
+        message$="Invalid marker to detect peak. Select P1-P5 only." : call PrintMessage
     end if
 end sub
 
@@ -27310,19 +27308,17 @@ sub gFindNextRightPeak traceNum, p1, p2, byref nextRightPeakNum, byref nextRight
     'maxY will be the peak value
     call gGetMinMaxPointNum pMin, pMax    'ver114-6d
     if p2>pMax then p2=pMax
-    maxPeakEnded=1
-    fallSection=1
-    riseSection=0
-    fallSectionEnded=0
-    riseSectionEnded=0
     for i=p1 to p2
         y=gGraphVal(i,traceNum)
         if i=p1 then
-            maxNumStart=p1
-            maxNumEnd=p1
             prevY=y
             sizeOfFall=0
             sizeOfRise=0
+            maxPeakEnded=1
+            fallSection=1
+            riseSection=0
+            fallSectionEnded=0
+            riseSectionEnded=0
         ' Start with value at first point, that indicates maximum (main peak)
         ' first we need to track fall trace stage, and when rise for minumum +1dB,
         ' than we can find next maximum
@@ -27334,7 +27330,7 @@ sub gFindNextRightPeak traceNum, p1, p2, byref nextRightPeakNum, byref nextRight
                     prevY=y
                 else
                     if y>prevY then sizeOfRise = sizeOfRise + y - prevY
-                    if sizeOfRise>1 then
+                    if sizeOfRise>2 then
                         fallSection=0
                         fallSectionEnded=1
                         riseSection=1
@@ -27343,16 +27339,19 @@ sub gFindNextRightPeak traceNum, p1, p2, byref nextRightPeakNum, byref nextRight
                 end if
             else
                 if riseSectionEnded=0 then
-                    if riseSection=1 and y>=prevY then
+                    if riseSection=1 and y>prevY then
                         riseSection=1
                         prevY=y
+                        sizeOfFall=0
                     else
-                        if y<prevY then sizeOfFall = sizeOfFall + y - prevY
+                        if y<prevY and sizeOfFall=0 then
+                            nextRightPeakY=prevY : nextRightPeakNum=i-1 : sizeOfFall=sizeOfFall + y - prevY
+                        else
+                            sizeOfFall=sizeOfFall + y - prevY
+                        end if
                         if sizeOfFall<-1 then
                             riseSection=0
                             riseSectionEnded=1
-                            nextRightPeakY=prevY
-                            nextRightPeakNum=i-1
                         end if
                     end if
                     'See if peak is found. Once found, so long as we remain at that level, continue
@@ -27375,9 +27374,6 @@ sub gFindNextPeak traceNum, p1, p2, byref nextMaxNum, byref nextMaxY    'find po
     'maxY will be the peak value
     call gGetMinMaxPointNum pMin, pMax    'ver114-6d
     if p2>pMax then p2=pMax
-    maxPeakEnded=1
-    fallSection=1
-    fallSectionEnded=0
     for i=p1 to p2
         y=gGraphVal(i,traceNum)
         if i=p1 then
@@ -27385,6 +27381,9 @@ sub gFindNextPeak traceNum, p1, p2, byref nextMaxNum, byref nextMaxY    'find po
             maxNumEnd=p1
             prevY=y
             sizeOfRise=0
+            maxPeakEnded=1
+            fallSection=1
+            fallSectionEnded=0
         ' Start with value at first point, that indicates maximum (main peak)
         ' first we need to track fall trace stage
         ' than we can find next maximum
