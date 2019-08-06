@@ -491,12 +491,12 @@
     global selMarkerID$  ' ID of marker selected by user
     global markNextMaxID$   ' ID of marker for next maximum peak verOK2FKU
     global markNextRightID$ ' ID of marker for next closest right peak verOK2FKU
-    global firstPeakP1Search    ' set/clean for state if next Peak P1 is first or other peak verOK2FKU
-    firstPeakP1Search=1  ' default set for indicate that first searching must do verOK2FKU
+    global firstFindNextRightMarker    ' set/clean for state if next Peak P1 is first or other peak verOK2FKU
+    firstFindNextRightMarker=1  ' default set for indicate that first searching must do verOK2FKU
     global peakP1FindNext ' indicate if we push Next button for next Peak verOK2FKU
     peakP1FindNext=0    ' def not pressed' verOK2FKU
     global oldPeakP1Num 'backup previous number of x peak verOK2FKU
-    global nextPeakP1Num    ' actual next peak number value of x verOK2FKU
+    global nextRightPeakNum    ' actual next peak number value of x verOK2FKU
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
     global doPeaksBounded   '=1 to limit peak search between L and R markers; otherwise 0
@@ -11676,18 +11676,18 @@ sub mUpdateMarkerLocations   'Find point numbers for peak markers and for L and 
     end if
     ' find Next Right peak Added by OK2FKU verOK2FKU
     if hasMarkPeakRight  then ' if pressed Next Right Peak
-        if firstPeakP1Search then   ' if first finding in progress
-            firstPeakP1Search=0 : pStart=maxNum : pEnd=gPointCount()    ' set borders from main peak to end'
+        if firstFindNextRightMarker then   ' if first finding in progress
+            firstFindNextRightMarker=0 : pStart=maxNum : pEnd=gPointCount()    ' set borders from main peak to end'
         else
             if peakP1FindNext then  ' if second and other pressed of Next button
-                pStart=nextPeakP1Num : pEnd=gPointCount() : peakP1FindNext=0
+                pStart=nextRightPeakNum : pEnd=gPointCount() : peakP1FindNext=0
             else
                 pStart=oldPeakP1Num ' if doesnt push next butten, recall old border
             end if
         end if
         oldPeakP1Num = pStart ' backup current starting border
-        call gFindNextRightPeak primaryAxisNum,pStart, pEnd, nextPeakP1Num, nextPeakP1Y
-        call gUpdateMarkerPointNum mMarkerNum(markNextRightID$),nextPeakP1Num
+        call gFindNextRightPeak primaryAxisNum,pStart, pEnd, nextRightPeakNum, nextRightPeakY
+        call gUpdateMarkerPointNum mMarkerNum(markNextRightID$),nextRightPeakNum
     end if
     if hasMarkNextMax  then ' if pressed Next Max Peak
         pStart=maxNum : pEnd=gPointCount()
@@ -11869,7 +11869,7 @@ end sub
 wait
 
 sub mClearMarkers
-    hasMarkL=0 : hasMarkR=0 : hasMarkPeakPos=0 : hasMarkPeakNeg=0 : hasMarkPeakRight=0 : hasMarkNextMax=0 : hasAnyMark=0 : firstPeakP1Search=1  ' firstPeakP1Search added verOK2FKU
+    hasMarkL=0 : hasMarkR=0 : hasMarkPeakPos=0 : hasMarkPeakNeg=0 : hasMarkPeakRight=0 : hasMarkNextMax=0 : hasAnyMark=0 : firstFindNextRightMarker=1  ' firstFindNextRightMarker added verOK2FKU
     call gClearMarkers
     call gDrawMarkerInfo    'to clear info area ver114-7n
     call mMarkSelect ""  'ver114-5L
@@ -12185,11 +12185,7 @@ sub mFindNextMaxMarker btn$
     if selMarkerID$="" then selMarkerID$="P1" : markNextMaxID$=selMarkerID$
     if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
         markNextMaxID$=selMarkerID$
-        if firstPeakP1Search then
-            call mAddMarker markNextMaxID$, 1, "2"
-        else
-            peakP1FindNext=1 ' button pressed
-        end if
+        call mAddMarker markNextMaxID$, 1, "2"
     else
         message$="Invalid marker to detect peak. Select P1-P5 only."
         call PrintMessage
@@ -12207,7 +12203,7 @@ sub mFindNextRightMarker btn$
     if selMarkerID$="" then selMarkerID$="P1" : markNextRightID$=selMarkerID$
     if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
         markNextRightID$=selMarkerID$
-        if firstPeakP1Search then
+        if firstFindNextRightMarker then
             call mAddMarker markNextRightID$, 1, "2"
         else
             peakP1FindNext=1 ' button pressed
@@ -27308,7 +27304,7 @@ sub gFindPeaks traceNum, p1, p2, byRef minNum, byref maxNum, byref minY, byref m
 end sub
 
 ' Added by OK2FKU to find next peak behind maximum peak
-sub gFindNextRightPeak traceNum, p1, p2, byref maxNum, byref maxY    'find next possible peak
+sub gFindNextRightPeak traceNum, p1, p2, byref nextRightPeakNum, byref nextRightPeakY    'find next possible peak
     'Search includes points from p1 to p2, inclusive. traceNum(1 or 2) indicates which trace to examine.
     'maxNum will be set to the point number (1...gDynamicSteps+1) where the peaks occur;
     'maxY will be the peak value
@@ -27355,8 +27351,8 @@ sub gFindNextRightPeak traceNum, p1, p2, byref maxNum, byref maxY    'find next 
                         if sizeOfFall<-1 then
                             riseSection=0
                             riseSectionEnded=1
-                            maxY=prevY
-                            maxNum=i-1
+                            nextRightPeakY=prevY
+                            nextRightPeakNum=i-1
                         end if
                     end if
                     'See if peak is found. Once found, so long as we remain at that level, continue
@@ -27373,7 +27369,7 @@ sub gFindNextRightPeak traceNum, p1, p2, byref maxNum, byref maxY    'find next 
 end sub
 
 ' Added by OK2FKU to find next peak behind maximum peak
-sub gFindNextPeak traceNum, p1, p2, byref maxNum, byref maxY    'find positive and negative peak
+sub gFindNextPeak traceNum, p1, p2, byref nextMaxNum, byref nextMaxY    'find positive and negative peak
     'Search includes points from p1 to p2, inclusive. traceNum(1 or 2) indicates which trace to examine.
     'maxNum will be set to the point number (1...gDynamicSteps+1) where the peaks occur;
     'maxY will be the peak value
@@ -27388,30 +27384,36 @@ sub gFindNextPeak traceNum, p1, p2, byref maxNum, byref maxY    'find positive a
             maxNumStart=p1
             maxNumEnd=p1
             prevY=y
+            sizeOfRise=0
         ' Start with value at first point, that indicates maximum (main peak)
         ' first we need to track fall trace stage
         ' than we can find next maximum
         else
             if fallSectionEnded=0 then
-                if fallSection=1 and y<prevY then
+                if fallSection=1 and y<=prevY then
+                    sizeOfRise=0
                     fallSection=1
-                    prevY=y ' falling section
+                    prevY=y
                 else
-                    fallSection=0
-                    fallSectionEnded=1
-                    maxY=y
+                    if y>prevY then sizeOfRise = sizeOfRise + y - prevY
+                    if sizeOfRise>1 then
+                        fallSection=0
+                        fallSectionEnded=1
+                        riseSection=1
+                        nextMaxY=y
+                    end if
                 end if
             else
                 'See if peak is found. Once found, so long as we remain at that level, continue
                 'to record maxPeakEnded
-                if y>maxY then maxY=y : maxNumStart=i : maxPeakEnded=0
-                if maxPeakEnded=0 and y>=maxY then maxNumEnd=i else maxPeakEnded=1
+                if y>nextMaxY then nextMaxY=y : maxNumStart=i : maxPeakEnded=0
+                if maxPeakEnded=0 and y>=nextMaxY then maxNumEnd=i else maxPeakEnded=1
             end if
         end if
     next i
     'Here the min or max start and end numbers indicate where the peak started and ended; we consider
     'the actual peak to be in the middle.
-    maxNum=int((maxNumEnd+maxNumStart)/2)   'ver115-4b
+    nextMaxNum=int((maxNumEnd+maxNumStart)/2)   'ver115-4b
 end sub
 
 sub gGetGridCorner corner$,byref xPix, byref yPix    'Get pixel coord of specified corner
