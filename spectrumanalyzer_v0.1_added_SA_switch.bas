@@ -11792,15 +11792,15 @@ sub mDeleteMarker markID$
         case "P-"
             hasMarkPeakNeg=0
         case "P1", "P2", "P3", "P4", "P5"   'verOK2FKU'
-            hasMarkPeakRight=0
-            hasMarkNextMax=0
+            if markID$=markNextMaxID$ then markNextMaxID$="" : hasMarkNextMax=0
+            if markID$=markNextRightID$ then markNextRightID$="" : hasMarkPeakRight=0
         case "1", "2","3","4","5", "6", "Halt"  'ver114-4c
             'valid markers but nothing special to do
         case else
             exit sub    'Not valid marker ID
     end select
     if gValidMarkerCount()>0 then hasAnyMark=1 else hasAnyMark=0
-'    'if markID$=selMarkerID$ then
+'   if markID$=selMarkerID$ then
     ''    call mMarkSelect ""  'ver114-5L
     'end if
 end sub
@@ -11870,7 +11870,9 @@ end sub
 wait
 
 sub mClearMarkers
-    hasMarkL=0 : hasMarkR=0 : hasMarkPeakPos=0 : hasMarkPeakNeg=0 : hasMarkPeakRight=0 : hasMarkNextMax=0 : hasAnyMark=0 : firstFindNextRightMarker=1  ' firstFindNextRightMarker added verOK2FKU
+    hasMarkL=0 : hasMarkR=0 : hasMarkPeakPos=0 : hasMarkPeakNeg=0 : hasAnyMark=0
+    hasMarkPeakRight=0 : hasMarkNextMax=0 : firstFindNextRightMarker=1  ' firstFindNextRightMarker added verOK2FKU
+    markNextMaxID$="" : markNextRightID$=""
     call gClearMarkers
     call gDrawMarkerInfo    'to clear info area ver114-7n
     call mMarkSelect ""  'ver114-5L
@@ -12182,12 +12184,17 @@ end sub
 
 ' verOK2FKU added this. Find Next maximum peak
 sub mFindNextMaxMarker btn$
-    if selMarkerID$="" then selMarkerID$="P1" : markNextMaxID$=selMarkerID$
+    message$="" : call PrintMessage
     if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
-        call mDeleteMarker markNextMaxID$
-        markNextMaxID$=selMarkerID$
-        call mAddMarker markNextMaxID$, 1, "2"
-        hasMarkNextMax=1
+        if selMarkerID$=markNextRightID$ then
+            message$="Selected marker is assign to next peak from right. Select another." : call PrintMessage
+        else
+            if hasMarkNextMax=1 then call mDeleteMarker markNextMaxID$
+            markNextMaxID$=selMarkerID$
+            call mAddMarker markNextMaxID$, 1, "2"
+            hasMarkNextMax=1
+            call mUpdateMarkerEditButtons
+        end if
     else
         message$="Invalid marker to detect peak. Select P1-P5 only." : call PrintMessage
     end if
@@ -12196,18 +12203,24 @@ end sub
 ' verOK2FKU added this. Find Minimum Peak
 sub mFindMinMarker btn$
     call mAddMarker "P-", 1, "2"
+    call mUpdateMarkerEditButtons
 end sub
 
 ' verOK2FKU added this. FInd next peak from right
 sub mFindNextRightMarker btn$
-    if selMarkerID$="" then selMarkerID$="P1" : markNextRightID$=selMarkerID$
+    message$="" : call PrintMessage
     if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
-        markNextRightID$=selMarkerID$
-        hasMarkPeakRight=1
-        if firstFindNextRightMarker then
-            call mAddMarker markNextRightID$, 1, "2"
+        if selMarkerID$=markNextMaxID$ then
+            message$="Selected marker is assign to next maximum peak. Select another." : call PrintMessage
         else
-            findNextRightBtnPressed=1 ' button pressed
+            markNextRightID$=selMarkerID$
+            hasMarkPeakRight=1
+            if firstFindNextRightMarker then
+                call mAddMarker markNextRightID$, 1, "2"
+                call mUpdateMarkerEditButtons
+            else
+                findNextRightBtnPressed=1 ' button pressed
+            end if
         end if
     else
         message$="Invalid marker to detect peak. Select P1-P5 only." : call PrintMessage
@@ -27606,7 +27619,7 @@ sub gPrintMessage msg$   'Print message above top of marker info area; Limited t
     call gGetInfoColors textColor$, backColor$
     cmd$="font Tahoma 8 bold;color ";textColor$;";backcolor ";backColor$    'ver116-4i
     #gGraphHandle$, cmd$    'ver116-4i
-    call gPrintText space$(140), x, y   'note spaces are smaller than letters ver116-4j
+    call gPrintText space$(160), x, y   'note spaces are smaller than letters ver116-4j
     if msg$<>"" then call gPrintText "MESSAGE: ";Left$(msg$,75), x, y 'Don't print if blank
 end sub
 
