@@ -13916,7 +13916,7 @@ end function
 
     filter$="Bitmap files" + chr$(0) + "*.bmp" + chr$(0) + "All files" + chr$(0) + "*.*" 'ver115-6b
     defaultExt$="bmp"
-    initialDir$=imageSaveLastFolder$+"\"
+    initialDir$=imageSaveLastFolder$+"\" '"
     initialFile$=""
     graphFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Image To File")
     if graphFileName$<>"" then   'blank means cancelled
@@ -13998,6 +13998,18 @@ sub SetFilterAnalysis  'Display dialog for filter analysis and set parameters
     if hasMarkL then markIDs$(1)="L" else markIDs$(1)=""
     if hasMarkR then markIDs$(2)="R" else markIDs$(2)=""
     markIDs$(3)="P+"
+    number=3 ' added by OK2FKU to ability choose P1-P5
+    for i=1 to gNumMarkers
+        markPointNum=gMarkerPoints(i,0)
+        if markPointNum>0 then
+            markID$=gMarkers$(i,0)
+            if markID$="P1" then number=number+1 : markIDs$(number)="P1"
+            if markID$="P2" then number=number+1 : markIDs$(number)="P2"
+            if markID$="P3" then number=number+1 : markIDs$(number)="P3"
+            if markID$="P4" then number=number+1 : markIDs$(number)="P4"
+            if markID$="P5" then number=number+1 : markIDs$(number)="P5"
+        end if
+    next i
     Stylebits #filt.peakMark, _CBS_DROPDOWNLIST, 0, 0, 0   'ver115-1a
     combobox #filt.peakMark, markIDs$(), [filtNOP],30,textTop+15,60, 90     'combo box to select reference marker
 
