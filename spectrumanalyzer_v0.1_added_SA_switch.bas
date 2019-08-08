@@ -7783,7 +7783,7 @@ end sub
 [CreateGraphWindow]'changed ver113-4b
   'We do this only once, at startup. After that, we work with the existing window, adjust its menus and redraw.
     BackgroundColor$="buttonface" : ForegroundColor$="black"
-    WindowWidth=800 : WindowHeight=600
+    WindowWidth=DisplayWidth-100 : WindowHeight=DisplayHeight-50
     UpperLeftX = 1 : UpperLeftY = 1
     TextboxColor$="white" : ComboboxColor$="white"
 
