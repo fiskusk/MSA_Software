@@ -6,6 +6,8 @@
     global msaVersion$, msaRevision$  'Version and revision numbers of this release
     msaVersion$="OK2FKU"   'OK2FKU..
     msaRevision$=" 0"  'ver118 rev 0
+    global maximize
+    maximize=1
 
 '------Changes and additions from version 117 Rev B to version 118 Rev 0_
 '1. removed multiscan option, and all code related to it. Code marked with '117cM
@@ -1956,6 +1958,7 @@
 'OneStep it continues only for a single point. If specialOneSweep=1 or HaltAtEnd=1, it
 'automatically stops at the end of a single sweep.
 [StartSweep]'enters from: above, or [IncrementOneStep]or[FocusKeyBox] [Continue]
+    if maximize then goto [Halted]
     if specialOneSweep then haltAtEnd=1 else haltAtEnd=0   'ver115-8d moved this here
     if haltedAfterPartialRestart=0 and scanResumed=1 then   'ver116-1b
         'For a resumed scan, a halt occurred after the previous step and that step was fully processed.
@@ -2075,7 +2078,18 @@
         specialOneSweep=0
         return 'Sweep process was called by gosub; we return to caller.
     end if
-    wait 'wait for operator action
+    if maximize then
+        maximize=0
+        hWnd = hWnd(#handle)
+        stateflag = 3 'SW_MAXIMIZE
+        CallDLL #user32, "ShowWindow", _
+             hWnd As long, _
+             stateflag As long, _
+             result As boolean
+        goto [StartSweep]
+    else
+        wait 'wait for operator action
+    end if
 
 '--end of loop. All below must be accessed by goto, gosub, or call--------------------------------
 
@@ -7783,8 +7797,10 @@ end sub
 [CreateGraphWindow]'changed ver113-4b
   'We do this only once, at startup. After that, we work with the existing window, adjust its menus and redraw.
     BackgroundColor$="buttonface" : ForegroundColor$="black"
-    WindowWidth=DisplayWidth-100 : WindowHeight=DisplayHeight-50
-    UpperLeftX = 1 : UpperLeftY = 1
+    WindowWidth=800 : WindowHeight=600
+    UpperLeftX = Int((DisplayWidth-WindowWidth)/2)
+    UpperLeftY = Int((DisplayHeight-WindowHeight)/2)
+
     TextboxColor$="white" : ComboboxColor$="white"
 
     menu #handle, "File", "Save Image", [SaveImage], "Load Prefs", [menuLoadPreferenceFile], _
