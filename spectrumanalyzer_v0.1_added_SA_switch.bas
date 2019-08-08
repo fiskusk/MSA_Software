@@ -480,13 +480,14 @@
     global hasMarkPeakPos, hasMarkPeakNeg, hasMarkL, hasMarkR, hasAnyMark       'Marker flags
     global hasMarkPeakRightLeft, hasMarkNextMax     ' Marker flags, Right=1 Left=0 verOK2FKU
     global numMarkers   'add by OK2FKU to easier initialize default markers. verOK2FKU
-    numMarkers=14   ' Count of markers verOK2FKU
+    numMarkers=17   ' Count of markers verOK2FKU
     dim markerIDs$(numMarkers)    'IDs of markers, used to fill combo box. marker numbers run from 1 so ID of marker N is markerIDs$(N-1)
     'fill markerIDs$ array with defaults. Moved here ver117c32
     markerIDs$(0)="1" : markerIDs$(1)="2" : markerIDs$(2)="3" : markerIDs$(3)="4"  'SEWgraph
-    markerIDs$(4)="5" : markerIDs$(5)="6" : markerIDs$(6)="L" : markerIDs$(7)="R"  'SEWgraph
-    markerIDs$(8)="P+" : markerIDs$(9)="P-" : markerIDs$(10)="P1" : markerIDs$(11)="P2" ' add Markers for peaks P1-P5 verOK2FKU
-    markerIDs$(12)="P3" : markerIDs$(13)="P4" : markerIDs$(14)="P5"
+    markerIDs$(4)="5" : markerIDs$(5)="6" : markerIDs$(6)="7" : markerIDs$(7)="8"   'SEWgraph
+    markerIDs$(8)="9"  : markerIDs$(9)="L" : markerIDs$(10)="R" : markerIDs$(11)="P+" 'added 7-9 markers verOK2FKU
+    markerIDs$(12)="P-" : markerIDs$(13)="P1" : markerIDs$(14)="P2" ' add Markers for peaks P1-P5 verOK2FKU
+    markerIDs$(15)="P3" : markerIDs$(16)="P4" : markerIDs$(17)="P5"
     dim selMarkIDs$(numMarkers+1) ' We must initialize array for more than 11 items. Array must have numMarkers+1 items (plus item "none") 'verOK2FKU
     global selMarkerID$  ' ID of marker selected by user
     global markNextMaxID$   ' ID of marker for next maximum peak verOK2FKU
@@ -11767,16 +11768,22 @@ function mMarkerNum(markID$) 'Return ordinal marker number for this marker ID$
             mMarkerNum=10
         case "6"
             mMarkerNum=11
-        case "P1"
+        case "7"    'verOK2FKU
             mMarkerNum=12
-        case "P2"
+        case "8"    'verOK2FKU
             mMarkerNum=13
-        case "P3"
+        case "9"    'verOK2FKU
             mMarkerNum=14
-        case "P4"
+        case "P1"   'verOK2FKU
             mMarkerNum=15
-        case "P5"
+        case "P2"   'verOK2FKU
             mMarkerNum=16
+        case "P3"   'verOK2FKU
+            mMarkerNum=17
+        case "P4"   'verOK2FKU
+            mMarkerNum=18
+        case "P5"   'verOK2FKU
+            mMarkerNum=19
         case else
             mMarkerNum=-1
     end select
@@ -11798,7 +11805,7 @@ sub mDeleteMarker markID$
         case "P1", "P2", "P3", "P4", "P5"   'verOK2FKU'
             if markID$=markNextMaxID$ then markNextMaxID$="" : hasMarkNextMax=0
             if markID$=markNextID$ then markNextID$="" : firstFindNextMarker=1
-        case "1", "2","3","4","5", "6", "Halt"  'ver114-4c
+        case "1", "2","3","4","5", "6", "7", "8", "9", "Halt"  'ver114-4c 'verOK2FKU add 7,8,9
             'valid markers but nothing special to do
         case else
             exit sub    'Not valid marker ID
@@ -11838,7 +11845,7 @@ sub mAddMarker markID$, pointNum, trace$     'Add specified marker at specified 
         case "Halt"   'ver114-4c
             markTrace$="Xaxis"  'ver114-6d
             markStyle$="HaltPointer"    'ver114-5m
-        case "1", "2","3","4","5", "6"
+        case "1", "2","3","4","5", "6", "7", "8", "9"   'verok2FKU added 7-9
             'valid markers but nothing special to do
         case else
             exit sub    'not valid marker
@@ -29089,7 +29096,7 @@ sub gDrawMarkerInfo 'Draw marker info in specified area
     markerY=gMarkerInfoTop
     a=gWindowHeight: b=gMarkerInfoTop
     markPerCol=int((gWindowHeight-5-gMarkerInfoTop-headHeight)/13)
-    maxBoxWidth=2*headWidth+14  'widest possible box area 'ver115-1b
+    maxBoxWidth=3*headWidth+24  'widest possible box area 'ver115-1b ' edit OK2FKU to 3 and + 24
     if nMarkers>markPerCol then _
             boxWidth=maxBoxWidth else boxWidth=headWidth+4      'ver115-1b
     boxHt= 4+ headHeight + (markPerCol)*13
@@ -29102,6 +29109,7 @@ sub gDrawMarkerInfo 'Draw marker info in specified area
 
     call gPrivateDrawMarkerInfo 1, markPerCol, markerX, markerY, firstEnd
     if nMarkers>markPerCol then call gPrivateDrawMarkerInfo firstEnd+1, markPerCol, markerX+headWidth+10, markerY, firstEnd
+    if nMarkers>2*markPerCol then call gPrivateDrawMarkerInfo firstEnd+1, markPerCol, markerX+20+2*headWidth, markerY, firstEnd 'verOK2FKU
     gMarkerInfoRight=markerX+boxWidth    'Rightmost pixel drawn, so area to right is still available
 end sub
 
