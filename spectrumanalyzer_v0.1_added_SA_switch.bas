@@ -12182,12 +12182,14 @@ end sub
 sub mFindMaxMarker btn$
     call mAddMarker "P+", 1, "2"
     call mUpdateMarkerEditButtons
+    if haltsweep = 0 then call RefreshGraph 0
 end sub
 
 ' verOK2FKU added this. Find Minimum Peak
 sub mFindMinMarker btn$
     call mAddMarker "P-", 1, "2"
     call mUpdateMarkerEditButtons
+    if haltsweep = 0 then call RefreshGraph 0
 end sub
 
 ' verOK2FKU added this. Find Next maximum peak
@@ -12202,6 +12204,7 @@ sub mFindNextMaxMarker btn$
             call mAddMarker markNextMaxID$, 1, "2"
             hasMarkNextMax=1
             call mUpdateMarkerEditButtons
+            if haltsweep = 0 then call RefreshGraph 0
         end if
     else
         message$="Invalid marker to detect peak. Select P1-P5 only." : call PrintMessage
@@ -12232,6 +12235,7 @@ sub mFindNexRightLeftMarker
             else
                 findNextBtnPressed=1 ' button pressed
             end if
+            if haltsweep = 0 then call RefreshGraph 0
         end if
     else
         message$="Invalid marker to detect peak. Select P1-P5 only." : call PrintMessage
