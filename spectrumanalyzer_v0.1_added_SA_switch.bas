@@ -6,8 +6,7 @@
     global msaVersion$, msaRevision$  'Version and revision numbers of this release
     msaVersion$="OK2FKU"   'OK2FKU..
     msaRevision$=" 0"  'ver118 rev 0
-    global maximize
-    maximize=1
+
 
 '------Changes and additions from version 117 Rev B to version 118 Rev 0_
 '1. removed multiscan option, and all code related to it. Code marked with '117cM
@@ -474,6 +473,8 @@
  '------SEWgraph globals for graph params
     global firstScan   'Set to 1 for first scan after background grid for graph is drawn
 'ver114-4e deleted global graphAppearance$
+    global maximize, maximize2 ' added verOK2FKU for maximize on startup'
+    maximize=1 : maximize2=0    ' auxiliary variables for maximizing on startup
     global currGraphBoxHeight, currGraphBoxWidth    'Actual current height, width, adjusted when resizing 'ver115-1c
     global clientHeightOffset, clientWidthOffset    'Difference between window size and client area size; set from test window 'ver115-1c
     global smithLastWindowHeight, smithLastWindowWidth  'Determines size of smith chart; initialized and later adjusted when resizing
@@ -2078,8 +2079,9 @@
         specialOneSweep=0
         return 'Sweep process was called by gosub; we return to caller.
     end if
-    if maximize then
+    if maximize then ' added verOK2FKU for maximize on startup'
         maximize=0
+        maximize2=1
         hWnd = hWnd(#handle)
         stateflag = 3 'SW_MAXIMIZE
         CallDLL #user32, "ShowWindow", _
@@ -2211,6 +2213,8 @@ return 'to: ' 3a. Initialize Graphing Variables
     'because it is not synchronous with the scan command. Or it may simply have something to do with
     'the fact that no button has yet been pushed on the graph window, which somehow affects the
     'LB resizing process. The crash still sometimes occurs, so it is best to halt before resizing.
+
+    if maximize2 then maximize2=0 : haltsweep=0: goto [RestartButton] ' added for maximize on startup verOK2FKU
     if haltsweep=1 then
         #graphBox$, "cls"
         notice "Warning: Halt before resizing to avoid LB bug."
