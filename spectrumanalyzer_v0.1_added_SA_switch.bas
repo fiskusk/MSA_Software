@@ -7801,9 +7801,9 @@ end sub
 [CreateGraphWindow]'changed ver113-4b
   'We do this only once, at startup. After that, we work with the existing window, adjust its menus and redraw.
     BackgroundColor$="buttonface" : ForegroundColor$="black"
-    WindowWidth=800 : WindowHeight=600
-    UpperLeftX = Int((DisplayWidth-WindowWidth)/2)
-    UpperLeftY = Int((DisplayHeight-WindowHeight)/2)
+    WindowWidth=DisplayWidth-200 : WindowHeight=DisplayHeight-50
+    UpperLeftX = 1
+    UpperLeftY = 1
 
     TextboxColor$="white" : ComboboxColor$="white"
 
@@ -7884,42 +7884,60 @@ end sub
         'Marker Selection buttons
     markTop=currGraphBoxHeight+12     'This isn't the top of anything in particular, just a reference point ver115-1b
     markSelLeft=5
-    statictext #handle.selMarkLab "Marker", markSelLeft+3, markTop-11, 40, 14
+    statictext #handle.selMarkLab "Marker", markSelLeft+3, markTop-9, 40, 14
     selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i
-    combobox #handle.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+3, 50, 180
+    combobox #handle.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+5, 50, 180
 
         'Marker Editing Items ver114-4a changed marker edit buttons so none need to be hidden
     markEditLeft=markSelLeft+55
-    button #handle.markDelete, "Delete",mBtnMarkDelete, LL, markEditLeft, -6, 65,18 'ver117c36 was -4 'ver117c44 was -8
-    button #handle.markClear, "Clear Marks",mBtnMarkClear, LL, markEditLeft, -24, 65,18 'ver117c36 was -22 'ver117c44 was -26
-    button #handle.markDec, "-",[btnDecPoint], LL, markEditLeft+71, -7, 14,15   'ver116-4j
-    button #handle.markInc, "+",[btnIncPoint], LL, markEditLeft+129, -7, 14,15   'ver116-4j
-    statictext #handle.FreqLab, "MHz", markEditLeft+100, markTop-6, 28,13
+    button #handle.markDelete, "Delete",mBtnMarkDelete, LL, markEditLeft, -4, 65,18 'ver117c36 was -4 'ver117c44 was -8
+    button #handle.markClear, "Clear Marks",mBtnMarkClear, LL, markEditLeft, -22, 65,18 'ver117c36 was -22 'ver117c44 was -26
+    button #handle.markDec, "-",[btnDecPoint], LL, markEditLeft+71, -4, 14,15   'ver116-4j
+    button #handle.markInc, "+",[btnIncPoint], LL, markEditLeft+129, -4, 14,15   'ver116-4j
+    statictext #handle.FreqLab, "MHz", markEditLeft+96, markTop-8, 28,13
     textbox #handle.markFreq, markEditLeft+70, markTop+7, 75,20
-    button #handle.markEnterFreq, "Enter",mEnterMarker, LL, markEditLeft+146, -26, 35,15 'ver117c36 was -25 'ver117c44 was -27
+    button #handle.markEnterFreq, "Enter",mEnterMarker, LL, markEditLeft+146, -22, 35,18 'ver117c36 was -25 'ver117c44 was -27
 
         'Misc Marker buttons
     markMiscLeft=markEditLeft+185
-    button #handle.ExpandLR, "Expand L-R", [menuExpandSweep],LL, markMiscLeft, -6,65,18 'ver117c36 was -4 'ver117c44 was -8
-    button #handle.mMarkToCenter, "Mark->Cent", mMarkToCenter,LL, markMiscLeft, -24,65,18 'ver117c36 was -22 'ver117c44 was -27
+    button #handle.ExpandLR, "Expand L-R", [menuExpandSweep],LL, markMiscLeft, -4,65,18 'ver117c36 was -4 'ver117c44 was -8
+    button #handle.mMarkToCenter, "Mark->Cent", mMarkToCenter,LL, markMiscLeft, -22,65,18 'ver117c36 was -22 'ver117c44 was -27
     'ver114-7b deleted buttons for IncDecRef
 
         'Marker Find Maximum/Minimum Button 'verOK2FKU added this
     markFindMaxMinLeft=markMiscLeft+70
-    button #handle.markFindMax, "Find Peak", mFindMaxMarker, LL, markFindMaxMinLeft, -6, 54, 18
-    button #handle.markFindMin, "Find Min", mFindMinMarker, LL, markFindMaxMinLeft, -24, 54, 18
+    button #handle.markFindMax, "Find Peak", mFindMaxMarker, LL, markFindMaxMinLeft, -4, 54, 18
+    button #handle.markFindMin, "Find Min", mFindMinMarker, LL, markFindMaxMinLeft, -22, 54, 18
 
         'Marker Find Next peak maximum Button 'verOK2FKU added this
     markFindNextPeakLeft=markFindMaxMinLeft+59
-    button #handle.markFindNextMax, "Next Peak", mFindNextMaxMarker, LL, markFindNextPeakLeft, -6, 56, 18
+    button #handle.markFindNextMax, "Next Peak", mFindNextMaxMarker, LL, markFindNextPeakLeft, -4, 56, 18
 
         'Marker Find Next right/left peak Button 'verOK2FKU added this
     markFindNextLRLeft=markFindNextPeakLeft+61
-    button #handle.markFindNextRight, "Next Pk Right", mFindNextRightMarker, LL, markFindNextLRLeft, -6, 75, 18
-    button #handle.markFindNextLeft, "Next Pk Left", mFindNextLeftMarker, LL, markFindNextLRLeft, -24, 75, 18
+    button #handle.markFindNextRight, "Next Pk Right", mFindNextRightMarker, LL, markFindNextLRLeft, -4, 75, 18
+    button #handle.markFindNextLeft, "Next Pk Left", mFindNextLeftMarker, LL, markFindNextLRLeft, -22, 75, 18
+
+    sweepFreqLeft=markFindNextLRLeft+80 : sweepFreqTop=17   'ver116-4k
+        'Center/Span frequencies and Start/Stop frequencies, with radio buttons to select one pair
+    groupbox #handle.ParamGroup, "", sweepFreqLeft-2, markTop-16, 310, 44
+    checkbox #handle.btnCentSpan, "", [setCentSpan], [setStartStop], sweepFreqLeft+2, markTop+4, 14, 12
+    statictext #handle.CentLab, "Cent", sweepFreqLeft+18, markTop-6, 27,15
+    statictext #handle.SpanLab, "Span", sweepFreqLeft+18, markTop+11, 27,15
+    statictext #handle.MHzLabA, "MHz", sweepFreqLeft+125, markTop-6, 25,15
+    statictext #handle.MHzLabB, "MHz", sweepFreqLeft+125, markTop+11, 25,15
+    textbox #handle.SweepCent, sweepFreqLeft+46, markTop-9, 75,20
+    textbox #handle.SweepSpan, sweepFreqLeft+46, markTop+8, 75,20
+    checkbox #handle.btnStartStop, "", [setStartStop], [setCentSpan], sweepFreqLeft+155, markTop+4, 14, 12
+    statictext #handle.StartLab, "Start", sweepFreqLeft+175, markTop-6, 25,15
+    statictext #handle.StopLab, "Stop", sweepFreqLeft+175, markTop+11, 25,15
+    statictext #handle.MHzLabC, "MHz", sweepFreqLeft+280, markTop-6, 25,15
+    statictext #handle.MHzLabD, "MHz", sweepFreqLeft+280, markTop+11, 25,15
+    textbox #handle.SweepStart, sweepFreqLeft+201, markTop-9, 75,20
+    textbox #handle.SweepStop, sweepFreqLeft+201, markTop+8, 75,20
 
         'Test Setup Button 'ver115-1g added this and deleted go/save config
-    configLeft=markFindNextLRLeft+80
+    configLeft=sweepFreqLeft+315
     stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
     button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -6, 50, 35 'ver117c36 was -5 'ver117c44 was -8
 
