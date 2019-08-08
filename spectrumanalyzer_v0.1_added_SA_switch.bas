@@ -7802,7 +7802,7 @@ end sub
   'We do this only once, at startup. After that, we work with the existing window, adjust its menus and redraw.
     BackgroundColor$="buttonface" : ForegroundColor$="black"
     WindowWidth=DisplayWidth-200 : WindowHeight=DisplayHeight-50
-    UpperLeftX = 1
+    UpperLeftX = 4
     UpperLeftY = 1
 
     TextboxColor$="white" : ComboboxColor$="white"
@@ -7918,7 +7918,7 @@ end sub
     button #handle.markFindNextRight, "Next Pk Right", mFindNextRightMarker, LL, markFindNextLRLeft, -4, 75, 18
     button #handle.markFindNextLeft, "Next Pk Left", mFindNextLeftMarker, LL, markFindNextLRLeft, -22, 75, 18
 
-    sweepFreqLeft=markFindNextLRLeft+80 : sweepFreqTop=17   'ver116-4k
+    sweepFreqLeft=markFindNextLRLeft+80   'verOK2FKU
         'Center/Span frequencies and Start/Stop frequencies, with radio buttons to select one pair
     groupbox #handle.ParamGroup, "", sweepFreqLeft-2, markTop-16, 310, 44
     checkbox #handle.btnCentSpan, "", [setCentSpan], [setStartStop], sweepFreqLeft+2, markTop+4, 14, 12
