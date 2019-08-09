@@ -1820,6 +1820,22 @@
 'ver117c36 change '12.[InitializeGraphModule]Create Graph, using Working Window data
 '12.Create Graph (Erase old one if displayed) 'ver117c36
 'ver117c29c delete    suppressPDMInversion=0  'ver115-1a
+    xForm$="#####.######"   'ver116-4k
+    print #handle.SweepCent, uFormatted$(centfreq, xForm$)
+    print #handle.SweepSpan, uFormatted$(sweepwidth, xForm$)
+    print #handle.SweepStart, uFormatted$(startfreq, xForm$)
+    print #handle.SweepStop, uFormatted$(endfreq, xForm$)
+
+    if userFreqPref=0 then 'This is based on last user setting  'ver115-1d
+        #handle.btnCentSpan, "set"   'Start in center/span mode
+        #handle.btnStartStop, "reset"
+        call mEnableCentSpan
+    else
+        #handle.btnStartStop, "set"   'Start in start/stop mode
+        #handle.btnCentSpan, "reset"
+        call mEnableStartStop
+    end if
+
     gosub [UpdateGraphParams] 'SEWgraph Update graph module for any changes made by the user
     firstScan=1     'Signal that the next scan is the first after Restart
 
@@ -7921,14 +7937,14 @@ end sub
     sweepFreqLeft=markFindNextLRLeft+80   'verOK2FKU
         'Center/Span frequencies and Start/Stop frequencies, with radio buttons to select one pair
     groupbox #handle.ParamGroup, "", sweepFreqLeft-2, markTop-16, 310, 44
-    checkbox #handle.btnCentSpan, "", [setCentSpan], [setStartStop], sweepFreqLeft+2, markTop+4, 14, 12
+    checkbox #handle.btnCentSpan, "", mSetCentSpan, mSetStartStop, sweepFreqLeft+2, markTop+4, 14, 12
     statictext #handle.CentLab, "Cent", sweepFreqLeft+18, markTop-6, 27,15
     statictext #handle.SpanLab, "Span", sweepFreqLeft+18, markTop+11, 27,15
     statictext #handle.MHzLabA, "MHz", sweepFreqLeft+125, markTop-6, 25,15
     statictext #handle.MHzLabB, "MHz", sweepFreqLeft+125, markTop+11, 25,15
     textbox #handle.SweepCent, sweepFreqLeft+46, markTop-9, 75,20
     textbox #handle.SweepSpan, sweepFreqLeft+46, markTop+8, 75,20
-    checkbox #handle.btnStartStop, "", [setStartStop], [setCentSpan], sweepFreqLeft+155, markTop+4, 14, 12
+    checkbox #handle.btnStartStop, "", mSetStartStop, mSetCentSpan, sweepFreqLeft+155, markTop+4, 14, 12
     statictext #handle.StartLab, "Start", sweepFreqLeft+175, markTop-6, 25,15
     statictext #handle.StopLab, "Stop", sweepFreqLeft+175, markTop+11, 25,15
     statictext #handle.MHzLabC, "MHz", sweepFreqLeft+280, markTop-6, 25,15
@@ -7967,6 +7983,16 @@ end sub
     #handle.g, "when leftButtonUp gMouseQueryEnd" 'ver116-4h
     #handle.g, "when characterInput [mAddMarkerFromKeyboard]" 'ver116-4j
     hGraphWindow=hwnd(#handle)  'get graph window handle
+
+    #handle.g, "when characterInput mSweepCentTextBox"
+
+    if userFreqPref=0 then 'This is based on last user setting  'ver115-1d
+        #handle.btnCentSpan, "set"   'Start in center/span mode
+        call mEnableCentSpan
+    else
+        #handle.btnStartStop, "set"   'Start in start/stop mode
+        call mEnableStartStop
+    end if
 
     calldll #user32, "GetMenu",_
         hGraphWindow as ulong,_ ' graph window handle
@@ -8131,6 +8157,59 @@ sub mMarkToCenter btn$ 'Recenter around marker frequency
     else
         call RequireRestart
     end if
+end sub
+
+sub mSweepCentTextBox hndl$, char$
+    key$=Inkey$
+    #handle.btnCentSpan, "value? resultCentSpan$"
+    #handle.btnStartStop, "value? resultStartStop$"
+    if key$= chr$(_VK_TAB) then
+        if resultCentSpan$="set" then
+            print #handle.SweepSpan, "!setfocus"
+            call uHighlightText "#handle.SweepSpan"
+        end if
+        if resultStartStop$="set" then
+            print #handle.SweepStop, "!setfocus"
+            call uHighlightText "#handle.SweepStop"
+        end if
+    end if
+end sub
+
+sub mSetCentSpan cbHandle$  'Select Center/Span mode; use Start/Stop to fill in Center/Span
+'embedded in DisplayAxisXPreference
+    #handle.btnStartStop, "reset"
+    #handle.btnCentSpan, "set"    'ver115-1d
+    #handle.SweepStart, "!contents? currStart$"
+    #handle.SweepStop, "!contents? currStop$"
+    currStart=val(uCompact$(currStart$)) : currStop=val(uCompact$(currStop$))
+    print #handle.SweepCent, using("#####.######",(currStart+currStop)/2)    'Enter center
+    print #handle.SweepSpan, using("#####.######",currStop-currStart)    'Enter span
+    call mEnableCentSpan
+end sub
+
+sub mEnableCentSpan
+    #handle.SweepCent, "!enable" : #handle.SweepSpan, "!enable"
+    #handle.SweepStart, "!disable" : #handle.SweepStop, "!disable"
+    #handle.SweepCent, "!setfocus" : call uHighlightText "#handle.SweepCent" 'ver115-1d
+end sub
+
+sub mSetStartStop cbHandle$    'Select Start/Stop mode; use Center/Span to fill in Start/Stop
+'embedded in DisplayAxisXPreference
+    #handle.btnCentSpan, "reset"
+    #handle.btnStartStop, "set"    'ver115-1d
+    #handle.SweepCent, "!contents? currCent$"
+    #handle.SweepSpan, "!contents? currSpan$"
+    currCent=val(uCompact$(currCent$)) : currSpan=val(uCompact$(currSpan$))
+    print #handle.SweepStart, using("#####.######",currCent-currSpan/2)    'Enter start
+    print #handle.SweepStop, using("#####.######",currCent+currSpan/2)    'Enter stop
+    call mEnableStartStop
+end sub
+
+
+sub mEnableStartStop
+    #handle.SweepCent, "!disable" : #handle.SweepSpan, "!disable"
+    #handle.SweepStart, "!enable" : #handle.SweepStop, "!enable"
+    #handle.SweepStart, "!setfocus" : call uHighlightText "#handle.SweepStart" 'ver115-1d
 end sub
 
 [menuExpandSweep]
@@ -11160,7 +11239,6 @@ function DisplayAxisXPreference()   'Display dialog to select axis preferences
         #axis.btnStartStop, "set"   'Start in start/stop mode
         gosub [enableStartStop]
     end if
-
     wait    'Wait for user to make choices
 
 'User gets here by double-click. If he double clicks again before we are open, we may end up
@@ -11583,6 +11661,13 @@ return
         DisplayAxisXPreference=0
     end if
 end function 'end of DisplayAxisXPreference
+
+[axisXHasFinished]
+    key$=Inkey$
+    if key$= chr$(_VK_RETURN) then
+        [axisXFinished]
+    end if
+    return
 
 sub SetCenterSpanFreq cent, span 'Use Center/Span to determine centfreq, sweepwidth, startfreq, endfreq
     'A centralized routine is used so all these related variables can be kept in sync.
