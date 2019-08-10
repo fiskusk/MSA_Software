@@ -501,6 +501,11 @@
     findNextBtnPressed=0    ' def not pressed' verOK2FKU
     global oldNextPeakNum 'backup previous number of x peak verOK2FKU
     global nextPeakNum    ' actual next peak number value of x verOK2FKU
+    global toggleShowMarkerButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowMarkerButton=1    'verOK2FKU
+    global toggleShowFrequencyButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowFrequencyButton=1 'verOK2FKU
+    global prevShowButton$  ' memory old pressed button 'verOK2FKU
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
     global doPeaksBounded   '=1 to limit peak search between L and R markers; otherwise 0
@@ -2207,10 +2212,10 @@ return 'to: ' 3a. Initialize Graphing Variables
     'Note: On resizing, all non-buttons seem to end up a few pixels higher than the original spec,
     'so the Y locations are adjusted accordingly via markTop
     'Note WindowHeight when window is created is entire height; on resizing, it is the client area only
-    markTop=currGraphBoxHeight+15 : markSelLeft=5 'ver115-1b   'ver115-1c
-    markEditLeft=markSelLeft+55
-    markMiscLeft=markEditLeft+185
-    configLeft=markMiscLeft+80
+    markTop=currGraphBoxHeight+15 : markSelLeft=configLeft+65 'ver115-1b   'ver115-1c 'verOK2FKU
+    markEditLeft=markSelLeft+53
+    markMiscLeft=markEditLeft+177
+    configLeft=sweepWaitLeft+48+37
 
     #handle, "refresh"
     #handle.Cover, "!show"      'Cover the crap that can appear from resizing
@@ -7900,9 +7905,22 @@ end sub
     currGraphBoxWidth=WindowWidth-clientWidthOffset 'ver115-1b  'ver115-1c
     graphicbox #handle.g, 0,0,currGraphBoxWidth,currGraphBoxHeight
 
+    'verOK2FKU Menu buttons for easy Control
+    markControlLeft=5
+    button #handle.showFrequecyControl, "Frequecy", mBtnShowFrequencyControl, LL, markControlLeft, -4, 65,18
+    button #handle.showAmplitudeControl, "Amplitude", mBtnShowAmplitudeControl, LL, markControlLeft, -22, 65,18
+    markControlSecondColLeft=markControlLeft+67
+    button #handle.showAmplitudeControl, "BW", mBtnShowBWControl, LL, markControlSecondColLeft, -4, 45,18
+    button #handle.showMarkerControl, "Marker", mBtnShowMarkerControl, LL, markControlSecondColLeft, -22, 45,18
+
+        'Test Setup Button 'ver115-1g added this and deleted go/save config
+    configLeft=markControlSecondColLeft+47
+    stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
+    button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -4, 50, 35 'ver117c36 was -5 'ver117c44 was -8
+
         'Marker Selection buttons
-    markTop=currGraphBoxHeight+12     'This isn't the top of anything in particular, just a reference point ver115-1b
-    markSelLeft=5
+    markTop=currGraphBoxHeight+15     'This isn't the top of anything in particular, just a reference point ver115-1b
+    markSelLeft=configLeft+65
     statictext #handle.selMarkLab "Marker", markSelLeft+3, markTop-9, 40, 14
     selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i
     combobox #handle.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+5, 50, 180
@@ -7937,9 +7955,9 @@ end sub
     button #handle.markFindNextRight, "Next Pk Right", mFindNextRightMarker, LL, markFindNextLRLeft, -4, 75, 18
     button #handle.markFindNextLeft, "Next Pk Left", mFindNextLeftMarker, LL, markFindNextLRLeft, -22, 75, 18
 
-    sweepFreqLeft=markFindNextLRLeft+77   'verOK2FKU
-        'Center/Span frequencies and Start/Stop frequencies, with radio buttons to select one pair
-    groupbox #handle.ParamGroup, "", sweepFreqLeft-1, markTop-16, 303, 44
+        'Center/Span frequencies and Start/Stop frequencies, with radio buttons to select one pair 'verOK2FKU
+    sweepFreqLeft=markSelLeft
+    groupbox #handle.FreqGroup, "", sweepFreqLeft-1, markTop-16, 303, 44
     checkbox #handle.btnCentSpan, "", mSetCentSpan, mSetStartStop, sweepFreqLeft+2, markTop+4, 14, 12
     statictext #handle.CentLab, "Cent", sweepFreqLeft+18, markTop-6, 27,15
     statictext #handle.SpanLab, "Span", sweepFreqLeft+18, markTop+11, 27,15
@@ -7955,25 +7973,21 @@ end sub
     textbox #handle.SweepStart, sweepFreqLeft+197, markTop-10, 75,20
     textbox #handle.SweepStop, sweepFreqLeft+197, markTop+7, 75,20
 
-        'Steps per sweep
+        'Steps per sweep 'verOK2FKU
     sweepStepsLeft=sweepFreqLeft+307
-    groupbox #handle.ParamGroup, "", sweepStepsLeft-3, markTop-16, 165, 44
+    groupbox #handle.AxisGroup, "", sweepStepsLeft-3, markTop-16, 165, 44
     statictext #handle.StepsLab, "Steps", sweepStepsLeft, markTop-6, 35,15
     textbox #handle.SweepSteps, sweepStepsLeft+38, markTop-10, 35,20
 
-        'Add box in Sweep Parameters window for ADC Averaging   'ver117c21
+        'Add box in Sweep Parameters window for ADC Averaging   'verOK2FKU
     statictext #handle.SampleLab, "Sample", sweepStepsLeft, markTop+11, 35,15
     textbox #handle.SampleBox, sweepStepsLeft+38, markTop+7, 35,20    'manual text entry, number of samples of ADC to average. 0 is default, which is 1 sample
 
-    'Wait time
+        'Wait time 'verOK2FKU
     sweepWaitLeft=sweepStepsLeft+38+40
     statictext #handle.WaitLab, "Wait (ms)", sweepWaitLeft, markTop-6, 45,15
     textbox #handle.SweepWait, sweepWaitLeft+48, markTop-10, 35,18   'manual text entry
     button #handle.SweepSettingConfirm, "Confirm", [axisXFinishedByPanel], LL, sweepWaitLeft+8, -22, 65,18
-        'Test Setup Button 'ver115-1g added this and deleted go/save config
-    configLeft=sweepWaitLeft+48+37
-    stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
-    button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -4, 50, 35 'ver117c36 was -5 'ver117c44 was -8
 
         'Sweep Control Buttons
     button #handle.Redraw, "Redraw",btnRedraw, LR, 105,13,70,19
@@ -7994,6 +8008,7 @@ end sub
     if graphBox$<>"" then close #handle 'if a window is already open, close it
 
     open "" for window as #handle    'Caption is set in ConformMenusToMode ver115-5d
+    call hideAllControlButtons  'verOK2FKU
     graphBox$="#handle.g"    'Used to draw in the graphics box   'ver115-1a
             'When left button goes down or motion occurs with left button down, we want to display info about that point.
     #handle.g, "when leftButtonDown gMouseQuery" 'ver116-4j
@@ -8002,9 +8017,9 @@ end sub
     #handle.g, "when characterInput [mAddMarkerFromKeyboard]" 'ver116-4j
     hGraphWindow=hwnd(#handle)  'get graph window handle
 
-    #handle.g, "when characterInput mSweepCentTextBox"
+    #handle.g, "when characterInput mSweepCentTextBox"  'verOK2FKU (TAB pressed in graph jump to Span/Stop textbox)
 
-    if userFreqPref=0 then 'This is based on last user setting  'ver115-1d
+    if userFreqPref=0 then 'This is based on last user setting  'verOK2FKU
         #handle.btnCentSpan, "set"   'Start in center/span mode
         call mEnableCentSpan
     else
@@ -10961,7 +10976,8 @@ end sub
 'ver117c36 del     gosub [FreqAxisPreference]
 'ver117c36 del     wait
 
-[axisXFinishedByPanel]
+
+[axisXFinishedByPanel] 'verOK2FKU added this for easy control from panel
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
     call RememberState
 
@@ -11017,7 +11033,14 @@ end sub
 
     steps=globalSteps   'transfer to non-global
     sweepDir=gGetSweepDir()
-    gosub [PartialRestart]
+    call DetectChanges 0   'Do necessary redrawing and set continueCode ver114-6e
+    if continueCode=3 then  'ver114-6e
+        needRestart=1
+    else
+        continueCode=0
+        needRestart=0
+    end if
+    if needRestart then gosub [PartialRestart]
     continueCode=0
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
@@ -12240,6 +12263,84 @@ sub mMenuMarkerOptions     'Button handler to set marker options
     if haltsweep=0 then call RefreshGraph 0   'if not sweeping redraw graph ver114-7d
 end sub
 
+sub updatePanelButtons button$, toggle ' called if any menu botton for easy control is pressed verOK2FKU
+    call hideAllControlButtons  ' hide all controls
+    select case button$
+        case "MarkerControl"
+            if prevShowButton$<>button$ then toggle=0 : toggleShowMarkerButton=toggle ' if first pressed this button, controls must be first shown
+            if toggle then
+                call hideShowMarkerControl "!hide"
+            else
+                call hideShowMarkerControl "!show"
+            end if
+        case "FrequencyControl"
+            if prevShowButton$<>button$ then toggle=0 : toggleShowFrequencyButton=toggle
+            if toggle then
+                call hideShowFrequencyControl "!hide"
+            else
+                call hideShowFrequencyControl "!show"
+            end if
+        case else
+            exit sub
+    end select
+    prevShowButton$=button$ ' remember button press
+end sub
+
+sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
+    call hideShowMarkerControl "!hide"
+    call hideShowFrequencyControl "!hide"
+end sub
+
+sub hideShowFrequencyControl control$ ' hide or show control for Frequency ' verOK2FKU
+    if control$="!hide" then
+        #handle.btnCentSpan, "hide"
+        #handle.btnStartStop, "hide"
+    else
+        #handle.btnCentSpan, "show"
+        #handle.btnStartStop, "show"
+    end if
+    #handle.FreqGroup, control$
+    #handle.CentLab, control$
+    #handle.SpanLab, control$
+    #handle.MHzLabA, control$
+    #handle.MHzLabB, control$
+    #handle.SweepCent, control$
+    #handle.SweepSpan, control$
+    #handle.StartLab, control$
+    #handle.StopLab, control$
+    #handle.MHzLabC, control$
+    #handle.MHzLabD, control$
+    #handle.SweepStart, control$
+    #handle.SweepStop, control$
+    #handle.AxisGroup, control$
+    #handle.StepsLab, control$
+    #handle.SweepSteps, control$
+    #handle.SampleLab, control$
+    #handle.SampleBox, control$
+    #handle.WaitLab, control$
+    #handle.SweepWait, control$
+    #handle.SweepSettingConfirm, control$
+end sub
+
+sub hideShowMarkerControl control$  ' hide or show control for Markers ' verOK2FKU
+    if control$="!show" then #handle.selMark, "show" else #handle.selMark, "hide"
+    #handle.selMarkLab, control$
+    #handle.markDelete, control$
+    #handle.markClear, control$
+    #handle.markDec, control$
+    #handle.markInc, control$
+    #handle.FreqLab, control$
+    #handle.markFreq, control$
+    #handle.markEnterFreq, control$
+    #handle.ExpandLR, control$
+    #handle.mMarkToCenter, control$
+    #handle.markFindMax, control$
+    #handle.markFindMin, control$
+    #handle.markFindNextMax, control$
+    #handle.markFindNextRight, control$
+    #handle.markFindNextLeft, control$
+end sub
+
 sub mUpdateMarkerEditButtons     'Enable/disable buttons based on selected marker
     'Disable if marker does not exist or for peak markers, which cannot be manually located
     if selMarkerID$="" then   'ver114-4a added this if... block
@@ -12317,6 +12418,18 @@ sub mMarkSelect markID$  'Program selection specified marker in combo box
 '117cM        end if
     end if
     call mUserMarkSelect ""  'Take same action as though user selected the marker
+end sub
+
+sub mBtnShowMarkerControl btn$  'called if menu button Marker was pressed verOK2FKU
+    if toggleShowMarkerButton then toggleShowMarkerButton=0 else toggleShowMarkerButton=1
+    showButton$="MarkerControl"
+    call updatePanelButtons showButton$, toggleShowMarkerButton
+end sub
+
+sub mBtnShowFrequencyControl btn$ 'called if menu button Frequency was pressed verOK2FKU
+    if toggleShowFrequencyButton then toggleShowFrequencyButton=0 else toggleShowFrequencyButton=1
+    showButton$="FrequencyControl"
+    call updatePanelButtons showButton$, toggleShowFrequencyButton
 end sub
 
 sub mBtnMarkClear btn$   'Button to clear all markers was clicked
@@ -24909,8 +25022,8 @@ end sub
     'Note: On resizing, all non-buttons seem to end up a few pixels higher than the original spec,
     'so the Y locations are adjusted accordingly via markTop
     'Note WindowHeight when window is created is entire height; on resizing, it is the client area only
-    markTop=TwoPortGraphBoxHeight+15 : markSelLeft=5 'ver115-1b   'ver115-1c
-    markEditLeft=markSelLeft+55
+    markTop=TwoPortGraphBoxHeight+15 : markSelLeft=configLeft+65 'ver115-1b   'ver115-1c
+    markEditLeft=markSelLeft+53
     twoPortPBLeft=TwoPortGraphBoxWidth-100
     twoPortPBTop=graphMarTop+50
     'I'm not sure setting the above variables does anything. The original creation instructions seem to be
@@ -24968,8 +25081,8 @@ end sub
             'GraphicBox for graphing
     graphicbox #twoPortWin.g, 0,0,currGraphBoxWidth,currGraphBoxHeight
         'Marker Selection buttons
-    markTop=TwoPortGraphBoxHeight+12     'This isn't the top of anything in particular, just a reference point ver115-1b
-    markSelLeft=5
+    markTop=TwoPortGraphBoxHeight+15     'This isn't the top of anything in particular, just a reference point ver115-1b
+    markSelLeft=configLeft+65
     statictext #twoPortWin.selMarkLab "Marker", markSelLeft+3, markTop-9, 40, 14    'ver116-4b
     selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i
     'Stylebits #twoPortWin.selMark, _CBS_DROPDOWNLIST, 0, 0, 0   'ver115-1a del115_1a so box generates click event
