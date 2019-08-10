@@ -1825,6 +1825,9 @@
     print #handle.SweepSpan, uFormatted$(sweepwidth, xForm$)
     print #handle.SweepStart, uFormatted$(startfreq, xForm$)
     print #handle.SweepStop, uFormatted$(endfreq, xForm$)
+    print #handle.SweepSteps, globalSteps
+    print #handle.SweepWait, "";wate
+    print #handle.SampleBox, "";adcsamples
 
     if userFreqPref=0 then 'This is based on last user setting  'ver115-1d
         #handle.btnCentSpan, "set"   'Start in center/span mode
@@ -7817,7 +7820,7 @@ end sub
 [CreateGraphWindow]'changed ver113-4b
   'We do this only once, at startup. After that, we work with the existing window, adjust its menus and redraw.
     BackgroundColor$="buttonface" : ForegroundColor$="black"
-    WindowWidth=DisplayWidth-200 : WindowHeight=DisplayHeight-50
+    WindowWidth=DisplayWidth-300 : WindowHeight=DisplayHeight-100
     UpperLeftX = 4
     UpperLeftY = 1
 
@@ -7905,57 +7908,72 @@ end sub
     combobox #handle.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+5, 50, 180
 
         'Marker Editing Items ver114-4a changed marker edit buttons so none need to be hidden
-    markEditLeft=markSelLeft+55
+    markEditLeft=markSelLeft+53
     button #handle.markDelete, "Delete",mBtnMarkDelete, LL, markEditLeft, -4, 65,18 'ver117c36 was -4 'ver117c44 was -8
     button #handle.markClear, "Clear Marks",mBtnMarkClear, LL, markEditLeft, -22, 65,18 'ver117c36 was -22 'ver117c44 was -26
-    button #handle.markDec, "-",[btnDecPoint], LL, markEditLeft+71, -4, 14,15   'ver116-4j
-    button #handle.markInc, "+",[btnIncPoint], LL, markEditLeft+129, -4, 14,15   'ver116-4j
-    statictext #handle.FreqLab, "MHz", markEditLeft+96, markTop-8, 28,13
-    textbox #handle.markFreq, markEditLeft+70, markTop+7, 75,20
-    button #handle.markEnterFreq, "Enter",mEnterMarker, LL, markEditLeft+146, -22, 35,18 'ver117c36 was -25 'ver117c44 was -27
+    button #handle.markDec, "-",[btnDecPoint], LL, markEditLeft+69, -4, 14,15   'ver116-4j
+    button #handle.markInc, "+",[btnIncPoint], LL, markEditLeft+123, -4, 14,15   'ver116-4j
+    statictext #handle.FreqLab, "MHz", markEditLeft+90, markTop-8, 28,13
+    textbox #handle.markFreq, markEditLeft+65, markTop+7, 71,20
+    button #handle.markEnterFreq, "Enter",mEnterMarker, LL, markEditLeft+140, -22, 35,18 'ver117c36 was -25 'ver117c44 was -27
 
         'Misc Marker buttons
-    markMiscLeft=markEditLeft+185
+    markMiscLeft=markEditLeft+177
     button #handle.ExpandLR, "Expand L-R", [menuExpandSweep],LL, markMiscLeft, -4,65,18 'ver117c36 was -4 'ver117c44 was -8
     button #handle.mMarkToCenter, "Mark->Cent", mMarkToCenter,LL, markMiscLeft, -22,65,18 'ver117c36 was -22 'ver117c44 was -27
     'ver114-7b deleted buttons for IncDecRef
 
         'Marker Find Maximum/Minimum Button 'verOK2FKU added this
-    markFindMaxMinLeft=markMiscLeft+70
+    markFindMaxMinLeft=markMiscLeft+67
     button #handle.markFindMax, "Find Peak", mFindMaxMarker, LL, markFindMaxMinLeft, -4, 54, 18
     button #handle.markFindMin, "Find Min", mFindMinMarker, LL, markFindMaxMinLeft, -22, 54, 18
 
         'Marker Find Next peak maximum Button 'verOK2FKU added this
-    markFindNextPeakLeft=markFindMaxMinLeft+59
+    markFindNextPeakLeft=markFindMaxMinLeft+56
     button #handle.markFindNextMax, "Next Peak", mFindNextMaxMarker, LL, markFindNextPeakLeft, -4, 56, 18
 
         'Marker Find Next right/left peak Button 'verOK2FKU added this
-    markFindNextLRLeft=markFindNextPeakLeft+61
+    markFindNextLRLeft=markFindNextPeakLeft+58
     button #handle.markFindNextRight, "Next Pk Right", mFindNextRightMarker, LL, markFindNextLRLeft, -4, 75, 18
     button #handle.markFindNextLeft, "Next Pk Left", mFindNextLeftMarker, LL, markFindNextLRLeft, -22, 75, 18
 
-    sweepFreqLeft=markFindNextLRLeft+80   'verOK2FKU
+    sweepFreqLeft=markFindNextLRLeft+77   'verOK2FKU
         'Center/Span frequencies and Start/Stop frequencies, with radio buttons to select one pair
-    groupbox #handle.ParamGroup, "", sweepFreqLeft-2, markTop-16, 310, 44
+    groupbox #handle.ParamGroup, "", sweepFreqLeft-1, markTop-16, 303, 44
     checkbox #handle.btnCentSpan, "", mSetCentSpan, mSetStartStop, sweepFreqLeft+2, markTop+4, 14, 12
     statictext #handle.CentLab, "Cent", sweepFreqLeft+18, markTop-6, 27,15
     statictext #handle.SpanLab, "Span", sweepFreqLeft+18, markTop+11, 27,15
     statictext #handle.MHzLabA, "MHz", sweepFreqLeft+125, markTop-6, 25,15
     statictext #handle.MHzLabB, "MHz", sweepFreqLeft+125, markTop+11, 25,15
-    textbox #handle.SweepCent, sweepFreqLeft+46, markTop-9, 75,20
-    textbox #handle.SweepSpan, sweepFreqLeft+46, markTop+8, 75,20
-    checkbox #handle.btnStartStop, "", mSetStartStop, mSetCentSpan, sweepFreqLeft+155, markTop+4, 14, 12
-    statictext #handle.StartLab, "Start", sweepFreqLeft+175, markTop-6, 25,15
-    statictext #handle.StopLab, "Stop", sweepFreqLeft+175, markTop+11, 25,15
-    statictext #handle.MHzLabC, "MHz", sweepFreqLeft+280, markTop-6, 25,15
-    statictext #handle.MHzLabD, "MHz", sweepFreqLeft+280, markTop+11, 25,15
-    textbox #handle.SweepStart, sweepFreqLeft+201, markTop-9, 75,20
-    textbox #handle.SweepStop, sweepFreqLeft+201, markTop+8, 75,20
+    textbox #handle.SweepCent, sweepFreqLeft+46, markTop-10, 75,20
+    textbox #handle.SweepSpan, sweepFreqLeft+46, markTop+7, 75,20
+    checkbox #handle.btnStartStop, "", mSetStartStop, mSetCentSpan, sweepFreqLeft+153, markTop+4, 14, 12
+    statictext #handle.StartLab, "Start", sweepFreqLeft+171, markTop-6, 25,15
+    statictext #handle.StopLab, "Stop", sweepFreqLeft+171, markTop+11, 25,15
+    statictext #handle.MHzLabC, "MHz", sweepFreqLeft+276, markTop-6, 25,15
+    statictext #handle.MHzLabD, "MHz", sweepFreqLeft+276, markTop+11, 25,15
+    textbox #handle.SweepStart, sweepFreqLeft+197, markTop-10, 75,20
+    textbox #handle.SweepStop, sweepFreqLeft+197, markTop+7, 75,20
 
+        'Steps per sweep
+    sweepStepsLeft=sweepFreqLeft+307
+    groupbox #handle.ParamGroup, "", sweepStepsLeft-3, markTop-16, 165, 44
+    statictext #handle.StepsLab, "Steps", sweepStepsLeft, markTop-6, 35,15
+    textbox #handle.SweepSteps, sweepStepsLeft+38, markTop-10, 35,20
+
+        'Add box in Sweep Parameters window for ADC Averaging   'ver117c21
+    statictext #handle.SampleLab, "Sample", sweepStepsLeft, markTop+11, 35,15
+    textbox #handle.SampleBox, sweepStepsLeft+38, markTop+7, 35,20    'manual text entry, number of samples of ADC to average. 0 is default, which is 1 sample
+
+    'Wait time
+    sweepWaitLeft=sweepStepsLeft+38+40
+    statictext #handle.WaitLab, "Wait (ms)", sweepWaitLeft, markTop-6, 45,15
+    textbox #handle.SweepWait, sweepWaitLeft+48, markTop-10, 35,18   'manual text entry
+    button #handle.SweepSettingConfirm, "Confirm", [axisXFinishedByPanel], LL, sweepWaitLeft+8, -22, 65,18
         'Test Setup Button 'ver115-1g added this and deleted go/save config
-    configLeft=sweepFreqLeft+315
+    configLeft=sweepWaitLeft+48+37
     stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
-    button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -6, 50, 35 'ver117c36 was -5 'ver117c44 was -8
+    button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -4, 50, 35 'ver117c36 was -5 'ver117c44 was -8
 
         'Sweep Control Buttons
     button #handle.Redraw, "Redraw",btnRedraw, LR, 105,13,70,19
@@ -10943,6 +10961,66 @@ end sub
 'ver117c36 del     gosub [FreqAxisPreference]
 'ver117c36 del     wait
 
+[axisXFinishedByPanel]
+    if haltsweep then gosub [FinishSweeping]    'ver115-8d
+    call RememberState
+
+    #handle.SweepSteps, "!contents? steps$"
+    globalSteps=val(steps$)
+    if globalSteps<>prevSteps then
+            'SEWgraph2 Note we set globalSteps here; steps is set from globalSteps
+            'after we exit back to [FreqAxisPreference]
+        if globalSteps<1 then globalSteps=1 else if globalSteps>maxNumSteps then globalSteps=maxNumSteps    'ver115-1b
+        if globalSteps>2000 then    'ver116-4k
+            confirm "Processing with more than 2,000 steps will be slow. Proceed anyway?"; stepsAns$
+            if stepsAns$="no" then #handle.SweepSteps, 2000 : wait
+        end if
+        'Note we are called by [FreqAxisPreference], which will transfer globalSteps to steps.
+        'Resize arrays if necessary for all steps and a few to spare
+        if globalSteps>=gMaxNumPoints() then call ResizeArrays globalSteps+10      'ver114-2a
+        call gSetNumDynamicSteps globalSteps    'Tell graph module ver114-1f
+    end if
+
+    #handle.btnCentSpan, "value? CentSpan$"
+    if CentSpan$="set" then
+        'Use Center/Span to determine centfreq, sweepwidth, startfreq and endfreq
+        userFreqPref=0  'Save as user preference ver115-1d
+        #handle.SweepCent, "!contents? currCent$"
+        #handle.SweepSpan, "!contents? currSpan$"
+            'uCompact deletes spaces, which can mess up negative numbers
+        temp1= val(uCompact$(currCent$)): temp2=val(uCompact$(currSpan$)) 'ver115-1b
+            'Enter new freq, but only if there is a material change. Otherwise,
+            'tiny differences between using center/span and start/stop will trigger a restart.  'ver115-1b
+        if abs(temp1-centfreq)>1e-12 or abs(temp2-sweepwidth)>1e-12 then _
+                    call SetCenterSpanFreq temp1, temp2 'new center and span
+    else
+        'Use Start/Stop to determine centfreq, sweepwidth, startfreq and endfreq
+        userFreqPref=1  'Save as user preference ver115-1d
+        #handle.SweepStart, "!contents? currStart$"
+        #handle.SweepStop, "!contents? currStop$"
+            'uCompact deletes spaces, which can mess up negative numbers
+        temp1= val(uCompact$(currStart$)): temp2=val(uCompact$(currStop$))  'ver115-1b
+            'Enter new freq, but only if there is a material change.  'ver115-1b
+        if abs(temp1-startfreq)>1e-12 or abs(temp2-endfreq)>1e-12 then _
+                    call SetStartStopFreq temp1, temp2 'new center and span
+    end if
+
+    #handle.SweepWait, "!contents? wate$";
+    wate = val(wate$)
+    if wate<0 then wate=0
+
+    #handle.SampleBox, "!contents? adcsamples$"  'ver117c21
+    adcsamples = val(adcsamples$)  'ver117c21
+    adcsamples = int(adcsamples)  'ver117c21
+    if adcsamples < 1 then adcsamples = 1  'ver117c21
+    if adcsamples > 255 then adcsamples = 255  'ver117c45 added to prevent error
+
+    steps=globalSteps   'transfer to non-global
+    sweepDir=gGetSweepDir()
+    gosub [PartialRestart]
+    continueCode=0
+    if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
+
 [FreqAxisPreference]    'called from menu or double click below X axis
 'Call routine to display frequency axis preference window. We do this in two stages because
 'the subroutine cannot access steps directly (it is not global, for speed reasons).
@@ -11660,6 +11738,9 @@ return
         continueCode=0
         DisplayAxisXPreference=0
     end if
+    print #handle.SweepSteps, globalSteps
+    print #handle.SweepWait, "";wate
+    print #handle.SampleBox, "";adcsamples
 end function 'end of DisplayAxisXPreference
 
 [axisXHasFinished]
@@ -12647,7 +12728,6 @@ sub CommandFilterSlimCBUSB byref fbank  'ver117c41 'change to extend pulse time
     if USBdevice <> 0 then CALLDLL #USB, "UsbMSADeviceWriteString", USBdevice as long, USBwrbuf2$ as ptr, 4 as short, result as boolean 'ver117c41
 end sub
 '---end Path Selection---
-
 
 'SEWgraph added HaltAtEnd
 [HaltAtEnd] 'Halt At End button pushed.
