@@ -505,6 +505,8 @@
     toggleShowMarkerButton=1    'verOK2FKU
     global toggleShowFrequencyButton   ' variable toggling state when button processed 'verOK2FKU
     toggleShowFrequencyButton=1 'verOK2FKU
+    global toggleShowBWButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowBWButton=1 'verOK2FKU
     global prevShowButton$  ' memory old pressed button 'verOK2FKU
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
@@ -1825,6 +1827,7 @@
 'ver117c36 change '12.[InitializeGraphModule]Create Graph, using Working Window data
 '12.Create Graph (Erase old one if displayed) 'ver117c36
 'ver117c29c delete    suppressPDMInversion=0  'ver115-1a
+    ' verOK2FKU added this to preset controls on panel
     xForm$="#####.######"   'ver116-4k
     print #handle.SweepCent, uFormatted$(centfreq, xForm$)
     print #handle.SweepSpan, uFormatted$(sweepwidth, xForm$)
@@ -1833,6 +1836,10 @@
     print #handle.SweepSteps, globalSteps
     print #handle.SweepWait, "";wate
     print #handle.SampleBox, "";adcsamples
+    filtIndex=val(Word$(path$, 2))-1   'Index is one less than filter number, moved ver113-7a
+    #handle.FiltList, "select ";MSAFiltStrings$(filtIndex)    'SEW2 Select filter for path$
+    #handle.VideoFilt, "select "; videoFilter$  'ver114-5p
+
 
     if userFreqPref=0 then 'This is based on last user setting  'ver115-1d
         #handle.btnCentSpan, "set"   'Start in center/span mode
@@ -2212,10 +2219,10 @@ return 'to: ' 3a. Initialize Graphing Variables
     'Note: On resizing, all non-buttons seem to end up a few pixels higher than the original spec,
     'so the Y locations are adjusted accordingly via markTop
     'Note WindowHeight when window is created is entire height; on resizing, it is the client area only
-    markTop=currGraphBoxHeight+15 : markSelLeft=configLeft+65 'ver115-1b   'ver115-1c 'verOK2FKU
-    markEditLeft=markSelLeft+53
-    markMiscLeft=markEditLeft+177
-    configLeft=sweepWaitLeft+48+37
+    markTop=currGraphBoxHeight+15' : markSelLeft=configLeft+65 'ver115-1b   'ver115-1c 'verOK2FKU
+    'markEditLeft=markSelLeft+53
+    'markMiscLeft=markEditLeft+177
+    'configLeft=sweepWaitLeft+48+37
 
     #handle, "refresh"
     #handle.Cover, "!show"      'Cover the crap that can appear from resizing
@@ -7989,6 +7996,16 @@ end sub
     textbox #handle.SweepWait, sweepWaitLeft+48, markTop-10, 35,18   'manual text entry
     button #handle.SweepSettingConfirm, "Confirm", [axisXFinishedByPanel], LL, sweepWaitLeft+8, -22, 65,18
 
+        'RBW Filter List
+        sweepBWLeft=markSelLeft
+    statictext #handle.filter, "Select Final Filter Path:", sweepBWLeft, markTop-9, 130, 12
+    ' must omit stylebits, if we have to take action, when we change value in combobox 'verOK2FKU
+    combobox #handle.FiltList, MSAFiltStrings$(), [changeRBWfilt],sweepBWLeft,markTop+5,140,20 'Filter list ver115-1b
+        'Video Filter
+    statictext #handle.vidLab, "Video Filter BW", sweepBWLeft+145,markTop-9,80,12
+    ' must omit stylebits, if we have to take action, when we change value in combobox 'verOK2FKU
+    combobox #handle.VideoFilt, videoFilterNames$(), changeVBWfilt, sweepBWLeft+145, markTop+5, 100, 20    'Video Filter ver116-1b
+
         'Sweep Control Buttons
     button #handle.Redraw, "Redraw",btnRedraw, LR, 105,13,70,19
         'OneStep becomes HaltAtEnd when scan is in progress
@@ -10969,6 +10986,26 @@ sub FillAppearancesArray
     next i
 end sub
 
+[changeRBWfilt]
+    if haltsweep then gosub [FinishSweeping]    'ver115-8d
+    #handle.FiltList, "selectionindex? filtIndex"   'Filter N is at index N in list
+    if filtIndex=0 then 'filtIndex can be 0 if user typed something in the combo box
+        filtIndex=1
+        #handle.FiltList, "select ";MSAFiltStrings$(0)   'Select default
+        #handle.FiltList, "setfocus"  'SEW2  Needed to activate the highlight
+    end if
+    path$="Path "+str$(filtIndex) 'Name of filter path; Path 1, ver113-7c
+    'RBW filter will actually be selected after we return and load the RBW path cal data
+    gosub [PartialRestart]
+    continueCode=0
+    if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
+
+sub changeVBWfilt handle$
+    #handle.VideoFilt, "contents? videoFilter$" 'get selected video filter  ver114-5p
+    call SelectVideoFilter
+end sub
+
+
 'ver117c36 this subroutine is not needed
 'ver117c36 del 'ver114-5o added [menuFreqAxisPreference] as wrapper to be invoked by menu;
 'ver117c36 del 'ends in wait instead of return
@@ -12280,6 +12317,13 @@ sub updatePanelButtons button$, toggle ' called if any menu botton for easy cont
             else
                 call hideShowFrequencyControl "!show"
             end if
+        case "BWControl"
+            if prevShowButton$<>button$ then toggle=0 : toggleShowBWButton=toggle
+            if toggle then
+                call hideShowBWControl "!hide"
+            else
+                call hideShowBWControl "!show"
+            end if
         case else
             exit sub
     end select
@@ -12289,6 +12333,19 @@ end sub
 sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
     call hideShowMarkerControl "!hide"
     call hideShowFrequencyControl "!hide"
+    call hideShowBWControl "!hide"
+end sub
+
+sub hideShowBWControl control$
+    if control$="!hide" then
+        #handle.FiltList, "hide"
+        #handle.VideoFilt, "hide"
+    else
+        #handle.FiltList, "show"
+        #handle.VideoFilt, "show"
+    end if
+    #handle.vidLab, control$
+    #handle.filter, control$
 end sub
 
 sub hideShowFrequencyControl control$ ' hide or show control for Frequency ' verOK2FKU
@@ -12418,6 +12475,12 @@ sub mMarkSelect markID$  'Program selection specified marker in combo box
 '117cM        end if
     end if
     call mUserMarkSelect ""  'Take same action as though user selected the marker
+end sub
+
+sub mBtnShowBWControl btn$
+    if toggleShowBWButton then toggleShowBWButton=0 else toggleShowBWButton=1
+    showButton$="BWControl"
+    call updatePanelButtons showButton$, toggleShowBWButton
 end sub
 
 sub mBtnShowMarkerControl btn$  'called if menu button Marker was pressed verOK2FKU
