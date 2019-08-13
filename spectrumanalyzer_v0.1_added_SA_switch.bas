@@ -507,6 +507,8 @@
     toggleShowFrequencyButton=1 'verOK2FKU
     global toggleShowBWButton   ' variable toggling state when button processed 'verOK2FKU
     toggleShowBWButton=1 'verOK2FKU
+    global toggleShowSweepButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowSweepButton=1 'verOK2FKU
     global prevShowButton$  ' memory old pressed button 'verOK2FKU
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
@@ -1839,7 +1841,26 @@
     filtIndex=val(Word$(path$, 2))-1   'Index is one less than filter number, moved ver113-7a
     #handle.FiltList, "select ";MSAFiltStrings$(filtIndex)    'SEW2 Select filter for path$
     #handle.VideoFilt, "select "; videoFilter$  'ver114-5p
-
+    if gGetXIsLinear() then
+        #handle.linear, "set"
+        #handle.log, "reset"
+        call gGetNumDivisions nHorDiv, nVertDiv
+        #handle.NDiv, "!";nHorDiv
+    else
+        #handle.linear, "reset"
+        #handle.log, "set"
+    end if
+    if alternateSweep then 'ver114-5a added alternateSweep
+        #handle.Alternate, "set"
+        #handle.LR, "reset" : #handle.RL, "reset"
+    else
+        #handle.Alternate, "reset"
+        if gGetSweepDir()=1 then
+            #handle.LR, "set" : #handle.RL, "reset"
+        else
+            #handle.RL, "set" : #handle.LR, "reset"
+        end if
+    end if
 
     if userFreqPref=0 then 'This is based on last user setting  'ver115-1d
         #handle.btnCentSpan, "set"   'Start in center/span mode
@@ -7914,14 +7935,16 @@ end sub
 
     'verOK2FKU Menu buttons for easy Control
     markControlLeft=5
-    button #handle.showFrequecyControl, "Frequecy", mBtnShowFrequencyControl, LL, markControlLeft, -4, 65,18
-    button #handle.showAmplitudeControl, "Amplitude", mBtnShowAmplitudeControl, LL, markControlLeft, -22, 65,18
-    markControlSecondColLeft=markControlLeft+67
-    button #handle.showAmplitudeControl, "BW", mBtnShowBWControl, LL, markControlSecondColLeft, -4, 45,18
-    button #handle.showMarkerControl, "Marker", mBtnShowMarkerControl, LL, markControlSecondColLeft, -22, 45,18
-
+    button #handle.showFrequecyControl, "Frequecy", mBtnShowFrequencyControl, LL, markControlLeft, -4, 62,18
+    button #handle.showAmplitudeControl, "Amplitude", mBtnShowAmplitudeControl, LL, markControlLeft, -22, 62,18
+    markControlSecondColLeft=markControlLeft+64
+    button #handle.showBWControl, "BW", mBtnShowBWControl, LL, markControlSecondColLeft, -4, 40,18
+    button #handle.showSweepControl, "Sweep", mBtnShowSweepControl, LL, markControlSecondColLeft, -22, 40,18
+    markControlThirdColLeft=markControlSecondColLeft+42
+    button #handle.showMarkerControl, "Marker", mBtnShowMarkerControl, LL, markControlThirdColLeft, -4, 47,18
+    button #handle.saveImage, "Save Im", mBtnShowMarkerControl, LL, markControlThirdColLeft, -22, 47,18
         'Test Setup Button 'ver115-1g added this and deleted go/save config
-    configLeft=markControlSecondColLeft+47
+    configLeft=markControlThirdColLeft+49
     stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
     button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -4, 50, 35 'ver117c36 was -5 'ver117c44 was -8
 
@@ -7994,7 +8017,12 @@ end sub
     sweepWaitLeft=sweepStepsLeft+38+40
     statictext #handle.WaitLab, "Wait (ms)", sweepWaitLeft, markTop-6, 45,15
     textbox #handle.SweepWait, sweepWaitLeft+48, markTop-10, 35,18   'manual text entry
-    button #handle.SweepSettingConfirm, "Confirm", [axisXFinishedByPanel], LL, sweepWaitLeft+8, -22, 65,18
+    staticText #handle.DivLab1 "Hor. Div.", sweepWaitLeft,markTop+11,45,15
+    NumHorDiv$(0)="4" : NumHorDiv$(1)="6" : NumHorDiv$(2)="8"   'ver115-1b changed to NumHorDiv$
+    NumHorDiv$(3)="10" : NumHorDiv$(4)="12"
+    combobox #handle.NDiv, NumHorDiv$(), [mAxisXHorDiv],sweepWaitLeft+48, markTop+7, 35, 20
+
+    button #handle.SweepSettingConfirm, "Confirm", [axisXFinishedByPanel], LL, sweepWaitLeft+48+35+10, -4, 65,18
 
         'RBW Filter List
         sweepBWLeft=markSelLeft
@@ -8005,6 +8033,20 @@ end sub
     statictext #handle.vidLab, "Video Filter BW", sweepBWLeft+145,markTop-9,80,12
     ' must omit stylebits, if we have to take action, when we change value in combobox 'verOK2FKU
     combobox #handle.VideoFilt, videoFilterNames$(), changeVBWfilt, sweepBWLeft+145, markTop+5, 100, 20    'Video Filter ver116-1b
+
+        sweepLeft=markSelLeft
+    checkbox #handle.linear, "", [mAxisXSelLinear], [mAxisXSelLog],sweepLeft, markTop-8, 15, 15 'ver115-1c
+    staticText #handle.linearLab, "Linear",sweepLeft+17, markTop-7, 30, 15
+    checkbox #handle.log, "", [mAxisXSelLog], [mAxisXSelLinear],sweepLeft, markTop+10, 15, 15 'ver115-1c
+    staticText #handle.logLab, "Log", sweepLeft+17, markTop+11, 30, 15
+
+                'ver114-4k added reverse
+    checkbox #handle.LR, "", [mAxisLRon], [mAxisLRoff],sweepLeft+17+30+25, markTop-8, 15, 15 'ver115-1c
+    staticText #handle.LRLab, "L-R",sweepLeft+17+30+25+17, markTop-7, 20, 15
+    checkbox #handle.RL, "", [mAxisRLon], [mAxisRLoff],sweepLeft+17+30+25, markTop+10, 15, 15 'ver115-1c
+    staticText #handle.RLlab, "R-L", sweepLeft+17+30+25+17, markTop+11, 20, 15
+    checkbox #handle.Alternate, "", [mAxisALTon], mAxisALToff,sweepLeft+17+30+25+17+25, markTop-8, 15, 15 'ver115-1c
+    staticText #handle.AltLab, "Alternate", sweepLeft+17+30+25+17+25+17, markTop-7, 50, 15
 
         'Sweep Control Buttons
     button #handle.Redraw, "Redraw",btnRedraw, LR, 105,13,70,19
@@ -8225,6 +8267,104 @@ sub mSweepCentTextBox hndl$, char$
     end if
 end sub
 
+[mAxisLRon]
+    #handle.RL, "reset"
+    #handle.Alternate, "reset"
+    goto [alternateOnOff]
+
+[mAxisLRoff]
+    #handle.LR, "set"
+    goto [alternateOnOff]
+
+[mAxisRLon]
+    #handle.LR, "reset"
+    #handle.Alternate, "reset"
+    goto [alternateOnOff]
+
+
+[mAxisRLoff]
+    #handle.RL, "set"
+    goto [alternateOnOff]
+
+[mAxisALTon]
+    #handle.RL, "reset"
+    #handle.LR, "reset"
+    goto [alternateOnOff]
+
+sub mAxisALToff cbHandle$
+    #handle.Alternate, "set"
+end sub
+
+[alternateOnOff]
+    if haltsweep then gosub [FinishSweeping]
+    #handle.Alternate, "value? s$"    'ver114-5a
+    if s$="set" then alternateSweep=1 else alternateSweep=0 'ver114-5a
+    'ver114-5a added this if... block
+    if alternateSweep then
+        dir=1   'if alternating, start with forward
+    else
+        #handle.LR, "value? s$"
+        if s$="set" then dir=1 else dir=-1  'set forward or reverse
+    end if
+    call gSetSweepDir dir  'save in graph module; caller must transfer it to sweepDir 'ver114-4n
+    sweepDir=gGetSweepDir()
+    gosub [PartialRestart]
+    continueCode=0
+    if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
+
+[mAxisXSelLinear]
+    '#handle.DivLab1, "!show"
+    #handle.NDiv, "select 10"     'Start with 10 divisions when switching from log to linear ver114-2c
+    #handle.log, "reset"
+    #handle.linear, "set" 'ver115-1c
+    goto [axisXSelLinLog]
+
+[mAxisXSelLog]
+    #handle.DivLab1, "!hide"  'Can't choose number of divisions for log sweep ver114-5p
+    #handle.linear, "reset"
+    #handle.log, "set"    'ver115-1c
+    #handle.btnStartStop, "value? ssVal$"
+    if ssVal$="reset" then call mSetStartStop cbHandle$  'Log should be in start/stop mode
+    goto [axisXSelLinLog]
+
+[axisXSelLinLog]
+    #handle.linear, "value? lin$"
+    if lin$="set" then linearF=1 else linearF=0
+    if linearF=0 then
+        'ver116-4k:for log sweeps, X range can be negative and can include zero, but cannot cross zero.
+        'If it includes zero, that value will be changed to a small value based on the "blackHoleRadius".
+        if (startfreq<0) and (endfreq>0) then _ 'ver116-4k
+                    notice "Log sweep cannot cross zero Hz. Range changed." : _
+                        endfreq=max(endfreq, 1) : call SetStartStopFreq endfreq/100000, endfreq
+        includesZero=(startfreq<=0) and (endfreq>=0) : allNegative=(startfreq<0) and (endfreq<0)    'ver116-4k
+        if includesZero then 'includes but does not cross zero
+            if startfreq=0 then
+                if endfreq=0 then   'both limits are zero
+                    linearF=1 : notice "Changed to linear sweep because span is small."
+                    #handle.NDiv, "select 10" 'set to 10 divisions ver116-1b
+                else 'starts at zero; ends above zero
+                    notice "0 Hz not allowed in log sweep; range changed" : call SetStartStopFreq 0.0001, max(0.001, endfreq)
+                end if
+            else    'starts below 0; ends at 0
+                notice "0 Hz not allowed in log sweep; range changed" : call SetStartStopFreq min(-0.001, startfreq), -0.0001
+            end if
+        else    'all positive or all negative
+            if allNegative then span=uSafeLog10(startfreq/endfreq) else span=uSafeLog10(endfreq/startfreq)    'ver116-4k
+            if span <0.7 then
+                linearF=1 : notice "Changed to linear sweep because span is small."  'ver114-6e
+                #handle.NDiv, "select 10" 'set to 10 divisions ver116-1b
+            end if
+            if span>9 then
+                if allNegative then call SetStartStopFreq startfreq, startfreq/1000000000 else call SetStartStopFreq endfreq/1000000000, endfreq 'ver116-4k
+                notice "Log span cannot exceed 9 decades; sweep limits changed."  'ver114-6e
+            end if
+        end if
+    end if
+    call gSetXIsLinear linearF   'Set freq linearity
+    gosub [PartialRestart]
+    continueCode=0
+    if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
+
 sub mSetCentSpan cbHandle$  'Select Center/Span mode; use Start/Stop to fill in Center/Span
 'embedded in DisplayAxisXPreference
     #handle.btnStartStop, "reset"
@@ -8254,7 +8394,6 @@ sub mSetStartStop cbHandle$    'Select Start/Stop mode; use Center/Span to fill 
     print #handle.SweepStop, using("#####.######",currCent+currSpan/2)    'Enter stop
     call mEnableStartStop
 end sub
-
 
 sub mEnableStartStop
     #handle.SweepCent, "!disable" : #handle.SweepSpan, "!disable"
@@ -11013,6 +11152,20 @@ end sub
 'ver117c36 del     gosub [FreqAxisPreference]
 'ver117c36 del     wait
 
+[mAxisXHorDiv]
+    if haltsweep then gosub [FinishSweeping]    'ver115-8d
+    #handle.NDiv, "contents? nDiv$"   'Get user specified number of divisions
+    nHorDiv=val(nDiv$) : if nHorDiv<2 then nHorDiv=2 else if nHorDiv>12 then nHorDiv=10 'ver116-1b
+    nHorDiv=2*int(nHorDiv/2)    'Make the number even
+        'Set new number of hor divisions, with old number of vert div
+    call gSetNumDivisions nHorDiv,nVertDiv
+    call gCalcGraphParams   'Calculate new scaling. May change min or max
+    doRedraw=doCalcAndRedraw
+    call RedrawGraph 0
+
+    continueCode=0
+    if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
+
 
 [axisXFinishedByPanel] 'verOK2FKU added this for easy control from panel
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
@@ -11801,6 +11954,8 @@ return
     print #handle.SweepSteps, globalSteps
     print #handle.SweepWait, "";wate
     print #handle.SampleBox, "";adcsamples
+    call gGetNumDivisions nHorDiv, nVertDiv
+    #handle.NDiv, "!";nHorDiv
 end function 'end of DisplayAxisXPreference
 
 [axisXHasFinished]
@@ -12324,6 +12479,13 @@ sub updatePanelButtons button$, toggle ' called if any menu botton for easy cont
             else
                 call hideShowBWControl "!show"
             end if
+        case "SweepControl"
+            if prevShowButton$<>button$ then toggle=0 : toggleShowSweepButton=toggle
+            if toggle then
+                call hideShowSweepControl "!hide"
+            else
+                call hideShowSweepControl "!show"
+            end if
         case else
             exit sub
     end select
@@ -12334,6 +12496,28 @@ sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
     call hideShowMarkerControl "!hide"
     call hideShowFrequencyControl "!hide"
     call hideShowBWControl "!hide"
+    call hideShowSweepControl "!hide"
+end sub
+
+sub hideShowSweepControl control$
+    if control$="!hide" then
+        #handle.linear, "hide"
+        #handle.log, "hide"
+        #handle.LR, "hide"
+        #handle.RL, "hide"
+        #handle.Alternate, "hide"
+    else
+        #handle.linear, "show"
+        #handle.log, "show"
+        #handle.LR, "show"
+        #handle.RL, "show"
+        #handle.Alternate, "show"
+    end if
+    #handle.linearLab, control$
+    #handle.logLab, control$
+    #handle.LRLab, control$
+    #handle.RLlab, control$
+    #handle.AltLab, control$
 end sub
 
 sub hideShowBWControl control$
@@ -12352,9 +12536,12 @@ sub hideShowFrequencyControl control$ ' hide or show control for Frequency ' ver
     if control$="!hide" then
         #handle.btnCentSpan, "hide"
         #handle.btnStartStop, "hide"
+        #handle.NDiv, "hide"
+        #handle.DivLab1, control$
     else
         #handle.btnCentSpan, "show"
         #handle.btnStartStop, "show"
+        if gGetXIsLinear() then #handle.NDiv, "show" : #handle.DivLab1, control$
     end if
     #handle.FreqGroup, control$
     #handle.CentLab, control$
@@ -12475,6 +12662,12 @@ sub mMarkSelect markID$  'Program selection specified marker in combo box
 '117cM        end if
     end if
     call mUserMarkSelect ""  'Take same action as though user selected the marker
+end sub
+
+sub mBtnShowSweepControl btn$
+    if toggleShowSweepButton then toggleShowSweepButton=0 else toggleShowSweepButton=1
+    showButton$="SweepControl"
+    call updatePanelButtons showButton$, toggleShowSweepButton
 end sub
 
 sub mBtnShowBWControl btn$
