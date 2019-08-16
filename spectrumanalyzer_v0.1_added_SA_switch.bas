@@ -509,6 +509,8 @@
     toggleShowBWButton=1 'verOK2FKU
     global toggleShowSweepButton   ' variable toggling state when button processed 'verOK2FKU
     toggleShowSweepButton=1 'verOK2FKU
+    global toggleMenu12Button   'global handle variable for menu 1/2
+    toggleMenu12Button=0    ' if 0 then menu 1/2, if 1 then menu 2/2
     global prevShowButton$  ' memory old pressed button 'verOK2FKU
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
@@ -1859,6 +1861,26 @@
             #handle.LR, "set" : #handle.RL, "reset"
         else
             #handle.RL, "set" : #handle.LR, "reset"
+        end if
+    end if
+
+    if msaMode$="SA" then 'ver115-4f
+        if TGtop = 2 then 'ver114-4j print proper label; button only exists for SA mode with TGtop=2
+'ver117c30 was: if normrev = 1 then print #axis.normReverse, "Reverse"
+        if gentrk = 1 and normrev = 1 then print #handle.normReverse, "Reverse" 'now 'ver117c30
+        end if
+        if TGtop>0 then 'Do if we have the TG--print either SG freq or TG offset
+            if gentrk=0 then print #handle.freqoffbox, uFormatted$(sgout, xForm$) else print #handle.freqoffbox, uFormatted$(offset, xForm$) 'ver115-4f
+        end if
+    else
+        if switchFR=0 then  'ver116-1b
+            #handle.DirectionF, "set" : #handle.DirectionR, "reset"
+        else
+            #handle.DirectionF, "reset" : #handle.DirectionR, "set"
+        end if
+        if msaMode$<>"ScalarTrans" then 'modes with phase ver115-4f
+            ''#handle.invdegbox, invdeg
+            ''#handle.planeadjbox, planeadj
         end if
     end if
 
@@ -7942,7 +7964,7 @@ end sub
     button #handle.showSweepControl, "Sweep", mBtnShowSweepControl, LL, markControlSecondColLeft, -22, 40,18
     markControlThirdColLeft=markControlSecondColLeft+42
     button #handle.showMarkerControl, "Marker", mBtnShowMarkerControl, LL, markControlThirdColLeft, -4, 47,18
-    button #handle.saveImage, "Save Im", mBtnShowMarkerControl, LL, markControlThirdColLeft, -22, 47,18
+    button #handle.saveImage, "Save Im", [SaveImage], LL, markControlThirdColLeft, -22, 47,18
         'Test Setup Button 'ver115-1g added this and deleted go/save config
     configLeft=markControlThirdColLeft+49
     stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
@@ -8004,17 +8026,17 @@ end sub
     textbox #handle.SweepStop, sweepFreqLeft+197, markTop+7, 75,20
 
         'Steps per sweep 'verOK2FKU
-    sweepStepsLeft=sweepFreqLeft+307
-    groupbox #handle.AxisGroup, "", sweepStepsLeft-3, markTop-16, 165, 44
+    sweepStepsLeft=markSelLeft
+    groupbox #handle.AxisGroup, "", sweepStepsLeft-3, markTop-16, 175, 44
     statictext #handle.StepsLab, "Steps", sweepStepsLeft, markTop-6, 35,15
-    textbox #handle.SweepSteps, sweepStepsLeft+38, markTop-10, 35,20
+    textbox #handle.SweepSteps, sweepStepsLeft+43, markTop-10, 35,20
 
         'Add box in Sweep Parameters window for ADC Averaging   'verOK2FKU
-    statictext #handle.SampleLab, "Sample", sweepStepsLeft, markTop+11, 35,15
-    textbox #handle.SampleBox, sweepStepsLeft+38, markTop+7, 35,20    'manual text entry, number of samples of ADC to average. 0 is default, which is 1 sample
+    statictext #handle.SampleLab, "Samples", sweepStepsLeft, markTop+11, 40,15
+    textbox #handle.SampleBox, sweepStepsLeft+43, markTop+7, 35,20    'manual text entry, number of samples of ADC to average. 0 is default, which is 1 sample
 
         'Wait time 'verOK2FKU
-    sweepWaitLeft=sweepStepsLeft+38+40
+    sweepWaitLeft=sweepStepsLeft+43+40
     statictext #handle.WaitLab, "Wait (ms)", sweepWaitLeft, markTop-6, 45,15
     textbox #handle.SweepWait, sweepWaitLeft+48, markTop-10, 35,18   'manual text entry
     staticText #handle.DivLab1 "Hor. Div.", sweepWaitLeft,markTop+11,45,15
@@ -8022,7 +8044,20 @@ end sub
     NumHorDiv$(3)="10" : NumHorDiv$(4)="12"
     combobox #handle.NDiv, NumHorDiv$(), [mAxisXHorDiv],sweepWaitLeft+48, markTop+7, 35, 20
 
-    button #handle.SweepSettingConfirm, "Confirm", [axisXFinishedByPanel], LL, sweepWaitLeft+48+35+10, -4, 65,18
+    x=DisplayWidth
+    y=DisplayHeight
+    genLeft=sweepWaitLeft+48+35+10
+    statictext #handle.LabTG, "TG Offset          Mode:",genLeft,markTop-7,109,15
+    button #handle.normReverse, "Normal", [mNormRevbutton], LL, genLeft+75+24+10, -4, 54, 18 'ver115-4f
+    textbox #handle.freqoffbox, genLeft, markTop+7, 72, 20   'TG offset
+    statictext #handle.LabF, "MHz", genLeft+75, markTop+10, 24, 15
+    statictext #handle.LabSG, "Sig Gen Freq", genLeft, markTop-9, 75, 15 'ver115-4
+    checkbox #handle.DirectionF, "DUT Forward", [mSetDUTForward], [mSetDUTReverse], genLeft, markTop-8, 110, 15
+    checkbox #handle.DirectionR, "DUT Reverse", [mSetDUTReverse], [mSetDUTForward], genLeft, markTop+10, 110, 15
+
+    button #handle.Menu12, "Menu 1/2", mMenu12, LL, sweepFreqLeft+350, -4, 65,18
+
+    button #handle.SweepSettingConfirm, "Confirm", [axisXFinishedByPanel], LL, sweepFreqLeft+350, -22, 65,18
 
         'RBW Filter List
         sweepBWLeft=markSelLeft
@@ -8067,7 +8102,6 @@ end sub
     if graphBox$<>"" then close #handle 'if a window is already open, close it
 
     open "" for window as #handle    'Caption is set in ConformMenusToMode ver115-5d
-    call hideAllControlButtons  'verOK2FKU
     graphBox$="#handle.g"    'Used to draw in the graphics box   'ver115-1a
             'When left button goes down or motion occurs with left button down, we want to display info about that point.
     #handle.g, "when leftButtonDown gMouseQuery" 'ver116-4j
@@ -8117,6 +8151,7 @@ end sub
 
     menuMode$=""    'because menus don't conform to any mode now.
     call ConformMenusToMode 'Hide whatever menu items we don't need for current msaMode$
+    call hideAllControlButtons  'verOK2FKU
 
     print #handle.g, "when rightButtonDown [RightButDown]"
     print #handle.g, "when leftButtonDouble [LeftButDouble]"
@@ -8130,6 +8165,7 @@ end sub
     #handle.StepLeft, "!disable"  '117c20
     #handle.Redraw, "!font Arial 9 bold" : #handle.Restart, "!font Arial 9 bold"   'SEWgraph
     #handle.Redraw, "!hide"     'We start out running so hide this
+    #handle.SweepSettingConfirm, "!font Arial 9 bold"
         'Tell graph module what size we are, and calculate scaling ver114-6f
     call gUpdateGraphObject graphBox$, currGraphBoxWidth, currGraphBoxHeight, _ 'ver115-1c
                                         graphMarLeft, graphMarRight, graphMarTop, graphMarBot
@@ -8141,6 +8177,47 @@ sub ConformMenusToMode  'Make menus and window caption match mode.
     'msaMode$ is the current mode. menuMode$ is the mode to which the menus are currently conformed.
     if msaMode$="SA" then
         if gentrk=0 then modeTitle$="Spectrum Analyzer Mode" else modeTitle$="Spectrum Analyzer with TG Mode"   'ver115-4f
+        if toggleShowFrequencyButton=0 then
+            #handle.DirectionF, "hide"
+            #handle.DirectionR, "hide"
+            #handle.freqoffbox, "!show"
+            #handle.LabF, "!show"
+            if gentrk=1 then
+                #handle.LabTG, "!show"
+                #handle.normReverse, "!show"
+                #handle.LabSG, "!hide"
+            else
+                if TGtop>0 then
+                    #handle.LabTG, "!hide"
+                    #handle.normReverse, "!hide"
+                    #handle.LabSG, "!show"
+                end if
+            end if
+        else
+            #handle.LabTG, "!hide"
+            #handle.normReverse, "!hide"
+            #handle.LabSG, "!hide"
+            #handle.DirectionF, "hide"
+            #handle.DirectionR, "hide"
+        end if
+    else
+        if toggleShowFrequencyButton=0 then
+            #handle.DirectionF, "show"
+            #handle.DirectionR, "show"
+            #handle.LabTG, "!hide"
+            #handle.normReverse, "!hide"
+            #handle.freqoffbox, "!hide"
+            #handle.LabSG, "!hide"
+            #handle.LabF, "!hide"
+        else
+            #handle.LabTG, "!hide"
+            #handle.normReverse, "!hide"
+            #handle.LabSG, "!hide"
+            #handle.freqoffbox, "!hide"
+            #handle.DirectionF, "hide"
+            #handle.DirectionR, "hide"
+            #handle.LabF, "!hide"
+        end if
     end if
     if msaMode$="ScalarTrans" then modeTitle$="Tracking Generator Mode"
     if msaMode$="VectorTrans" then modeTitle$="VNA Transmission Mode"
@@ -11144,6 +11221,17 @@ sub changeVBWfilt handle$
     call SelectVideoFilter
 end sub
 
+sub mMenu12 btn$
+    if toggleMenu12Button=0  then
+        toggleMenu12Button=1
+        print #handle.Menu12, "Menu 2/2"
+    else
+        toggleMenu12Button=0
+        print #handle.Menu12, "Menu 1/2"
+    end if
+    call hideShowFreqX2Control "!show"
+end sub
+
 
 'ver117c36 this subroutine is not needed
 'ver117c36 del 'ver114-5o added [menuFreqAxisPreference] as wrapper to be invoked by menu;
@@ -11151,6 +11239,21 @@ end sub
 'ver117c36 del [menuFreqAxisPreference]
 'ver117c36 del     gosub [FreqAxisPreference]
 'ver117c36 del     wait
+
+[mSetDUTForward] 'ver116-1b
+    if haltsweep then gosub [FinishSweeping]    'ver115-8d
+    #handle.DirectionF, "set" : #handle.DirectionR, "reset"
+    goto [mSetDUTFR]
+
+[mSetDUTReverse]  'ver116-1b
+    if haltsweep then gosub [FinishSweeping]    'ver115-8d
+    #handle.DirectionF, "reset" : #handle.DirectionR, "set"
+
+[mSetDUTFR]
+    #handle.DirectionF, "value? DUTDirect$"
+    if DUTDirect$="set" then switchFR=0 else switchFR=1
+    continueCode=0
+    if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
 [mAxisXHorDiv]
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
@@ -11165,6 +11268,16 @@ end sub
 
     continueCode=0
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
+
+[mNormRevbutton]
+    if haltsweep then gosub [FinishSweeping]
+    if normrev = 0 then
+        print #handle.normReverse, "Reverse"
+        normrev = 1
+    else 'normrev = 1
+        print #handle.normReverse, "Normal"
+        normrev = 0
+    end if
 
 
 [axisXFinishedByPanel] 'verOK2FKU added this for easy control from panel
@@ -11220,6 +11333,21 @@ end sub
     adcsamples = int(adcsamples)  'ver117c21
     if adcsamples < 1 then adcsamples = 1  'ver117c21
     if adcsamples > 255 then adcsamples = 255  'ver117c45 added to prevent error
+
+    if msaMode$="SA" then 'ver115-4g
+        if TGtop > 0 then print #handle.freqoffbox, "!contents? freqoff$"   'Sig Gen Freq or TG offset box data ver116-4q
+        if gentrk = 0 then
+            sgout = val(using("####.######",val(uCompact$(freqoff$)))) 'ver115-4g
+            if sgout<-75 then Notice "LO3 for Sig Gen Frequency may be too low"    'ver116-4r
+            if sgout>3*LO2 then Notice "LO3 for Sig Gen Frequency may be too high"    'ver116-4r
+        end if
+        if gentrk = 1 then offset = val(using("####.######",val(uCompact$(freqoff$)))) 'ver115-4g
+    end if
+    if msaMode$="VectorTrans" or msaMode$="Reflection" then 'modes with phase ver115-4g
+        print #handle.invdegbox, "!contents? invdeg$";
+        invdeg = val(uCompact$(invdeg$))
+        'ver115-2b moved planeadj further above
+    end if
 
     steps=globalSteps   'transfer to non-global
     sweepDir=gGetSweepDir()
@@ -11502,12 +11630,13 @@ function DisplayAxisXPreference()   'Display dialog to select axis preferences
     if spurcheck=1 then #axis.spurbox, "set" else #axis.spurbox, "reset"  'ver115-4g
 
     if msaMode$="SA" then 'ver115-4f
+        xForm$="#####.######"   ' formatted print verOK2FKU
         if TGtop = 2 then 'ver114-4j print proper label; button only exists for SA mode with TGtop=2
 'ver117c30 was: if normrev = 1 then print #axis.normReverse, "Reverse"
         if gentrk = 1 and normrev = 1 then print #axis.normReverse, "Reverse" 'now 'ver117c30
         end if
         if TGtop>0 then 'Do if we have the TG--print either SG freq or TG offset
-            if gentrk=0 then print #axis.freqoffbox, "";sgout else print #axis.freqoffbox, "";offset 'ver115-4f
+            if gentrk=0 then print #axis.freqoffbox, uFormatted$(sgout, xForm$) else print #axis.freqoffbox, uFormatted$(offset, xForm$) 'ver115-4f 'verOK2FKU formatted
         end if
     else
         if switchFR=0 then  'ver116-1b
@@ -11956,6 +12085,17 @@ return
     print #handle.SampleBox, "";adcsamples
     call gGetNumDivisions nHorDiv, nVertDiv
     #handle.NDiv, "!";nHorDiv
+    if msaMode$<>"SA" then 'ver115-4f
+        if switchFR=0 then  'ver116-1b
+            #handle.DirectionF, "set" : #handle.DirectionR, "reset"
+        else
+            #handle.DirectionF, "reset" : #handle.DirectionR, "set"
+        end if
+        if msaMode$<>"ScalarTrans" then 'modes with phase ver115-4f
+            '#handle.invdegbox, invdeg
+            '#handle.planeadjbox, planeadj
+        end if
+    end if
 end function 'end of DisplayAxisXPreference
 
 [axisXHasFinished]
@@ -12468,9 +12608,9 @@ sub updatePanelButtons button$, toggle ' called if any menu botton for easy cont
         case "FrequencyControl"
             if prevShowButton$<>button$ then toggle=0 : toggleShowFrequencyButton=toggle
             if toggle then
-                call hideShowFrequencyControl "!hide"
+                call hideShowFreqX2Control "!hide"
             else
-                call hideShowFrequencyControl "!show"
+                call hideShowFreqX2Control "!show"
             end if
         case "BWControl"
             if prevShowButton$<>button$ then toggle=0 : toggleShowBWButton=toggle
@@ -12494,7 +12634,7 @@ end sub
 
 sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
     call hideShowMarkerControl "!hide"
-    call hideShowFrequencyControl "!hide"
+    call hideAllFreqControl
     call hideShowBWControl "!hide"
     call hideShowSweepControl "!hide"
 end sub
@@ -12532,17 +12672,75 @@ sub hideShowBWControl control$
     #handle.filter, control$
 end sub
 
-sub hideShowFrequencyControl control$ ' hide or show control for Frequency ' verOK2FKU
+sub hideShowFreqX2Control control$ ' hide or show control for Frequency ' verOK2FKU
+    call hideAllFreqControl
+    if toggleMenu12Button=0 then call hideShowFreq12Control control$ else call hideShowFreq22Control control$
+    #handle.SweepSettingConfirm, control$
+    #handle.Menu12, control$
+end sub
+
+sub hideShowFreq12Control control$
     if control$="!hide" then
         #handle.btnCentSpan, "hide"
         #handle.btnStartStop, "hide"
-        #handle.NDiv, "hide"
-        #handle.DivLab1, control$
     else
         #handle.btnCentSpan, "show"
         #handle.btnStartStop, "show"
+    end if
+    #handle.FreqGroup, control$
+    #handle.CentLab, control$
+    #handle.SpanLab, control$
+    #handle.MHzLabA, control$
+    #handle.MHzLabB, control$
+    #handle.SweepCent, control$
+    #handle.SweepSpan, control$
+    #handle.StartLab, control$
+    #handle.StopLab, control$
+    #handle.MHzLabC, control$
+    #handle.MHzLabD, control$
+    #handle.SweepStart, control$
+    #handle.SweepStop, control$
+end sub
+
+sub hideShowFreq22Control control$
+    #handle.AxisGroup, control$
+    #handle.StepsLab, control$
+    #handle.SweepSteps, control$
+    #handle.SampleLab, control$
+    #handle.SampleBox, control$
+    #handle.WaitLab, control$
+    #handle.SweepWait, control$
+    if control$="!hide" then
+        #handle.NDiv, "hide"
+    else
         if gGetXIsLinear() then #handle.NDiv, "show" : #handle.DivLab1, control$
     end if
+    if msaMode$="SA" then
+        #handle.freqoffbox, control$
+        #handle.LabF, control$
+        if gentrk=1 then
+            #handle.LabTG, control$
+            #handle.normReverse, control$
+        else
+            if TGtop>0 then #handle.LabSG, control$
+        end if
+    else
+        if control$="!hide" then
+            #handle.DirectionF, "hide"
+            #handle.DirectionR, "hide"
+        else
+            #handle.DirectionF, "show"
+            #handle.DirectionR, "show"
+        end if
+    end if
+end sub
+
+sub hideAllFreqControl
+    control$="!hide"
+    #handle.SweepSettingConfirm, control$
+    #handle.Menu12, control$
+    #handle.btnCentSpan, "hide"
+    #handle.btnStartStop, "hide"
     #handle.FreqGroup, control$
     #handle.CentLab, control$
     #handle.SpanLab, control$
@@ -12564,6 +12762,16 @@ sub hideShowFrequencyControl control$ ' hide or show control for Frequency ' ver
     #handle.WaitLab, control$
     #handle.SweepWait, control$
     #handle.SweepSettingConfirm, control$
+    #handle.Menu12, control$
+    #handle.NDiv, "hide"
+    #handle.freqoffbox, control$
+    #handle.LabF, control$
+    #handle.LabTG, control$
+    #handle.normReverse, control$
+    #handle.LabSG, control$
+    #handle.DirectionF, "hide"
+    #handle.DirectionR, "hide"
+    #handle.DivLab1, control$
 end sub
 
 sub hideShowMarkerControl control$  ' hide or show control for Markers ' verOK2FKU
