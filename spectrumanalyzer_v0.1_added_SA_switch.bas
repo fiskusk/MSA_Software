@@ -11317,8 +11317,8 @@ end sub
         if gentrk = 1 then offset = val(using("####.######",val(uCompact$(freqoff$)))) 'ver115-4g
     end if
     if msaMode$="VectorTrans" or msaMode$="Reflection" then 'modes with phase ver115-4g
-        print #handle.invdegbox, "!contents? invdeg$";
-        invdeg = val(uCompact$(invdeg$))
+        'print #handle.invdegbox, "!contents? invdeg$";
+        'invdeg = val(uCompact$(invdeg$))
         'ver115-2b moved planeadj further above
     end if
 
