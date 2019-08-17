@@ -8178,47 +8178,7 @@ sub ConformMenusToMode  'Make menus and window caption match mode.
     'msaMode$ is the current mode. menuMode$ is the mode to which the menus are currently conformed.
     if msaMode$="SA" then
         if gentrk=0 then modeTitle$="Spectrum Analyzer Mode" else modeTitle$="Spectrum Analyzer with TG Mode"   'ver115-4f
-        if toggleShowFrequencyButton=0 then
-            #handle.DirectionF, "hide"
-            #handle.DirectionR, "hide"
-            #handle.freqoffbox, "!show"
-            #handle.LabF, "!show"
-            if gentrk=1 then
-                #handle.LabTG, "!show"
-                #handle.normReverse, "!show"
-                #handle.LabSG, "!hide"
-            else
-                if TGtop>0 then
-                    #handle.LabTG, "!hide"
-                    #handle.normReverse, "!hide"
-                    #handle.LabSG, "!show"
-                end if
-            end if
-        else
-            #handle.LabTG, "!hide"
-            #handle.normReverse, "!hide"
-            #handle.LabSG, "!hide"
-            #handle.DirectionF, "hide"
-            #handle.DirectionR, "hide"
-        end if
-    else
-        if toggleShowFrequencyButton=0 then
-            #handle.DirectionF, "show"
-            #handle.DirectionR, "show"
-            #handle.LabTG, "!hide"
-            #handle.normReverse, "!hide"
-            #handle.freqoffbox, "!hide"
-            #handle.LabSG, "!hide"
-            #handle.LabF, "!hide"
-        else
-            #handle.LabTG, "!hide"
-            #handle.normReverse, "!hide"
-            #handle.LabSG, "!hide"
-            #handle.freqoffbox, "!hide"
-            #handle.DirectionF, "hide"
-            #handle.DirectionR, "hide"
-            #handle.LabF, "!hide"
-        end if
+        if toggle=0 then call hideShowFreqX2Control  "!show"
     end if
     if msaMode$="ScalarTrans" then modeTitle$="Tracking Generator Mode"
     if msaMode$="VectorTrans" then modeTitle$="VNA Transmission Mode"
@@ -11249,10 +11209,12 @@ end sub
 [mSetDUTReverse]  'ver116-1b
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
     #handle.DirectionF, "reset" : #handle.DirectionR, "set"
+    goto [mSetDUTFR]
 
 [mSetDUTFR]
     #handle.DirectionF, "value? DUTDirect$"
     if DUTDirect$="set" then switchFR=0 else switchFR=1
+    gosub [PartialRestart]
     continueCode=0
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
