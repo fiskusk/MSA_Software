@@ -8045,8 +8045,6 @@ end sub
     NumHorDiv$(3)="10" : NumHorDiv$(4)="12"
     combobox #handle.NDiv, NumHorDiv$(), [mAxisXHorDiv],sweepWaitLeft+48, markTop+7, 35, 20
 
-    x=DisplayWidth
-    y=DisplayHeight
     genLeft=sweepWaitLeft+48+35+10
     statictext #handle.LabTG, "TG Offset          Mode:",genLeft,markTop-7,109,15
     button #handle.normReverse, "Normal", [mNormRevbutton], LL, genLeft+75+24+10, -4, 54, 18 'ver115-4f
@@ -8071,18 +8069,13 @@ end sub
     combobox #handle.VideoFilt, videoFilterNames$(), changeVBWfilt, sweepBWLeft+145, markTop+5, 100, 20    'Video Filter ver116-1b
 
         sweepLeft=markSelLeft
-    checkbox #handle.linear, "", [mAxisXSelLinear], [mAxisXSelLog],sweepLeft, markTop-8, 15, 15 'ver115-1c
-    staticText #handle.linearLab, "Linear",sweepLeft+17, markTop-7, 30, 15
-    checkbox #handle.log, "", [mAxisXSelLog], [mAxisXSelLinear],sweepLeft, markTop+10, 15, 15 'ver115-1c
-    staticText #handle.logLab, "Log", sweepLeft+17, markTop+11, 30, 15
+    checkbox #handle.linear, "Linear", [mAxisXSelLinear], [mAxisXSelLog],sweepLeft, markTop-8, 47, 15 'ver115-1c
+    checkbox #handle.log, "Log", [mAxisXSelLog], [mAxisXSelLinear],sweepLeft, markTop+10, 47, 15 'ver115-1c
 
                 'ver114-4k added reverse
-    checkbox #handle.LR, "", [mAxisLRon], [mAxisLRoff],sweepLeft+17+30+25, markTop-8, 15, 15 'ver115-1c
-    staticText #handle.LRLab, "L-R",sweepLeft+17+30+25+17, markTop-7, 20, 15
-    checkbox #handle.RL, "", [mAxisRLon], [mAxisRLoff],sweepLeft+17+30+25, markTop+10, 15, 15 'ver115-1c
-    staticText #handle.RLlab, "R-L", sweepLeft+17+30+25+17, markTop+11, 20, 15
-    checkbox #handle.Alternate, "", [mAxisALTon], mAxisALToff,sweepLeft+17+30+25+17+25, markTop-8, 15, 15 'ver115-1c
-    staticText #handle.AltLab, "Alternate", sweepLeft+17+30+25+17+25+17, markTop-7, 50, 15
+    checkbox #handle.LR, "L-R", [mAxisLRon], [mAxisLRoff],sweepLeft+17+30+25, markTop-8, 37, 15 'ver115-1c
+    checkbox #handle.RL, "R-L", [mAxisRLon], [mAxisRLoff],sweepLeft+17+30+25, markTop+10, 37, 15 'ver115-1c
+    checkbox #handle.Alternate, "Alternate", [mAxisALTon], mAxisALToff,sweepLeft+17+30+25+17+25, markTop-8, 67, 15 'ver115-1c
 
     checkbox #handle.Refresh, "Refresh Screen Each Scan", [axisSetupNOP], [axisSetupNOP], sweepLeft+17+30+25+17+25+17+57, markTop-8, 147, 15 'ver115-4c
     checkbox #handle.SweepTime, "Display Sweep Time", [axisSetupNOP], [axisSetupNOP], sweepLeft+17+30+25+17+25+17+57, markTop+10, 112, 15  'ver115-4c
@@ -12621,11 +12614,6 @@ sub hideShowSweepControl control$
         #handle.RL, "show"
         #handle.Alternate, "show"
     end if
-    #handle.linearLab, control$
-    #handle.logLab, control$
-    #handle.LRLab, control$
-    #handle.RLlab, control$
-    #handle.AltLab, control$
 end sub
 
 sub hideShowBWControl control$
