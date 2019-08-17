@@ -8176,7 +8176,7 @@ end sub
 
 sub ConformMenusToMode  'Make menus and window caption match mode.
     'msaMode$ is the current mode. menuMode$ is the mode to which the menus are currently conformed.
-    if toggleShowFrequencyButton=0 then call hideShowFreqX2Control "!show"
+    call updatePanelButtons prevShowButton$, toggle ' verOK2FKU
     if msaMode$="SA" then
         if gentrk=0 then modeTitle$="Spectrum Analyzer Mode" else modeTitle$="Spectrum Analyzer with TG Mode"   'ver115-4f
     end if
