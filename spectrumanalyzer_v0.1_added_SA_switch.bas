@@ -11318,6 +11318,8 @@ end sub
     if continueCode=3 then  'ver114-6e
         needRestart=1
     else
+        call mDeleteMarker "Halt"
+        call RefreshGraph 0
         continueCode=0
         needRestart=0
     end if
@@ -11336,7 +11338,7 @@ end sub
 '117c13    if (calCanUseAutoWait=0) and useAutoWait then   'ver116-4e
 '117c13        useAutoWait=0 : wate=100
 '117c13    end if
-    if needRestart=1 then gosub [PartialRestart]
+    if needRestart=1 then gosub [PartialRestart] else call mDeleteMarker "Halt" : call RefreshGraph 0 ' verOK2FKU delete Halt
     continueCode=0  'signal to keep going ver115-8d
 '117cM    if multiscanIsOpen then call multiscanSaveContexts 0 'zero means main graph  ver115-8d
     'wait 'entered from: [LeftButDouble],[menuFreqAxisPreference] 'commented by OK2FKU
