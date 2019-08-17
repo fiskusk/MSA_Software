@@ -8084,6 +8084,9 @@ end sub
     checkbox #handle.Alternate, "", [mAxisALTon], mAxisALToff,sweepLeft+17+30+25+17+25, markTop-8, 15, 15 'ver115-1c
     staticText #handle.AltLab, "Alternate", sweepLeft+17+30+25+17+25+17, markTop-7, 50, 15
 
+    checkbox #handle.Refresh, "Refresh Screen Each Scan", [axisSetupNOP], [axisSetupNOP], sweepLeft+17+30+25+17+25+17+57, markTop-8, 147, 15 'ver115-4c
+    checkbox #handle.SweepTime, "Display Sweep Time", [axisSetupNOP], [axisSetupNOP], sweepLeft+17+30+25+17+25+17+57, markTop+10, 112, 15  'ver115-4c
+
         'Sweep Control Buttons
     button #handle.Redraw, "Redraw",btnRedraw, LR, 105,13,70,19
         'OneStep becomes HaltAtEnd when scan is in progress
