@@ -1895,6 +1895,10 @@
         call mEnableStartStop
     end if
 
+    if refreshEachScan then #handle.Refresh, "set" else #handle.Refresh, "reset"
+    if displaySweepTime then #handle.SweepTime, "set" else #handle.SweepTime, "reset"   'ver114-4f
+
+
     gosub [UpdateGraphParams] 'SEWgraph Update graph module for any changes made by the user
     firstScan=1     'Signal that the next scan is the first after Restart
 
@@ -8077,8 +8081,8 @@ end sub
     checkbox #handle.RL, "R-L", [mAxisRLon], [mAxisRLoff],sweepLeft+17+30+25, markTop+10, 37, 15 'ver115-1c
     checkbox #handle.Alternate, "Alternate", [mAxisALTon], mAxisALToff,sweepLeft+17+30+25+17+25, markTop-8, 67, 15 'ver115-1c
 
-    checkbox #handle.Refresh, "Refresh Screen Each Scan", [axisSetupNOP], [axisSetupNOP], sweepLeft+17+30+25+17+25+17+57, markTop-8, 147, 15 'ver115-4c
-    checkbox #handle.SweepTime, "Display Sweep Time", [axisSetupNOP], [axisSetupNOP], sweepLeft+17+30+25+17+25+17+57, markTop+10, 112, 15  'ver115-4c
+    checkbox #handle.Refresh, "Refresh Screen Each Scan", mAxisRefresh, mAxisRefresh, sweepLeft+17+30+25+17+25+17+57, markTop-8, 147, 15 'ver115-4c
+    checkbox #handle.SweepTime, "Display Sweep Time", mAxisSweepTime, mAxisSweepTime, sweepLeft+17+30+25+17+25+17+57, markTop+10, 112, 15  'ver115-4c
 
         'Sweep Control Buttons
     button #handle.Redraw, "Redraw",btnRedraw, LR, 105,13,70,19
@@ -8299,6 +8303,16 @@ sub mSweepCentTextBox hndl$, char$
             call uHighlightText "#handle.SweepStop"
         end if
     end if
+end sub
+
+sub mAxisRefresh cbHandle$
+    #handle.Refresh, "value? doRefresh$"
+    if doRefresh$="set" then refreshEachScan=1 else refreshEachScan=0
+end sub
+
+sub mAxisSweepTime cbHandle$
+    #handle.SweepTime, "value? doSweepTime$"  'ver114-4f
+    if doSweepTime$="set" then displaySweepTime=1 else displaySweepTime=0 : message$="" : call PrintMessage
 end sub
 
 [mAxisLRon]
@@ -12057,6 +12071,9 @@ return
             '#handle.planeadjbox, planeadj
         end if
     end if
+    if refreshEachScan then #handle.Refresh, "set" else #handle.Refresh, "reset"
+    if displaySweepTime then #handle.SweepTime, "set" else #handle.SweepTime, "reset"   'ver114-4f
+
 end function 'end of DisplayAxisXPreference
 
 [axisXHasFinished]
@@ -12607,12 +12624,16 @@ sub hideShowSweepControl control$
         #handle.LR, "hide"
         #handle.RL, "hide"
         #handle.Alternate, "hide"
+        #handle.Refresh, "hide"
+        #handle.SweepTime, "hide"
     else
         #handle.linear, "show"
         #handle.log, "show"
         #handle.LR, "show"
         #handle.RL, "show"
         #handle.Alternate, "show"
+        #handle.Refresh, "show"
+        #handle.SweepTime, "show"
     end if
 end sub
 
