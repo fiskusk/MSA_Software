@@ -459,7 +459,7 @@
     crystalLastUsedID=0 'moved ver117c33
     global tranRLCLastRLCWasSeries, tranRLCLastNotchWasTop 'most recent settings for tran mode RLC analysis
     global imageSaveLastFolder$  'Folder in which last graph image was saved, regular or Smith chart ver115-2a
-    imageSaveLastFolder$=DefaultDir$  'Folder in which image was last saved ver115-2a 'moved ver117c33
+    imageSaveLastFolder$=DefaultDir$+"\Screenshot_images"  'Folder in which image was last saved ver115-2a 'moved ver117c33
     dim Appearances$(10)    'Names of Appearances
     dim customPresetNames$(5)   'User names for custom color presets (1-5) ver115-2a
 
@@ -1655,6 +1655,7 @@
 'ver117c31    videoFilter$="Wide" : freqBand=1 : switchTR=1 : switchFR=1 : call SelectVideoFilter 'moved to Globals
 
 ' 2g. Create OperatingCal Folder
+    isErr=CreateImageFolder()
     if TGtop>0 then
         isErr=CreateOperatingCalFolder()  'Create OperatingCal folder if it does not exist
         if isErr then notice "Unable to create OperatingCal folder."
@@ -14674,10 +14675,14 @@ end function
     end if
     if isStickMode=0 then refreshGridDirty=1 : call RefreshGraph 0  'Redraw without erasure mark; but not if we are in stick mode ver114-7d
 
+    files DefaultDir$;"\Screenshot_images", "screenshot_*.bmp", fileInfo$()
+    filesQty$=fileInfo$(0,0)
+    if val(filesQty$)<=9 then prefix$="0" else prefix$=""
+
     filter$="Bitmap files" + chr$(0) + "*.bmp" + chr$(0) + "All files" + chr$(0) + "*.*" 'ver115-6b
     defaultExt$="bmp"
     initialDir$=imageSaveLastFolder$+"\" '"
-    initialFile$=""
+    initialFile$="screenshot_"+prefix$+filesQty$
     graphFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Image To File")
     if graphFileName$<>"" then   'blank means cancelled
         bmpName$=FullGraphBmp$()    'name of bitmap of entire graph window
@@ -14686,6 +14691,16 @@ end function
         unloadbmp bmpName$ : bmpName$="" 'ver116-1b moved this here
     end if
     wait
+
+function CreateImageFolder()
+    CreateImageFolder=0
+    files DefaultDir$, "", fileInfo$()  'get directory list
+    numFolders=val(fileInfo$(0,1))
+    for i=1 to numFolders   'search list for OperatingCal
+        if fileInfo$(i,1)="Screenshot_images" then exit function
+    next  i
+    if 0<>mkDir("Screenshot_images") then CreateImageFolder=1 : notice "Cannot create Screenshot Images folder"
+end function
 
 function FullGraphBmp$() 'return name of bitmap for entire graph--grid and surrounding info
             'Get Image size by finding center positions and doubling them
