@@ -8176,9 +8176,9 @@ end sub
 
 sub ConformMenusToMode  'Make menus and window caption match mode.
     'msaMode$ is the current mode. menuMode$ is the mode to which the menus are currently conformed.
+    if toggleShowFrequencyButton=0 then call hideShowFreqX2Control "!show"
     if msaMode$="SA" then
         if gentrk=0 then modeTitle$="Spectrum Analyzer Mode" else modeTitle$="Spectrum Analyzer with TG Mode"   'ver115-4f
-        if toggle=0 then call hideShowFreqX2Control  "!show"
     end if
     if msaMode$="ScalarTrans" then modeTitle$="Tracking Generator Mode"
     if msaMode$="VectorTrans" then modeTitle$="VNA Transmission Mode"
@@ -9269,7 +9269,7 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 
 [GoSAmode] 'Switch to MSA mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
-    switchSA=0 : call SelectLatchedSwitches freqBand 'Set SA/VNA switch to SA 'verOK2FKU
+    switchSA=0 : switchTR=0 : call SelectLatchedSwitches freqBand 'Set SA/VNA switch to SA 'verOK2FKU
     if graphBox$="" then 'See if window is created yet ver115-5d
         gosub [CreateGraphWindow]   'Note msaMode$ is new mode; menuMode$ is old mode
     else
