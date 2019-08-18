@@ -511,7 +511,14 @@
     toggleShowSweepButton=1 'verOK2FKU
     global toggleMenu12Button   'global handle variable for menu 1/2
     toggleMenu12Button=0    ' if 0 then menu 1/2, if 1 then menu 2/2
+    global toggleShowAmplitudeButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowAmplitudeButton=1 'verOK2FKU
+    global toggleAmplAxisY1Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleAmplAxisY1Button=1 'verOK2FKU
+    global toggleAmplAxisY2Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleAmplAxisY2Button=1 'verOK2FKU
     global prevShowButton$  ' memory old pressed button 'verOK2FKU
+    global prevAmplButton$  ' memory old pressed Y axis button 'verOK2FKU
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
     global doPeaksBounded   '=1 to limit peak search between L and R markers; otherwise 0
@@ -8084,6 +8091,14 @@ end sub
     checkbox #handle.Refresh, "Refresh Screen Each Scan", mAxisRefresh, mAxisRefresh, sweepLeft+17+30+25+17+25+17+57, markTop-8, 147, 15 'ver115-4c
     checkbox #handle.SweepTime, "Display Sweep Time", mAxisSweepTime, mAxisSweepTime, sweepLeft+17+30+25+17+25+17+57, markTop+10, 112, 15  'ver115-4c
 
+        amplitudeLeft=markSelLeft
+    button #handle.AxisY1, "Axis Y1", mBtnAmplAxisY1, LL, amplitudeLeft, -4, 47,18
+    button #handle.AxisY2, "Axis Y2", mBtnAmplAxisY2, LL, amplitudeLeft, -22, 47,18
+
+        amplAxisYxLeft=amplitudeLeft+45+5
+    staticText #handle.LabColor, "Trace Color", amplAxisYxLeft,markTop-9,70,12
+    graphicbox #handle.color, amplAxisYxLeft, markTop+5, 50, 20  'Trace Color
+
         'Sweep Control Buttons
     button #handle.Redraw, "Redraw",btnRedraw, LR, 105,13,70,19
         'OneStep becomes HaltAtEnd when scan is in progress
@@ -12573,6 +12588,33 @@ sub mMenuMarkerOptions     'Button handler to set marker options
     if haltsweep=0 then call RefreshGraph 0   'if not sweeping redraw graph ver114-7d
 end sub
 
+sub updateAmplAxisYSubmenu button$, buttToggle
+    call hideAxisYxSubmenu
+    select case button$
+        case "AmplAxisY1Control"
+            if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplAxisY1Button=buttToggle : #handle.AxisY2, "!font Arial 9"
+            if buttToggle then
+                call hideShowAxisY1Submenu "!hide"
+                #handle.AxisY1, "!font Arial 9"
+            else
+                call hideShowAxisY1Submenu "!show"
+                #handle.AxisY1, "!font Arial 9 bold"
+            end if
+        case "AmplAxisY2Control"
+            if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplAxisY2Button=buttToggle : #handle.AxisY1, "!font Arial 9"
+            if buttToggle then
+                call hideShowAxisY2Submenu "!hide"
+                #handle.AxisY2, "!font Arial 9"
+            else
+                call hideShowAxisY2Submenu "!show"
+                #handle.AxisY2, "!font Arial 9 bold"
+            end if
+        case else
+            exit sub
+    end select
+    prevAmplButton$=button$ ' remember button press
+end sub
+
 sub updatePanelButtons button$, toggle ' called if any menu botton for easy control is pressed verOK2FKU
     call hideAllControlButtons  ' hide all controls
     select case button$
@@ -12604,6 +12646,13 @@ sub updatePanelButtons button$, toggle ' called if any menu botton for easy cont
             else
                 call hideShowSweepControl "!show"
             end if
+        case "AmplitudeControl"
+            if prevShowButton$<>button$ then toggle=0 : toggleShowAmplitudeButton=toggle
+            if toggle then
+                call hideShowAmplitudeControl "!hide"
+            else
+                call hideShowAmplitudeControl "!show"
+            end if
         case else
             exit sub
     end select
@@ -12615,6 +12664,35 @@ sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
     call hideAllFreqControl
     call hideShowBWControl "!hide"
     call hideShowSweepControl "!hide"
+    call hideShowAmplitudeControl "!hide"
+    call hideAxisYxSubmenu
+end sub
+
+sub hideAxisYxSubmenu
+    call hideShowAxisY1Submenu "!hide"
+    call hideShowAxisY2Submenu "!hide"
+end sub
+
+sub hideShowAxisY1Submenu control$
+    if control$="!hide" then
+        #handle.color, "hide"
+    else
+        #handle.color, "show"
+    end if
+    #handle.LabColor, control$
+end sub
+
+sub hideShowAxisY2Submenu control$
+
+end sub
+
+sub hideShowAmplitudeControl control$
+    #handle.AxisY1, control$
+    #handle.AxisY2, control$
+    call hideShowAxisY1Submenu "!hide"
+    #handle.AxisY1, "!font Arial 9"
+    call hideShowAxisY2Submenu "!hide"
+    #handle.AxisY2, "!font Arial 9"
 end sub
 
 sub hideShowSweepControl control$
@@ -12847,6 +12925,24 @@ sub mMarkSelect markID$  'Program selection specified marker in combo box
 '117cM        end if
     end if
     call mUserMarkSelect ""  'Take same action as though user selected the marker
+end sub
+
+sub mBtnAmplAxisY1 btn$
+    if toggleAmplAxisY1Button then toggleAmplAxisY1Button=0 else toggleAmplAxisY1Button=1
+    showButton$="AmplAxisY1Control"
+    call updateAmplAxisYSubmenu showButton$, toggleAmplAxisY1Button
+end sub
+
+sub mBtnAmplAxisY2 btn$
+    if toggleAmplAxisY2Button then toggleAmplAxisY2Button=0 else toggleAmplAxisY2Button=1
+    showButton$="AmplAxisY2Control"
+    call updateAmplAxisYSubmenu showButton$, toggleAmplAxisY2Button
+end sub
+
+sub mBtnShowAmplitudeControl btn$
+    if toggleShowAmplitudeButton then toggleShowAmplitudeButton=0 else toggleShowAmplitudeButton=1
+    showButton$="AmplitudeControl"
+    call updatePanelButtons showButton$, toggleShowAmplitudeButton
 end sub
 
 sub mBtnShowSweepControl btn$
