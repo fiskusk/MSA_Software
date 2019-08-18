@@ -1855,7 +1855,7 @@
         #handle.linear, "set"
         #handle.log, "reset"
         call gGetNumDivisions nHorDiv, nVertDiv
-        #handle.NDiv, "!";nHorDiv
+        #handle.HDiv, "!";nHorDiv
     else
         #handle.linear, "reset"
         #handle.log, "set"
@@ -7977,14 +7977,10 @@ end sub
     markControlThirdColLeft=markControlSecondColLeft+42
     button #handle.showMarkerControl, "Marker", mBtnShowMarkerControl, LL, markControlThirdColLeft, -4, 47,18
     button #handle.saveImage, "Save Im", [SaveImage], LL, markControlThirdColLeft, -22, 47,18
-        'Test Setup Button 'ver115-1g added this and deleted go/save config
-    configLeft=markControlThirdColLeft+49
-    stylebits #handle.testsetup, _BS_MULTILINE, 0, 0, 0
-    button #handle.testsetup, "Test Setups", [ManageTestSetups], LL, configLeft, -4, 50, 35 'ver117c36 was -5 'ver117c44 was -8
 
         'Marker Selection buttons
     markTop=currGraphBoxHeight+15     'This isn't the top of anything in particular, just a reference point ver115-1b
-    markSelLeft=configLeft+65
+    markSelLeft=markControlThirdColLeft+57
     statictext #handle.selMarkLab "Marker", markSelLeft+3, markTop-9, 40, 14
     selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i
     combobox #handle.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+5, 50, 180
@@ -8054,7 +8050,7 @@ end sub
     staticText #handle.DivLab1 "Hor. Div.", sweepWaitLeft,markTop+11,45,15
     NumHorDiv$(0)="4" : NumHorDiv$(1)="6" : NumHorDiv$(2)="8"   'ver115-1b changed to NumHorDiv$
     NumHorDiv$(3)="10" : NumHorDiv$(4)="12"
-    combobox #handle.NDiv, NumHorDiv$(), [mAxisXHorDiv],sweepWaitLeft+48, markTop+7, 35, 20
+    combobox #handle.HDiv, NumHorDiv$(), [mAxisXHorDiv],sweepWaitLeft+48, markTop+7, 35, 20
 
     genLeft=sweepWaitLeft+48+35+10
     statictext #handle.LabTG, "TG Offset          Mode:",genLeft,markTop-7,109,15
@@ -8095,9 +8091,53 @@ end sub
     button #handle.AxisY1, "Axis Y1", mBtnAmplAxisY1, LL, amplitudeLeft, -4, 50,18
     button #handle.AxisY2, "Axis Y2", mBtnAmplAxisY2, LL, amplitudeLeft, -22, 50,18
 
-        amplAxisYxLeft=amplitudeLeft+50+5
-    staticText #handle.LabColor, "Trace Color", amplAxisYxLeft,markTop-9,70,12
-    graphicbox #handle.color, amplAxisYxLeft, markTop+5, 50, 20  'Trace Color
+        amplAxisYxColorLeft=amplitudeLeft+50+5
+    staticText #handle.LabColor, "Tr. Color", amplAxisYxColorLeft, markTop-6,45,12
+    graphicbox #handle.color, amplAxisYxColorLeft+48, markTop-10, 30, 20  'Trace Color
+
+    staticText #handle.LabTraceWidth "Tr. Width", amplAxisYxColorLeft,markTop+11,45,12
+    TraceWidths$(0)="0" : TraceWidths$(1)="1" : TraceWidths$(2)="2" : TraceWidths$(3)="3"
+    combobox #handle.width, TraceWidths$(), [axisYDoNothing],amplAxisYxColorLeft+48, markTop+7, 30, 20  'Trace Width
+
+        amplAxisYxStyleLeft=amplAxisYxColorLeft+48+30+3
+    staticText #handle.LabStyle "Trace Style", amplAxisYxStyleLeft,markTop-8,70,12
+    if (msaMode$="SA" or msaMode$="ScalarTrans") and axisNum=primaryAxisNum then    'ver115-3b
+        'histo modes are only in non-phase modes, and only on primary axis
+        TraceStyles$(0)="Off" : TraceStyles$(1)="Norm Erase" :  TraceStyles$(2)="Norm Stick"
+        TraceStyles$(4)="Histo Erase" : TraceStyles$(5)="Histo Stick"
+    else    'Phase modes and secondary axis have no histo
+        TraceStyles$(0)="Off" : TraceStyles$(1)="Erase" :  TraceStyles$(2)="Stick"
+        TraceStyles$(4)="" : TraceStyles$(5)=""
+    end if
+    'Y1DisplayMode, Y2DisplayMode  0=off  1=NormErase  2=NormStick  3=HistoErase  4=HistoStick
+    combobox #handle.style, TraceStyles$(), [axisYDoNothing],amplAxisYxStyleLeft, markTop+7, 80, 20   'Trace Style
+
+    '   Number of vertical divisions
+        amplAxisYxVerDivLeft=amplAxisYxStyleLeft+80+3
+    staticText #handle.LabVDiv "Ver. Div.", amplAxisYxVerDivLeft,markTop-8,45,12
+    NumVertDiv$(0)="4" : NumVertDiv$(1)="5" : NumVertDiv$(2)="6"    'ver115-1b changed to NumVertDiv$
+    NumVertDiv$(3)="8" : NumVertDiv$(4)="10" : NumVertDiv$(5)="12"
+    combobox #handle.VDiv, NumVertDiv$(), [axisYDoNothing],amplAxisYxVerDivLeft, markTop+7, 45, 20   'Number of vert divisions
+
+        'Top and bottom limits
+        amplAxisYxRefLeft=amplAxisYxVerDivLeft+45+5
+    staticText #handle.LabTopRef, "Top Ref", amplAxisYxRefLeft,markTop-6,42,15
+    textbox #handle.TopRef, amplAxisYxRefLeft+45, markTop-10, 55,20     'Top Ref  ver115-2c
+    staticText #handle.LabBotRef, "Bot Ref", amplAxisYxRefLeft,markTop+11,42,15
+    textbox #handle.BotRef, amplAxisYxRefLeft+45, markTop+7, 55,20     'Bot Ref ver115-2c
+
+        'List of graphs
+        amplAxisYxGraphDataLeft=amplAxisYxRefLeft+45+55+5
+    'staticText #handle.Instruct1, "Graph Data",amplAxisYxGraphDataLeft+68+30, markTop-8, 60,12
+    'ver115-3a omitted the stylebits, because we have to take action when the graph changes
+    comboBox #handle.GraphData, axisGraphData$(),[axisYChangeGraph], amplAxisYxGraphDataLeft, markTop+7, 155, 350 'ver115-4a
+
+    button #handle.RefConfirm, "OK", mRefConfirm, LL, amplAxisYxGraphDataLeft, -2,30,18
+    checkbox #handle.auto, "Auto Scale", [mAxisAutoscaleOn], [mAxisAutoscaleOn], amplAxisYxGraphDataLeft+33, markTop-9, 69,15
+    button #handle.DefaultAxis, "Default", mDefAxis, LL, amplAxisYxGraphDataLeft+33+72, -2,45,18
+
+        'Test Setup Button 'ver115-1g added this and deleted go/save config
+    button #handle.testsetup, "Test Setups", [ManageTestSetups], LR, 175, 13, 70, 19 'ver117c36 was -5 'ver117c44 was -8
 
         'Sweep Control Buttons
     button #handle.Redraw, "Redraw",btnRedraw, LR, 105,13,70,19
@@ -8124,6 +8164,8 @@ end sub
     #handle.g, "when leftButtonMove gMouseQuery" 'ver116-4j
     #handle.g, "when leftButtonUp gMouseQueryEnd" 'ver116-4h
     #handle.g, "when characterInput [mAddMarkerFromKeyboard]" 'ver116-4j
+    #handle.color, "when leftButtonDown mPickColor handle,x,y$"
+
     hGraphWindow=hwnd(#handle)  'get graph window handle
 
     #handle.g, "when characterInput mSweepCentTextBox"  'verOK2FKU (TAB pressed in graph jump to Span/Stop textbox)
@@ -8182,6 +8224,7 @@ end sub
     #handle.Redraw, "!font Arial 9 bold" : #handle.Restart, "!font Arial 9 bold"   'SEWgraph
     #handle.Redraw, "!hide"     'We start out running so hide this
     #handle.SweepSettingConfirm, "!font Arial 9 bold"
+    #handle.RefConfirm, "!font Arial 9 bold"
         'Tell graph module what size we are, and calculate scaling ver114-6f
     call gUpdateGraphObject graphBox$, currGraphBoxWidth, currGraphBoxHeight, _ 'ver115-1c
                                         graphMarLeft, graphMarRight, graphMarTop, graphMarBot
@@ -8377,7 +8420,7 @@ end sub
 
 [mAxisXSelLinear]
     '#handle.DivLab1, "!show"
-    #handle.NDiv, "select 10"     'Start with 10 divisions when switching from log to linear ver114-2c
+    #handle.HDiv, "select 10"     'Start with 10 divisions when switching from log to linear ver114-2c
     #handle.log, "reset"
     #handle.linear, "set" 'ver115-1c
     goto [axisXSelLinLog]
@@ -8404,7 +8447,7 @@ end sub
             if startfreq=0 then
                 if endfreq=0 then   'both limits are zero
                     linearF=1 : notice "Changed to linear sweep because span is small."
-                    #handle.NDiv, "select 10" 'set to 10 divisions ver116-1b
+                    #handle.HDiv, "select 10" 'set to 10 divisions ver116-1b
                 else 'starts at zero; ends above zero
                     notice "0 Hz not allowed in log sweep; range changed" : call SetStartStopFreq 0.0001, max(0.001, endfreq)
                 end if
@@ -8415,7 +8458,7 @@ end sub
             if allNegative then span=uSafeLog10(startfreq/endfreq) else span=uSafeLog10(endfreq/startfreq)    'ver116-4k
             if span <0.7 then
                 linearF=1 : notice "Changed to linear sweep because span is small."  'ver114-6e
-                #handle.NDiv, "select 10" 'set to 10 divisions ver116-1b
+                #handle.HDiv, "select 10" 'set to 10 divisions ver116-1b
             end if
             if span>9 then
                 if allNegative then call SetStartStopFreq startfreq, startfreq/1000000000 else call SetStartStopFreq endfreq/1000000000, endfreq 'ver116-4k
@@ -11245,7 +11288,7 @@ end sub
 
 [mAxisXHorDiv]
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
-    #handle.NDiv, "contents? nDiv$"   'Get user specified number of divisions
+    #handle.HDiv, "contents? nDiv$"   'Get user specified number of divisions
     nHorDiv=val(nDiv$) : if nHorDiv<2 then nHorDiv=2 else if nHorDiv>12 then nHorDiv=10 'ver116-1b
     nHorDiv=2*int(nHorDiv/2)    'Make the number even
         'Set new number of hor divisions, with old number of vert div
@@ -12074,7 +12117,7 @@ return
     print #handle.SweepWait, "";wate
     print #handle.SampleBox, "";adcsamples
     call gGetNumDivisions nHorDiv, nVertDiv
-    #handle.NDiv, "!";nHorDiv
+    #handle.HDiv, "!";nHorDiv
     if msaMode$<>"SA" then 'ver115-4f
         if switchFR=0 then  'ver116-1b
             #handle.DirectionF, "set" : #handle.DirectionR, "reset"
@@ -12594,19 +12637,21 @@ sub updateAmplAxisYSubmenu button$, buttToggle
         case "AmplAxisY1Control"
             if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplAxisY1Button=buttToggle : #handle.AxisY2, "!font Arial 9"
             if buttToggle then
-                call hideShowAxisY1Submenu "!hide"
+                call hideShowAxisY1Submenu "!hide", axisNum
                 #handle.AxisY1, "!font Arial 9"
             else
-                call hideShowAxisY1Submenu "!show"
+                axisNum=1
+                call hideShowAxisY1Submenu "!show", axisNum
                 #handle.AxisY1, "!font Arial 9 bold"
             end if
         case "AmplAxisY2Control"
             if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplAxisY2Button=buttToggle : #handle.AxisY1, "!font Arial 9"
             if buttToggle then
-                call hideShowAxisY2Submenu "!hide"
+                call hideShowAxisY2Submenu "!hide", axisNum
                 #handle.AxisY2, "!font Arial 9"
             else
-                call hideShowAxisY2Submenu "!show"
+                axisNum=2
+                call hideShowAxisY2Submenu "!show", axisNum
                 #handle.AxisY2, "!font Arial 9 bold"
             end if
         case else
@@ -12669,35 +12714,142 @@ sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
 end sub
 
 sub hideAxisYxSubmenu
-    call hideShowAxisY1Submenu "!hide"
-    call hideShowAxisY2Submenu "!hide"
+    call hideShowAxisY1Submenu "!hide", axisNum
+    call hideShowAxisY2Submenu "!hide", axisNum
 end sub
 
-sub hideShowAxisY1Submenu control$
-    if control$="!hide" then
-        #handle.color, "hide"
-    else
-        #handle.color, "show"
-    end if
-    #handle.LabColor, control$
+sub hideShowAxisY1Submenu control$, axisNum
+    call loadAxisControls control$, axisNum
+    call hideShowAxisYxControl control$
 end sub
 
-sub hideShowAxisY2Submenu control$
+sub hideShowAxisY2Submenu control$, axisNum
+    call loadAxisControls control$, axisNum
+    call hideShowAxisYxControl control$
+end sub
+
+sub hideShowAxisYxControl control$
     if control$="!hide" then
         #handle.color, "hide"
+        #handle.width, "hide"
+        #handle.style, "hide"
+        #handle.VDiv, "hide"
+        #handle.GraphData, "hide"
+        #handle.auto, "hide"
     else
         #handle.color, "show"
+        #handle.width, "show"
+        #handle.style, "show"
+        #handle.VDiv, "show"
+        #handle.GraphData, "show"
+        #handle.auto, "show"
     end if
     #handle.LabColor, control$
+    #handle.LabTraceWidth, control$
+    #handle.LabStyle, control$
+    #handle.LabVDiv, control$
+    #handle.LabTopRef, control$
+    #handle.TopRef, control$
+    #handle.LabBotRef, control$
+    #handle.BotRef, control$
+    #handle.RefConfirm, control$
+    #handle.DefaultAxis, control$
+end sub
+
+sub loadAxisControls control$, axisNum
+    if control$="!show" then
+        if (msaMode$="SA" or msaMode$="ScalarTrans") and axisNum=primaryAxisNum then    'ver115-3b
+            'histo modes are only in non-phase modes, and only on primary axis
+            TraceStyles$(0)="Off" : TraceStyles$(1)="Norm Erase" :  TraceStyles$(2)="Norm Stick"
+            TraceStyles$(4)="Histo Erase" : TraceStyles$(5)="Histo Stick"
+        else    'Phase modes and secondary axis have no histo
+            TraceStyles$(0)="Off" : TraceStyles$(1)="Erase" :  TraceStyles$(2)="Stick"
+            TraceStyles$(4)="" : TraceStyles$(5)=""
+        end if
+        numGraphs=FillRegularGraphData(axisNum)
+        #handle.style, "reload"
+        #handle.GraphData, "reload"
+
+        call gGetTraceWidth w1, w2  'Trace widths
+        call gGetTraceColors c1$, c2$   'Trace colors
+        if axisNum=1 then
+            tWidth=w1
+            tColor$=c1$
+            if doTwoPort=0 then
+                if autoScaleY1=1 then #handle.auto, "set" else #handle.auto, "reset"    'ver114-7a
+            end if
+        else
+            tWidth=w2
+            tColor$=c2$
+            if doTwoPort=0 then
+                if autoScaleY2=1 then #handle.auto, "set" else  #handle.auto, "reset"    'ver114-7a
+            end if
+        end if
+        #handle.color, "fill "; tColor$;";flush"  'Fill box with current trace color
+        #handle.width, "select ";tWidth
+
+        call gGetNumDivisions nHorDiv, nVertDiv
+        #handle.VDiv, "!";nVertDiv
+
+        call gGetYAxisRange axisNum, yMin, yMax     'Previously specified min and max
+        call gGetAxisFormats xForm$, y1Form$, y2Form$
+        if axisNum=1 then yForm$=y1Form$ else yForm$=y2Form$
+        topref$= uFormatted$(yMax, yForm$): botref$=uFormatted$(yMin, yForm$)
+        print #handle.TopRef, topref$ : print #handle.BotRef, botref$
+
+        if doTwoPort=0 then
+            'select initial trace style based on Y2DisplayMode or Y1DisplayMode. Note those variables run from 0 but
+            'combobox selection indices run from 1; hence the +1
+            if axisNum=1 then #handle.style, "selectindex ";Y1DisplayMode+1 _
+                                    else #handle.style, "selectindex ";Y2DisplayMode+1
+        end if
+
+        if doTwoPort then
+            if axisNum=1 then origData=TwoPortGetY1Type() else origData=TwoPortGetY2Type()
+        else
+            if axisNum=1 then origData=Y1DataType else origData=Y2DataType
+        end if
+        if doTwoPort then
+            if axisNum=1 then origData=TwoPortGetY1Type() else origData=TwoPortGetY2Type()
+        else
+            if axisNum=1 then origData=Y1DataType else origData=Y2DataType
+        end if
+        call mSelectGraphType origData
+    end if
+end sub
+
+sub mSelectGraphType selectDataType  'select graph to match selectDataType
+    sel=0
+    for i=0 to 40
+        if axisDataType(i)=selectDataType then sel=i+1 : exit for  'Look for match
+    next i
+    if sel=0 then sel=1 'Error, use first entry
+    'sel now has the index (1...) to use to select the current data type
+    #handle.GraphData, "selectindex ";sel
+    #handle.TopRef, "!setfocus" : call uHighlightText "#handle.TopRef"      'Highlite axis max box  'ver115-2c
+end sub
+
+sub mPickColor handle$,x,y
+    ColorDialog tColor$, newColor$
+    if newColor$<>"" then
+        tColor$=newColor$
+        #handle.color, "fill "; tColor$;";flush"  'Fill box with new trace color
+    end if
+    if axisNum=1 then
+        c1$=tColor$ : y1Col$=tColor$    'Set trace and grid labels to same color
+    else
+        c2$=tColor$ : y2Col$=tColor$    'Set trace and grid labels to same color
+    end if
+    call gSetTraceColors c1$, c2$
 end sub
 
 sub hideShowAmplitudeControl control$
     #handle.AxisY1, control$
     #handle.AxisY2, control$
-    call hideShowAxisY1Submenu "!hide"
+    call hideShowAxisY1Submenu "!hide", axisNum
     #handle.AxisY1, "!font Arial 9"
     toggleAmplAxisY1Button=1
-    call hideShowAxisY2Submenu "!hide"
+    call hideShowAxisY2Submenu "!hide", axisNum
     #handle.AxisY2, "!font Arial 9"
     toggleAmplAxisY2Button=1
 end sub
@@ -12773,9 +12925,9 @@ sub hideShowFreq22Control control$
     #handle.WaitLab, control$
     #handle.SweepWait, control$
     if control$="!hide" then
-        #handle.NDiv, "hide"
+        #handle.HDiv, "hide"
     else
-        if gGetXIsLinear() then #handle.NDiv, "show" : #handle.DivLab1, control$
+        if gGetXIsLinear() then #handle.HDiv, "show" : #handle.DivLab1, control$
     end if
     if msaMode$="SA" then
         #handle.freqoffbox, control$
@@ -12825,7 +12977,7 @@ sub hideAllFreqControl
     #handle.SweepWait, control$
     #handle.SweepSettingConfirm, control$
     #handle.Menu12, control$
-    #handle.NDiv, "hide"
+    #handle.HDiv, "hide"
     #handle.freqoffbox, control$
     #handle.LabF, control$
     #handle.LabTG, control$
