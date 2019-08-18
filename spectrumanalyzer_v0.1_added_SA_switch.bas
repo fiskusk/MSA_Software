@@ -8092,10 +8092,10 @@ end sub
     checkbox #handle.SweepTime, "Display Sweep Time", mAxisSweepTime, mAxisSweepTime, sweepLeft+17+30+25+17+25+17+57, markTop+10, 112, 15  'ver115-4c
 
         amplitudeLeft=markSelLeft
-    button #handle.AxisY1, "Axis Y1", mBtnAmplAxisY1, LL, amplitudeLeft, -4, 47,18
-    button #handle.AxisY2, "Axis Y2", mBtnAmplAxisY2, LL, amplitudeLeft, -22, 47,18
+    button #handle.AxisY1, "Axis Y1", mBtnAmplAxisY1, LL, amplitudeLeft, -4, 50,18
+    button #handle.AxisY2, "Axis Y2", mBtnAmplAxisY2, LL, amplitudeLeft, -22, 50,18
 
-        amplAxisYxLeft=amplitudeLeft+45+5
+        amplAxisYxLeft=amplitudeLeft+50+5
     staticText #handle.LabColor, "Trace Color", amplAxisYxLeft,markTop-9,70,12
     graphicbox #handle.color, amplAxisYxLeft, markTop+5, 50, 20  'Trace Color
 
@@ -12683,7 +12683,12 @@ sub hideShowAxisY1Submenu control$
 end sub
 
 sub hideShowAxisY2Submenu control$
-
+    if control$="!hide" then
+        #handle.color, "hide"
+    else
+        #handle.color, "show"
+    end if
+    #handle.LabColor, control$
 end sub
 
 sub hideShowAmplitudeControl control$
@@ -12691,8 +12696,10 @@ sub hideShowAmplitudeControl control$
     #handle.AxisY2, control$
     call hideShowAxisY1Submenu "!hide"
     #handle.AxisY1, "!font Arial 9"
+    toggleAmplAxisY1Button=1
     call hideShowAxisY2Submenu "!hide"
     #handle.AxisY2, "!font Arial 9"
+    toggleAmplAxisY2Button=1
 end sub
 
 sub hideShowSweepControl control$
