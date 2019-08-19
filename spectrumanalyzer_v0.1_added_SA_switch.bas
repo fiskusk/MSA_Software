@@ -519,6 +519,7 @@
     toggleAmplAxisY2Button=1 'verOK2FKU
     global prevShowButton$  ' memory old pressed button 'verOK2FKU
     global prevAmplButton$  ' memory old pressed Y axis button 'verOK2FKU
+    global mAxisNum         ' memory which menu for axis Y1 or Y2 is or was show
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
     global doPeaksBounded   '=1 to limit peak search between L and R markers; otherwise 0
@@ -8097,20 +8098,20 @@ end sub
 
     staticText #handle.LabTraceWidth "Tr. Width", amplAxisYxColorLeft,markTop+11,45,12
     TraceWidths$(0)="0" : TraceWidths$(1)="1" : TraceWidths$(2)="2" : TraceWidths$(3)="3"
-    combobox #handle.width, TraceWidths$(), [axisYDoNothing],amplAxisYxColorLeft+48, markTop+7, 30, 20  'Trace Width
+    combobox #handle.width, TraceWidths$(), mChangeWidth,amplAxisYxColorLeft+48, markTop+7, 30, 20  'Trace Width
 
         amplAxisYxStyleLeft=amplAxisYxColorLeft+48+30+3
     staticText #handle.LabStyle "Trace Style", amplAxisYxStyleLeft,markTop-8,70,12
-    if (msaMode$="SA" or msaMode$="ScalarTrans") and axisNum=primaryAxisNum then    'ver115-3b
+    'if (msaMode$="SA" or msaMode$="ScalarTrans") and axisNum=primaryAxisNum then    'ver115-3b
         'histo modes are only in non-phase modes, and only on primary axis
-        TraceStyles$(0)="Off" : TraceStyles$(1)="Norm Erase" :  TraceStyles$(2)="Norm Stick"
-        TraceStyles$(4)="Histo Erase" : TraceStyles$(5)="Histo Stick"
-    else    'Phase modes and secondary axis have no histo
-        TraceStyles$(0)="Off" : TraceStyles$(1)="Erase" :  TraceStyles$(2)="Stick"
-        TraceStyles$(4)="" : TraceStyles$(5)=""
-    end if
+        'T'raceStyles$(0)="Off" : TraceStyles$(1)="Norm Erase" :  TraceStyles$(2)="Norm Stick"
+        'TraceStyles$(4)="Histo Erase" : TraceStyles$(5)="Histo Stick"
+    'else    'Phase modes and secondary axis have no histo
+        'TraceStyles$(0)="Off" : TraceStyles$(1)="Erase" :  TraceStyles$(2)="Stick"
+        'TraceStyles$(4)="" : TraceStyles$(5)=""
+    'end if
     'Y1DisplayMode, Y2DisplayMode  0=off  1=NormErase  2=NormStick  3=HistoErase  4=HistoStick
-    combobox #handle.style, TraceStyles$(), [axisYDoNothing],amplAxisYxStyleLeft, markTop+7, 80, 20   'Trace Style
+    combobox #handle.style, TraceStyles$(), mChangeStyle,amplAxisYxStyleLeft, markTop+7, 80, 20   'Trace Style
 
     '   Number of vertical divisions
         amplAxisYxVerDivLeft=amplAxisYxStyleLeft+80+3
@@ -8164,7 +8165,7 @@ end sub
     #handle.g, "when leftButtonMove gMouseQuery" 'ver116-4j
     #handle.g, "when leftButtonUp gMouseQueryEnd" 'ver116-4h
     #handle.g, "when characterInput [mAddMarkerFromKeyboard]" 'ver116-4j
-    #handle.color, "when leftButtonDown mPickColor handle,x,y$"
+    #handle.color, "when leftButtonDown mPickColor"
 
     hGraphWindow=hwnd(#handle)  'get graph window handle
 
@@ -11147,6 +11148,9 @@ sub DisplayAxisYPreference axisNum, doTwoPort   'Display dialog to select Y axis
     else
         call TwoPortAdjustToYChanges (origData<>restoreData)
     end if
+    if toggleAmplAxisY2Button=0 or toggleAmplAxisY1Button=0 then
+        call loadAxisControls "!show", mAxisNum ' load changes into bottom menu
+    end if
 end sub  'return to: sub DisplayAxisYPreference
 
 function FillRegularGraphData(axisNum) 'Fill axisGraphData$ and axisDataType for regular scan graphs; return number of graphs
@@ -12637,21 +12641,21 @@ sub updateAmplAxisYSubmenu button$, buttToggle
         case "AmplAxisY1Control"
             if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplAxisY1Button=buttToggle : #handle.AxisY2, "!font Arial 9"
             if buttToggle then
-                call hideShowAxisY1Submenu "!hide", axisNum
+                call hideShowAxisY1Submenu "!hide", mAxisNum
                 #handle.AxisY1, "!font Arial 9"
             else
-                axisNum=1
-                call hideShowAxisY1Submenu "!show", axisNum
+                mAxisNum=1
+                call hideShowAxisY1Submenu "!show", mAxisNum
                 #handle.AxisY1, "!font Arial 9 bold"
             end if
         case "AmplAxisY2Control"
             if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplAxisY2Button=buttToggle : #handle.AxisY1, "!font Arial 9"
             if buttToggle then
-                call hideShowAxisY2Submenu "!hide", axisNum
+                call hideShowAxisY2Submenu "!hide", mAxisNum
                 #handle.AxisY2, "!font Arial 9"
             else
-                axisNum=2
-                call hideShowAxisY2Submenu "!show", axisNum
+                mAxisNum=2
+                call hideShowAxisY2Submenu "!show", mAxisNum
                 #handle.AxisY2, "!font Arial 9 bold"
             end if
         case else
@@ -12714,17 +12718,17 @@ sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
 end sub
 
 sub hideAxisYxSubmenu
-    call hideShowAxisY1Submenu "!hide", axisNum
-    call hideShowAxisY2Submenu "!hide", axisNum
+    call hideShowAxisY1Submenu "!hide", mAxisNum
+    call hideShowAxisY2Submenu "!hide", mAxisNum
 end sub
 
-sub hideShowAxisY1Submenu control$, axisNum
-    call loadAxisControls control$, axisNum
+sub hideShowAxisY1Submenu control$, mAxisNum
+    call loadAxisControls control$, mAxisNum
     call hideShowAxisYxControl control$
 end sub
 
-sub hideShowAxisY2Submenu control$, axisNum
-    call loadAxisControls control$, axisNum
+sub hideShowAxisY2Submenu control$, mAxisNum
+    call loadAxisControls control$, mAxisNum
     call hideShowAxisYxControl control$
 end sub
 
@@ -12756,9 +12760,9 @@ sub hideShowAxisYxControl control$
     #handle.DefaultAxis, control$
 end sub
 
-sub loadAxisControls control$, axisNum
+sub loadAxisControls control$, mAxisNum
     if control$="!show" then
-        if (msaMode$="SA" or msaMode$="ScalarTrans") and axisNum=primaryAxisNum then    'ver115-3b
+        if (msaMode$="SA" or msaMode$="ScalarTrans") and mAxisNum=primaryAxisNum then    'ver115-3b
             'histo modes are only in non-phase modes, and only on primary axis
             TraceStyles$(0)="Off" : TraceStyles$(1)="Norm Erase" :  TraceStyles$(2)="Norm Stick"
             TraceStyles$(4)="Histo Erase" : TraceStyles$(5)="Histo Stick"
@@ -12766,13 +12770,13 @@ sub loadAxisControls control$, axisNum
             TraceStyles$(0)="Off" : TraceStyles$(1)="Erase" :  TraceStyles$(2)="Stick"
             TraceStyles$(4)="" : TraceStyles$(5)=""
         end if
-        numGraphs=FillRegularGraphData(axisNum)
+        numGraphs=FillRegularGraphData(mAxisNum)
         #handle.style, "reload"
         #handle.GraphData, "reload"
 
         call gGetTraceWidth w1, w2  'Trace widths
         call gGetTraceColors c1$, c2$   'Trace colors
-        if axisNum=1 then
+        if mAxisNum=1 then
             tWidth=w1
             tColor$=c1$
             if doTwoPort=0 then
@@ -12791,28 +12795,23 @@ sub loadAxisControls control$, axisNum
         call gGetNumDivisions nHorDiv, nVertDiv
         #handle.VDiv, "!";nVertDiv
 
-        call gGetYAxisRange axisNum, yMin, yMax     'Previously specified min and max
+        call gGetYAxisRange mAxisNum, yMin, yMax     'Previously specified min and max
         call gGetAxisFormats xForm$, y1Form$, y2Form$
-        if axisNum=1 then yForm$=y1Form$ else yForm$=y2Form$
+        if mAxisNum=1 then yForm$=y1Form$ else yForm$=y2Form$
         topref$= uFormatted$(yMax, yForm$): botref$=uFormatted$(yMin, yForm$)
         print #handle.TopRef, topref$ : print #handle.BotRef, botref$
 
         if doTwoPort=0 then
             'select initial trace style based on Y2DisplayMode or Y1DisplayMode. Note those variables run from 0 but
             'combobox selection indices run from 1; hence the +1
-            if axisNum=1 then #handle.style, "selectindex ";Y1DisplayMode+1 _
+            if mAxisNum=1 then #handle.style, "selectindex ";Y1DisplayMode+1 _
                                     else #handle.style, "selectindex ";Y2DisplayMode+1
         end if
 
         if doTwoPort then
-            if axisNum=1 then origData=TwoPortGetY1Type() else origData=TwoPortGetY2Type()
+            if mAxisNum=1 then origData=TwoPortGetY1Type() else origData=TwoPortGetY2Type()
         else
-            if axisNum=1 then origData=Y1DataType else origData=Y2DataType
-        end if
-        if doTwoPort then
-            if axisNum=1 then origData=TwoPortGetY1Type() else origData=TwoPortGetY2Type()
-        else
-            if axisNum=1 then origData=Y1DataType else origData=Y2DataType
+            if mAxisNum=1 then origData=Y1DataType else origData=Y2DataType
         end if
         call mSelectGraphType origData
     end if
@@ -12830,26 +12829,73 @@ sub mSelectGraphType selectDataType  'select graph to match selectDataType
 end sub
 
 sub mPickColor handle$,x,y
+    call gGetTextColors xCol$, y1Col$, y2Col$,gridCol$
+    call gGetTraceColors c1$, c2$   'Trace colors
+    if mAxisNum=1 then
+        tColor$=c1$
+    else
+        tColor$=c2$
+    end if
     ColorDialog tColor$, newColor$
     if newColor$<>"" then
         tColor$=newColor$
         #handle.color, "fill "; tColor$;";flush"  'Fill box with new trace color
+        if mAxisNum=1 then
+            c1$=tColor$ : y1Col$=tColor$    'Set trace and grid labels to same color
+        else
+            c2$=tColor$ : y2Col$=tColor$    'Set trace and grid labels to same color
+        end if
+        call gSetTraceColors c1$, c2$
+        call gSetTextColors xCol$, y1Col$, y2Col$,gridCol$
+        call DetectChanges 0
     end if
-    if axisNum=1 then
-        c1$=tColor$ : y1Col$=tColor$    'Set trace and grid labels to same color
+end sub
+
+sub mChangeWidth handle$
+    call gGetTraceWidth w1, w2  ' Actual Trace widths
+    #handle.width, "contents? newWidth$"    ' get new set value
+    newWidth=val(uCompact$(newWidth$))
+    if mAxisNum=1 then
+        w1=newWidth
     else
-        c2$=tColor$ : y2Col$=tColor$    'Set trace and grid labels to same color
+        w2=newWidth
     end if
-    call gSetTraceColors c1$, c2$
+    call gSetTraceWidth w1, w2
+    call DetectChanges 0
+end sub
+
+sub mChangeStyle handle$
+    if doTwoPort=0 then
+        #handle.style, "selectionIndex? axisStyle"
+        if axisStyle<1 then axisStyle=1
+        if mAxisNum=1 then   'Set Y1DisplayMode or Y2DisplayMode from contents of axis style box; to Norm Erase if no graph
+            if Y1DataType=constNoGraph then Y1DisplayMode=1 else Y1DisplayMode=axisStyle-1 'ver115-4e
+        else
+            if Y2DataType=constNoGraph then Y2DisplayMode=1 else Y2DisplayMode=axisStyle-1 'ver115-4e
+        end if
+        call ImplementDisplayModes    'ver114-6e
+                'Save some sweep settings for reflection and transmission for use when changing
+            'back to a previously used mode
+        if msaMode$="Reflection" then   'ver116-1b
+            refLastY1Type=Y1DataType : refLastY1Top=Y1Top : refLastY1Bot=Y1Bot : refLastY1AutoScale=autoScaleY1
+            refLastY2Type=Y2DataType : refLastY2Top=Y2Top : refLastY2Bot=Y2Bot : refLastY2AutoScale=autoScaleY2
+        else
+            if msaMode$="VectorTrans" then
+                transLastY1Type=Y1DataType : transLastY1Top=Y1Top : transLastY1Bot=Y1Bot : transLastY1AutoScale=autoScaleY1
+                transLastY2Type=Y2DataType : transLastY2Top=Y2Top : transLastY2Bot=Y2Bot : transLastY2AutoScale=autoScaleY2
+            end if
+        end if
+    end if
+    call DetectChanges 0
 end sub
 
 sub hideShowAmplitudeControl control$
     #handle.AxisY1, control$
     #handle.AxisY2, control$
-    call hideShowAxisY1Submenu "!hide", axisNum
+    call hideShowAxisY1Submenu "!hide", mAxisNum
     #handle.AxisY1, "!font Arial 9"
     toggleAmplAxisY1Button=1
-    call hideShowAxisY2Submenu "!hide", axisNum
+    call hideShowAxisY2Submenu "!hide", mAxisNum
     #handle.AxisY2, "!font Arial 9"
     toggleAmplAxisY2Button=1
 end sub
