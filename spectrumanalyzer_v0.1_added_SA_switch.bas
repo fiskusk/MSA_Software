@@ -8111,14 +8111,14 @@ end sub
         'TraceStyles$(4)="" : TraceStyles$(5)=""
     'end if
     'Y1DisplayMode, Y2DisplayMode  0=off  1=NormErase  2=NormStick  3=HistoErase  4=HistoStick
-    combobox #handle.style, TraceStyles$(), mChangeStyle,amplAxisYxStyleLeft, markTop+7, 80, 20   'Trace Style
+    combobox #handle.style, TraceStyles$(), [mChangeStyle],amplAxisYxStyleLeft, markTop+7, 80, 20   'Trace Style
 
     '   Number of vertical divisions
         amplAxisYxVerDivLeft=amplAxisYxStyleLeft+80+3
     staticText #handle.LabVDiv "Ver. Div.", amplAxisYxVerDivLeft,markTop-8,45,12
     NumVertDiv$(0)="4" : NumVertDiv$(1)="5" : NumVertDiv$(2)="6"    'ver115-1b changed to NumVertDiv$
     NumVertDiv$(3)="8" : NumVertDiv$(4)="10" : NumVertDiv$(5)="12"
-    combobox #handle.VDiv, NumVertDiv$(), [axisYDoNothing],amplAxisYxVerDivLeft, markTop+7, 45, 20   'Number of vert divisions
+    combobox #handle.VDiv, NumVertDiv$(), mChangeVertDiv,amplAxisYxVerDivLeft, markTop+7, 45, 20   'Number of vert divisions
 
         'Top and bottom limits
         amplAxisYxRefLeft=amplAxisYxVerDivLeft+45+5
@@ -8133,7 +8133,7 @@ end sub
     'ver115-3a omitted the stylebits, because we have to take action when the graph changes
     comboBox #handle.GraphData, axisGraphData$(),[axisYChangeGraph], amplAxisYxGraphDataLeft, markTop+7, 155, 350 'ver115-4a
 
-    button #handle.RefConfirm, "OK", mRefConfirm, LL, amplAxisYxGraphDataLeft, -2,30,18
+    button #handle.RefConfirm, "OK", mChangeRange, LL, amplAxisYxGraphDataLeft, -2,30,18
     checkbox #handle.auto, "Auto Scale", [mAxisAutoscaleOn], [mAxisAutoscaleOn], amplAxisYxGraphDataLeft+33, markTop-9, 69,15
     button #handle.DefaultAxis, "Default", mDefAxis, LL, amplAxisYxGraphDataLeft+33+72, -2,45,18
 
@@ -12847,7 +12847,9 @@ sub mPickColor handle$,x,y
         end if
         call gSetTraceColors c1$, c2$
         call gSetTextColors xCol$, y1Col$, y2Col$,gridCol$
-        call DetectChanges 0
+        refreshGridDirty=1
+        if haltsweep=1 then doErasure=1 else doErasure=0
+        if isStickMode=0 then call RefreshGraph doErasure
     end if
 end sub
 
@@ -12855,16 +12857,21 @@ sub mChangeWidth handle$
     call gGetTraceWidth w1, w2  ' Actual Trace widths
     #handle.width, "contents? newWidth$"    ' get new set value
     newWidth=val(uCompact$(newWidth$))
+    if newWidth<0 then newWidth=0 else if newWidth>3 then newWidth=3    'ver116-4b
     if mAxisNum=1 then
         w1=newWidth
     else
         w2=newWidth
     end if
     call gSetTraceWidth w1, w2
-    call DetectChanges 0
+    refreshGridDirty=1
+    if haltsweep=1 then doErasure=1 else doErasure=0
+    if isStickMode=0 then call RefreshGraph doErasure
 end sub
 
-sub mChangeStyle handle$
+[mChangeStyle]
+    if haltsweep=1 then gosub [FinishSweeping]
+    prevY1Disp=Y1DisplayMode : prevY2Disp=Y2DisplayMode
     if doTwoPort=0 then
         #handle.style, "selectionIndex? axisStyle"
         if axisStyle<1 then axisStyle=1
@@ -12886,7 +12893,78 @@ sub mChangeStyle handle$
             end if
         end if
     end if
-    call DetectChanges 0
+    if prevY1Disp<>Y1DisplayMode and (Y1DisplayMode<>0 or prevY1Disp=0) then doRefreshTraces=1    'ver114-7d
+    if prevY2Disp<>Y2DisplayMode and (Y2DisplayMode<>0 or prevY2Disp=0) then doRefreshTraces=1    'ver114-7d
+    if doRefreshTraces then refreshTracesDirty=1 : refreshGridDirty=1 : call RefreshGraph 0    'ver114-7d
+
+    useExpeditedDraw=gCanUseExpeditedDraw()
+    call mDeleteMarker "Halt"    'Delete Halt marker ver114-4c
+    'if haltsweep=1 then goto [PostScan]
+    'wait 'comented by for continue sweeping verOK2FKU
+    ' if previous clicked to Halt At End, after changing go to Halted, else continue verOK2FKU
+    if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
+
+
+sub mChangeVertDiv handle$
+    call gGetNumDivisions nHorDiv, nVertDiv
+    #handle.VDiv, "contents? nDiv$"
+    nVertDiv=val(nDiv$) : if nVertDiv<1 then nVertDiv=1 else if nVertDiv>12 then nVertDiv=12
+    call gSetNumDivisions nHorDiv, nVertDiv
+    call gCalcGraphParams   'Calculate new scaling. May change min or max
+    doRedraw=doCalcAndRedraw
+    call RedrawGraph 0
+end sub
+
+sub mChangeRange btn$
+    'Get current range
+    #handle.TopRef "!contents? newTop$"
+    #handle.BotRef "!contents? newBot$"
+    'uCompact deletes blanks, which can mess up negative numbers
+    newTop=uValWithMult(newTop$) : newBot=uValWithMult(newBot$)
+    if newTop<newBot then temp=newTop : newTop=newBot : newBot=temp 'Swap to get correct order
+    if newBot=newTop then newBot=yMin : newTop=yMax : notice "Axis range cannot be zero. Previous values retained."
+    call gGetAxisFormats xForm$, y1Form$, y2Form$
+    if mAxisNum=1 then yForm$=y1Form$ else yForm$=y2Form$
+    topref$= uFormatted$(newTop, yForm$): botref$=uFormatted$(newBot, yForm$)
+    newTop=uValWithMult(topref$) : newBot=uValWithMult(botref$)   'Do any rounding from formatting
+    if doTwoPort then
+        call TwoPortStartingLimits newData, origData, newBot, newTop 'ver115-3a
+    else
+        call StartingLimits newData, origData, newBot, newTop 'ver115-3a
+    end if
+
+    topref$= uFormatted$(newTop, yForm$): botref$=uFormatted$(newBot, yForm$)
+        'Reprint the range in the new format
+    print #handle.TopRef, topref$  'ver115-3a
+    print #handle.BotRef, botref$  'ver115-3a
+    origData=newData
+
+    if axisNum=1 then
+        if doTwoPort then call TwoPortSetY1Range newBot, newTop else call SetY1Range newBot, newTop 'ver116-1b
+        if doTwoPort=0 then
+            if auto$="set" then autoScaleY1=1 else autoScaleY1=0
+        end if
+    else
+        if doTwoPort then call TwoPortSetY2Range newBot, newTop else call SetY2Range newBot, newTop   'ver116-1b
+        if doTwoPort=0 then
+            if auto$="set" then autoScaleY2=1 else autoScaleY2=0
+        end if
+    end if
+    'call DetectChanges 0
+    doCalcAndRedraw=0
+    rescaleReferences=0
+    call gGetYAxisRange 1, currStartY1, currEndY1
+    call gGetYAxisRange 2, currStartY2, currEndY2
+    call gGetNumDivisions currHorDiv, currVertDiv
+    if currStartY1<>prevStartY1 or currEndY1<>prevEndY1 then doCalcAndRedraw=1 : rescaleReferences=1
+    if currStartY2<>prevStartY2 or currEndY2<>prevEndY2 then doCalcAndRedraw=1 : rescaleReferences=1
+    if rescaleReferences then call CreateReferenceTransform
+
+    if doCalcAndRedraw then 'ver115-1b
+        call gCalcGraphParams   'Calculate new scaling. May change min or max.
+        call gGetXAxisRange  xMin, xMax
+    end if
+    call RedrawGraph 0
 end sub
 
 sub hideShowAmplitudeControl control$
