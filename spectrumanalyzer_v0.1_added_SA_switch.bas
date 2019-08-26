@@ -513,10 +513,18 @@
     toggleMenu12Button=0    ' if 0 then menu 1/2, if 1 then menu 2/2
     global toggleShowAmplitudeButton   ' variable toggling state when button processed 'verOK2FKU
     toggleShowAmplitudeButton=1 'verOK2FKU
-    global toggleAmplAxisY1Button   ' variable toggling state when button processed 'verOK2FKU
-    toggleAmplAxisY1Button=1 'verOK2FKU
-    global toggleAmplAxisY2Button   ' variable toggling state when button processed 'verOK2FKU
-    toggleAmplAxisY2Button=1 'verOK2FKU
+    global toggleShowTraceButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowTraceButton=1 'verOK2FKU
+    global toggleAmplitudeY1Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleAmplitudeY1Button=1 'verOK2FKU
+    global toggleAmplitudeY2Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleAmplitudeY2Button=1 'verOK2FKU
+    global toggleTraceY1Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleTraceY1Button=1 'verOK2FKU
+    global toggleTraceY2Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleTraceY2Button=1 'verOK2FKU
+    global toggleAutoScaleButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleAutoScaleButton=1 'verOK2FKU
     global prevShowButton$  ' memory old pressed button 'verOK2FKU
     global prevAmplButton$  ' memory old pressed Y axis button 'verOK2FKU
     global mAxisNum         ' memory which menu for axis Y1 or Y2 is or was show
@@ -7970,18 +7978,18 @@ end sub
 
     'verOK2FKU Menu buttons for easy Control
     markControlLeft=5
-    button #handle.showFrequecyControl, "Frequecy", mBtnShowFrequencyControl, LL, markControlLeft, -4, 62,18
-    button #handle.showAmplitudeControl, "Amplitude", mBtnShowAmplitudeControl, LL, markControlLeft, -22, 62,18
-    markControlSecondColLeft=markControlLeft+64
-    button #handle.showBWControl, "BW", mBtnShowBWControl, LL, markControlSecondColLeft, -4, 40,18
-    button #handle.showSweepControl, "Sweep", mBtnShowSweepControl, LL, markControlSecondColLeft, -22, 40,18
-    markControlThirdColLeft=markControlSecondColLeft+42
-    button #handle.showMarkerControl, "Marker", mBtnShowMarkerControl, LL, markControlThirdColLeft, -4, 47,18
-    button #handle.saveImage, "Save Im", [SaveImage], LL, markControlThirdColLeft, -22, 47,18
+    button #handle.showFrequecyControl, "Frequecy", mBtnShowFrequencyControl, LL, markControlLeft, -4, 68,18
+    button #handle.showAmplitudeControl, "Amplitude", mBtnShowAmplitudeControl, LL, markControlLeft, -22, 68,18
+    markControlSecondColLeft=markControlLeft+70
+    button #handle.showBWControl, "BW", mBtnShowBWControl, LL, markControlSecondColLeft, -4, 45,18
+    button #handle.showSweepControl, "Sweep", mBtnShowSweepControl, LL, markControlSecondColLeft, -22, 45,18
+    markControlThirdColLeft=markControlSecondColLeft+47
+    button #handle.showMarkerControl, "Marker", mBtnShowMarkerControl, LL, markControlThirdColLeft, -4, 50,18
+    button #handle.showTraceControl, "Trace", mBtnShowTraceControl, LL, markControlThirdColLeft, -22, 50,18
 
         'Marker Selection buttons
     markTop=currGraphBoxHeight+15     'This isn't the top of anything in particular, just a reference point ver115-1b
-    markSelLeft=markControlThirdColLeft+57
+    markSelLeft=markControlThirdColLeft+60
     statictext #handle.selMarkLab "Marker", markSelLeft+3, markTop-9, 40, 14
     selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i
     combobox #handle.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+5, 50, 180
@@ -8089,10 +8097,10 @@ end sub
     checkbox #handle.SweepTime, "Display Sweep Time", mAxisSweepTime, mAxisSweepTime, sweepLeft+17+30+25+17+25+17+57, markTop+10, 112, 15  'ver115-4c
 
         amplitudeLeft=markSelLeft
-    button #handle.AxisY1, "Axis Y1", mBtnAmplAxisY1, LL, amplitudeLeft, -4, 50,18
-    button #handle.AxisY2, "Axis Y2", mBtnAmplAxisY2, LL, amplitudeLeft, -22, 50,18
+    button #handle.AxisY1, "Axis Y1", mBtnAxisY1, LL, amplitudeLeft, -4, 50,18
+    button #handle.AxisY2, "Axis Y2", mBtnAxisY2, LL, amplitudeLeft, -22, 50,18
 
-        amplAxisYxColorLeft=amplitudeLeft+50+5
+    amplAxisYxColorLeft=amplitudeLeft+50+5
     staticText #handle.LabColor, "Tr. Color", amplAxisYxColorLeft, markTop-6,45,12
     graphicbox #handle.color, amplAxisYxColorLeft+48, markTop-10, 30, 20  'Trace Color
 
@@ -8100,28 +8108,23 @@ end sub
     TraceWidths$(0)="0" : TraceWidths$(1)="1" : TraceWidths$(2)="2" : TraceWidths$(3)="3"
     combobox #handle.width, TraceWidths$(), mChangeWidth,amplAxisYxColorLeft+48, markTop+7, 30, 20  'Trace Width
 
-        amplAxisYxStyleLeft=amplAxisYxColorLeft+48+30+3
+    amplAxisYxStyleLeft=amplAxisYxColorLeft+48+30+5
     staticText #handle.LabStyle "Trace Style", amplAxisYxStyleLeft,markTop-8,70,12
-    'if (msaMode$="SA" or msaMode$="ScalarTrans") and axisNum=primaryAxisNum then    'ver115-3b
-        'histo modes are only in non-phase modes, and only on primary axis
-        'T'raceStyles$(0)="Off" : TraceStyles$(1)="Norm Erase" :  TraceStyles$(2)="Norm Stick"
-        'TraceStyles$(4)="Histo Erase" : TraceStyles$(5)="Histo Stick"
-    'else    'Phase modes and secondary axis have no histo
-        'TraceStyles$(0)="Off" : TraceStyles$(1)="Erase" :  TraceStyles$(2)="Stick"
-        'TraceStyles$(4)="" : TraceStyles$(5)=""
-    'end if
-    'Y1DisplayMode, Y2DisplayMode  0=off  1=NormErase  2=NormStick  3=HistoErase  4=HistoStick
     combobox #handle.style, TraceStyles$(), [mChangeStyle],amplAxisYxStyleLeft, markTop+7, 80, 20   'Trace Style
 
+        ' Do cycle color
+    cycleColorsLeft=amplAxisYxStyleLeft+80+5
+    checkbox #handle.cycleColors, "Cycle colors in Stick modes.",[doCycleColors], [doCycleColors], cycleColorsLeft, markTop-8, 175,15  'Cycling ver116-4s
+
     '   Number of vertical divisions
-        amplAxisYxVerDivLeft=amplAxisYxStyleLeft+80+3
+    amplAxisYxVerDivLeft=amplitudeLeft+50+5
     staticText #handle.LabVDiv "Ver. Div.", amplAxisYxVerDivLeft,markTop-8,45,12
     NumVertDiv$(0)="4" : NumVertDiv$(1)="5" : NumVertDiv$(2)="6"    'ver115-1b changed to NumVertDiv$
     NumVertDiv$(3)="8" : NumVertDiv$(4)="10" : NumVertDiv$(5)="12"
     combobox #handle.VDiv, NumVertDiv$(), mChangeVertDiv,amplAxisYxVerDivLeft, markTop+7, 45, 20   'Number of vert divisions
 
         'Top and bottom limits
-        amplAxisYxRefLeft=amplAxisYxVerDivLeft+45+5
+    amplAxisYxRefLeft=amplAxisYxVerDivLeft+45+5
     staticText #handle.LabTopRef, "Top Ref", amplAxisYxRefLeft,markTop-6,42,15
     textbox #handle.TopRef, amplAxisYxRefLeft+45, markTop-10, 55,20     'Top Ref  ver115-2c
     staticText #handle.LabBotRef, "Bot Ref", amplAxisYxRefLeft,markTop+11,42,15
@@ -8131,10 +8134,10 @@ end sub
         amplAxisYxGraphDataLeft=amplAxisYxRefLeft+45+55+5
     'staticText #handle.Instruct1, "Graph Data",amplAxisYxGraphDataLeft+68+30, markTop-8, 60,12
     'ver115-3a omitted the stylebits, because we have to take action when the graph changes
-    comboBox #handle.GraphData, axisGraphData$(),[axisYChangeGraph], amplAxisYxGraphDataLeft, markTop+7, 155, 350 'ver115-4a
+    comboBox #handle.GraphData, axisGraphData$(),[mChangeGraphData], amplAxisYxGraphDataLeft, markTop+7, 155, 350 'ver115-4a
 
     button #handle.RefConfirm, "OK", mChangeRange, LL, amplAxisYxGraphDataLeft, -2,30,18
-    checkbox #handle.auto, "Auto Scale", [mAxisAutoscaleOn], [mAxisAutoscaleOn], amplAxisYxGraphDataLeft+33, markTop-9, 69,15
+    button #handle.auto, "Auto Scale", mAxisAutoScaleOn, LL, amplAxisYxGraphDataLeft+33, -2, 69,18
     button #handle.DefaultAxis, "Default", mDefAxis, LL, amplAxisYxGraphDataLeft+33+72, -2,45,18
 
         'Test Setup Button 'ver115-1g added this and deleted go/save config
@@ -11148,7 +11151,7 @@ sub DisplayAxisYPreference axisNum, doTwoPort   'Display dialog to select Y axis
     else
         call TwoPortAdjustToYChanges (origData<>restoreData)
     end if
-    if toggleAmplAxisY2Button=0 or toggleAmplAxisY1Button=0 then
+    if toggleAmplitudeY2Button=0 or toggleAmplitudeY1Button=0 or toggleTraceY1Button=0 or toggleTraceY2Button=0 then
         call loadAxisControls "!show", mAxisNum ' load changes into bottom menu
     end if
 end sub  'return to: sub DisplayAxisYPreference
@@ -12635,27 +12638,58 @@ sub mMenuMarkerOptions     'Button handler to set marker options
     if haltsweep=0 then call RefreshGraph 0   'if not sweeping redraw graph ver114-7d
 end sub
 
-sub updateAmplAxisYSubmenu button$, buttToggle
-    call hideAxisYxSubmenu
+sub updateAmpliduteYSubmenu button$, buttToggle
+    call hideAmplitudeYxSubmenu
+    call hideTraceYxSubmenu
     select case button$
-        case "AmplAxisY1Control"
-            if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplAxisY1Button=buttToggle : #handle.AxisY2, "!font Arial 9"
+        case "AxisY1Control"
+            if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplitudeY1Button=buttToggle : #handle.AxisY2, "!font Arial 9"
             if buttToggle then
-                call hideShowAxisY1Submenu "!hide", mAxisNum
+                call hideShowAmplitudeY1Submenu "!hide", mAxisNum
                 #handle.AxisY1, "!font Arial 9"
             else
                 mAxisNum=1
-                call hideShowAxisY1Submenu "!show", mAxisNum
+                call hideShowAmplitudeY1Submenu "!show", mAxisNum
                 #handle.AxisY1, "!font Arial 9 bold"
             end if
-        case "AmplAxisY2Control"
-            if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplAxisY2Button=buttToggle : #handle.AxisY1, "!font Arial 9"
+        case "AxisY2Control"
+            if prevAmplButton$<>button$ then buttToggle=0 : toggleAmplitudeY2Button=buttToggle : #handle.AxisY1, "!font Arial 9"
             if buttToggle then
-                call hideShowAxisY2Submenu "!hide", mAxisNum
+                call hideShowAmplitudeY2Submenu "!hide", mAxisNum
                 #handle.AxisY2, "!font Arial 9"
             else
                 mAxisNum=2
-                call hideShowAxisY2Submenu "!show", mAxisNum
+                call hideShowAmplitudeY2Submenu "!show", mAxisNum
+                #handle.AxisY2, "!font Arial 9 bold"
+            end if
+        case else
+            exit sub
+    end select
+    prevAmplButton$=button$ ' remember button press
+end sub
+
+sub updateTraceYSubmenu button$, buttToggle
+    call hideAmplitudeYxSubmenu
+    call hideTraceYxSubmenu
+    select case button$
+        case "AxisY1Control"
+            if prevAmplButton$<>button$ then buttToggle=0 : toggleTraceY1Button=buttToggle : #handle.AxisY2, "!font Arial 9"
+            if buttToggle then
+                call hideShowTraceY1Submenu "!hide", mAxisNum
+                #handle.AxisY1, "!font Arial 9"
+            else
+                mAxisNum=1
+                call hideShowTraceY1Submenu "!show", mAxisNum
+                #handle.AxisY1, "!font Arial 9 bold"
+            end if
+        case "AxisY2Control"
+            if prevAmplButton$<>button$ then buttToggle=0 : toggleTraceY2Button=buttToggle : #handle.AxisY1, "!font Arial 9"
+            if buttToggle then
+                call hideShowTraceY2Submenu "!hide", mAxisNum
+                #handle.AxisY2, "!font Arial 9"
+            else
+                mAxisNum=2
+                call hideShowTraceY2Submenu "!show", mAxisNum
                 #handle.AxisY2, "!font Arial 9 bold"
             end if
         case else
@@ -12668,39 +12702,82 @@ sub updatePanelButtons button$, toggle ' called if any menu botton for easy cont
     call hideAllControlButtons  ' hide all controls
     select case button$
         case "MarkerControl"
+            toggleShowFrequencyButton=1
+            toggleShowBWButton=1
+            toggleShowSweepButton=1
+            toggleShowAmplitudeButton=1
+            toggleShowTraceButton=1
             if prevShowButton$<>button$ then toggle=0 : toggleShowMarkerButton=toggle ' if first pressed this button, controls must be first shown
             if toggle then
                 call hideShowMarkerControl "!hide"
             else
+                #handle.showMarkerControl, "!font Arial 9 bold"
                 call hideShowMarkerControl "!show"
             end if
         case "FrequencyControl"
+            toggleShowMarkerButton=1
+            toggleShowBWButton=1
+            toggleShowSweepButton=1
+            toggleShowAmplitudeButton=1
+            toggleShowTraceButton=1
             if prevShowButton$<>button$ then toggle=0 : toggleShowFrequencyButton=toggle
             if toggle then
                 call hideShowFreqX2Control "!hide"
             else
+                #handle.showFrequecyControl, "!font Arial 9 bold"
                 call hideShowFreqX2Control "!show"
             end if
         case "BWControl"
+            toggleShowMarkerButton=1
+            toggleShowFrequencyButton=1
+            toggleShowSweepButton=1
+            toggleShowAmplitudeButton=1
+            toggleShowTraceButton=1
             if prevShowButton$<>button$ then toggle=0 : toggleShowBWButton=toggle
             if toggle then
                 call hideShowBWControl "!hide"
             else
+                #handle.showBWControl, "!font Arial 9 bold"
                 call hideShowBWControl "!show"
             end if
         case "SweepControl"
+            toggleShowMarkerButton=1
+            toggleShowFrequencyButton=1
+            toggleShowBWButton=1
+            toggleShowAmplitudeButton=1
+            toggleShowTraceButton=1
             if prevShowButton$<>button$ then toggle=0 : toggleShowSweepButton=toggle
             if toggle then
                 call hideShowSweepControl "!hide"
             else
+                #handle.showSweepControl, "!font Arial 9 bold"
                 call hideShowSweepControl "!show"
             end if
         case "AmplitudeControl"
+            toggleShowMarkerButton=1
+            toggleShowFrequencyButton=1
+            toggleShowBWButton=1
+            toggleShowSweepButton=1
+            toggleShowTraceButton=1
             if prevShowButton$<>button$ then toggle=0 : toggleShowAmplitudeButton=toggle
             if toggle then
                 call hideShowAmplitudeControl "!hide"
             else
+                #handle.showAmplitudeControl, "!font Arial 9 bold"
                 call hideShowAmplitudeControl "!show"
+            end if
+        case "TraceControl"
+            toggleShowMarkerButton=1
+            toggleShowFrequencyButton=1
+            toggleShowBWButton=1
+            toggleShowSweepButton=1
+            toggleShowAmplitudeButton=1
+            if prevShowButton$<>button$ then toggle=0 : toggleShowTraceButton=toggle
+            if toggle then
+                call hideShowTraceControl "!hide"
+            else
+                #handle.showTraceControl, "!font Arial 9 bold"
+                call hideShowTraceControl "!show"
             end if
         case else
             exit sub
@@ -12709,55 +12786,85 @@ sub updatePanelButtons button$, toggle ' called if any menu botton for easy cont
 end sub
 
 sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
+    #handle.showFrequecyControl, "!font Arial 9"
+    #handle.showAmplitudeControl, "!font Arial 9"
+    #handle.showBWControl, "!font Arial 9"
+    #handle.showSweepControl, "!font Arial 9"
+    #handle.showMarkerControl, "!font Arial 9"
+    #handle.showTraceControl, "!font Arial 9"
     call hideShowMarkerControl "!hide"
     call hideAllFreqControl
     call hideShowBWControl "!hide"
     call hideShowSweepControl "!hide"
     call hideShowAmplitudeControl "!hide"
-    call hideAxisYxSubmenu
+    call hideAmplitudeYxSubmenu
+    call hideShowTraceControl "!hide"
+    call hideTraceYxSubmenu
 end sub
 
-sub hideAxisYxSubmenu
-    call hideShowAxisY1Submenu "!hide", mAxisNum
-    call hideShowAxisY2Submenu "!hide", mAxisNum
+sub hideAmplitudeYxSubmenu
+    call hideShowAmplitudeY1Submenu "!hide", mAxisNum
+    call hideShowAmplitudeY2Submenu "!hide", mAxisNum
 end sub
 
-sub hideShowAxisY1Submenu control$, mAxisNum
+sub hideTraceYxSubmenu
+    call hideShowTraceY1Submenu "!hide", mAxisNum
+    call hideShowTraceY2Submenu "!hide", mAxisNum
+end sub
+
+sub hideShowAmplitudeY1Submenu control$, mAxisNum
     call loadAxisControls control$, mAxisNum
-    call hideShowAxisYxControl control$
+    call hideShowAmplitudeYxControl control$
 end sub
 
-sub hideShowAxisY2Submenu control$, mAxisNum
+sub hideShowTraceY1Submenu control$, mAxisNum
     call loadAxisControls control$, mAxisNum
-    call hideShowAxisYxControl control$
+    call hideShowTraceYxControl control$
 end sub
 
-sub hideShowAxisYxControl control$
+sub hideShowAmplitudeY2Submenu control$, mAxisNum
+    call loadAxisControls control$, mAxisNum
+    call hideShowAmplitudeYxControl control$
+end sub
+
+sub hideShowTraceY2Submenu control$, mAxisNum
+    call loadAxisControls control$, mAxisNum
+    call hideShowTraceYxControl control$
+end sub
+
+sub hideShowAmplitudeYxControl control$
     if control$="!hide" then
-        #handle.color, "hide"
-        #handle.width, "hide"
-        #handle.style, "hide"
         #handle.VDiv, "hide"
         #handle.GraphData, "hide"
-        #handle.auto, "hide"
     else
-        #handle.color, "show"
-        #handle.width, "show"
-        #handle.style, "show"
         #handle.VDiv, "show"
         #handle.GraphData, "show"
-        #handle.auto, "show"
     end if
-    #handle.LabColor, control$
-    #handle.LabTraceWidth, control$
-    #handle.LabStyle, control$
     #handle.LabVDiv, control$
     #handle.LabTopRef, control$
     #handle.TopRef, control$
     #handle.LabBotRef, control$
     #handle.BotRef, control$
     #handle.RefConfirm, control$
-    #handle.DefaultAxis, control$
+    #handle.DefaultAxis, "!hide"
+    #handle.auto, control$
+end sub
+
+sub hideShowTraceYxControl control$
+    if control$="!hide" then
+        #handle.color, "hide"
+        #handle.width, "hide"
+        #handle.style, "hide"
+        #handle.cycleColors, "hide"
+    else
+        #handle.color, "show"
+        #handle.width, "show"
+        #handle.style, "show"
+        #handle.cycleColors, "show"
+    end if
+    #handle.LabColor, control$
+    #handle.LabTraceWidth, control$
+    #handle.LabStyle, control$
 end sub
 
 sub loadAxisControls control$, mAxisNum
@@ -12780,13 +12887,25 @@ sub loadAxisControls control$, mAxisNum
             tWidth=w1
             tColor$=c1$
             if doTwoPort=0 then
-                if autoScaleY1=1 then #handle.auto, "set" else #handle.auto, "reset"    'ver114-7a
+                if autoScaleY1=1 then
+                    #handle.auto, "!font arial 9 bold"
+                    toggleAutoScaleButton=0
+                else
+                    #handle.auto, "!font arial 9"
+                    toggleAutoScaleButton=1
+                end if
             end if
         else
             tWidth=w2
             tColor$=c2$
             if doTwoPort=0 then
-                if autoScaleY2=1 then #handle.auto, "set" else  #handle.auto, "reset"    'ver114-7a
+                if autoScaleY2=1 then
+                    #handle.auto, "!font arial 9 bold"
+                    toggleAutoScaleButton=0
+                else
+                    #handle.auto, "!font arial 9"
+                    toggleAutoScaleButton=1
+                end if
             end if
         end if
         #handle.color, "fill "; tColor$;";flush"  'Fill box with current trace color
@@ -12814,6 +12933,7 @@ sub loadAxisControls control$, mAxisNum
             if mAxisNum=1 then origData=Y1DataType else origData=Y2DataType
         end if
         call mSelectGraphType origData
+        if doCycleTraceColors=1 then #handle.cycleColors, "set" else #handle.cycleColors, "reset"  'ver116-4s
     end if
 end sub
 
@@ -12869,6 +12989,105 @@ sub mChangeWidth handle$
     if isStickMode=0 then call RefreshGraph doErasure
 end sub
 
+[doCycleColors]
+    if haltsweep=1 then gosub [FinishSweeping]
+    call RefreshGraph 0
+    #handle.cycleColors, "value? cycleVal$"
+    if cycleVal$="set" then
+        doCycleTraceColors=1  'ver116-4s
+        call SetCycleColors     'Set trace colors for color cycling ver116-4s
+        cycleNumber=1 : call gSetTraceColors cycleColorsAxis1$(1),cycleColorsAxis2$(1) 'start over if cycling colors ver116-4s
+    else
+        doCycleTraceColors=0
+        call SetCycleColors     'Set trace colors for color cycling ver116-4s
+        call gGetTextColors xCol$, y1Col$, y2Col$,gridCol$
+        call gSetTraceColors "0 255 255", "255 200 90"
+    end if
+    if haltsweep=1 then goto [PostScan]
+    'wait 'comented by for continue sweeping verOK2FKU
+    ' if previous clicked to Halt At End, after changing go to Halted, else continue verOK2FKU
+    if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
+
+[mChangeGraphData]
+    if haltsweep=1 then gosub [FinishSweeping]
+    call RememberState
+    #handle.GraphData, "selectionindex? sel"
+    if sel=0 then sel=1 'In case user typed something into the box.
+    newData=axisDataType(sel-1)   'constant indicating the data type
+    if doTwoPort then 'ver116-1b
+        if mAxisNum=1 then call TwoPortSetY1Type newData else call TwoPortSetY2Type newData
+    else
+        if mAxisNum=1 then Y1DataType=newData else Y2DataType=newData
+    end if
+
+    if newData<>constNoGraph then  'ver116-1b
+        call CalcAutoScale mAxisNum, axisMin, axisMax
+        if mAxisNum=1 then yForm$=y1Form$ else yForm$=y2Form$
+
+        if doTwoPort then
+            call TwoPortDetermineGraphDataFormat newData, dum1$, dum2$, dum3, yForm$   'Get new data format
+        else
+            call DetermineGraphDataFormat newData, dum1$, dum2$, dum3, yForm$   'Get new data format
+        end if
+            'Get current range
+        #handle.TopRef "!contents? newTop$"
+        #handle.BotRef "!contents? newBot$"
+            'uCompact deletes blanks, which can mess up negative numbers
+        newTop=uValWithMult(newTop$) : newBot=uValWithMult(newBot$)
+        if newTop<newBot then temp=newTop : newTop=newBot : newBot=temp 'Swap to get correct order
+
+        topref$= uFormatted$(newTop, yForm$): botref$=uFormatted$(newBot, yForm$)
+        newTop=uValWithMult(topref$) : newBot=uValWithMult(botref$)   'Do any rounding from formatting
+
+        if doTwoPort then
+            call TwoPortStartingLimits newData, origData, newBot, newTop 'ver115-3a
+        else
+            call StartingLimits newData, origData, newBot, newTop 'ver115-3a
+        end if
+
+        topref$= uFormatted$(newTop, yForm$): botref$=uFormatted$(newBot, yForm$)
+            'Reprint the range in the new format
+        print #handle.TopRef, topref$  'ver115-3a
+        print #handle.BotRef, botref$  'ver115-3a
+    end if
+    origData=newData
+    continueCode=0  'Assume we can continue when we are done here
+    doCalcAndRedraw=0
+    doTransform=0
+    dataTypeChanged=0   'ver115-1b
+    if prevY1DataType<>Y1DataType or prevY2DataType<>Y2DataType then 'ver115-4g
+        call gSetDoAxis (Y1DataType<>constNoGraph), (Y2DataType<>constNoGraph)  'Tell graph module whether we have graphs ver115-2c
+        call ImplementDisplayModes    'ver114-6e
+        doCalcAndRedraw=1 : dataTypeChanged=1 :doTransform=1  'ver115-1b
+    end if
+    if doCalcAndRedraw then 'ver115-1b
+        if dataTypeChanged or prevSwitchFR<>switchFR then call UpdateGraphDataFormat 0  'To get new data format ver116-1b
+        call gCalcGraphParams   'Calculate new scaling. May change min or max.
+        call gGetXAxisRange  xMin, xMax
+        if startfreq<>xMin or endfreq<>xMax then call SetStartStopFreq xMin, xMax : continueCode=3
+    end if
+    doRedraw=doCalcAndRedraw
+    if doTransform then
+        call UpdateGraphDataFormat 0  'Update data formatting; may also affect data transform
+        call RecalcYValues
+        if autoScaleIsOn then
+            call PerformAutoScale  'autoscale with the new data   'ver114-7a
+            autoScaleTurnedOn=0     'Since we just did autoscale ver114-7e
+        end if
+        doRedraw=1  'Signal to do complete redraw from scratch
+    end if
+    if autoScaleTurnedOn then refreshAutoScale=1   'ver114-7a
+    if doRedraw then call RedrawGraph 0
+
+    call mAxisAutoScaleOn btn$
+
+    call mDeleteMarker "Halt"    'Delete Halt marker ver114-4c
+    if haltsweep=1 then goto [PostScan]
+    'wait 'comented by for continue sweeping verOK2FKU
+    ' if previous clicked to Halt At End, after changing go to Halted, else continue verOK2FKU
+    if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
+
+
 [mChangeStyle]
     if haltsweep=1 then gosub [FinishSweeping]
     prevY1Disp=Y1DisplayMode : prevY2Disp=Y2DisplayMode
@@ -12899,7 +13118,7 @@ end sub
 
     useExpeditedDraw=gCanUseExpeditedDraw()
     call mDeleteMarker "Halt"    'Delete Halt marker ver114-4c
-    'if haltsweep=1 then goto [PostScan]
+    if haltsweep=1 then goto [PostScan]
     'wait 'comented by for continue sweeping verOK2FKU
     ' if previous clicked to Halt At End, after changing go to Halted, else continue verOK2FKU
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
@@ -12913,6 +13132,30 @@ sub mChangeVertDiv handle$
     call gCalcGraphParams   'Calculate new scaling. May change min or max
     doRedraw=doCalcAndRedraw
     call RedrawGraph 0
+end sub
+
+sub mAxisAutoScaleOn btn$
+    if toggleAutoScaleButton then
+        toggleAutoScaleButton=0
+        #handle.auto, "!font arial 9 bold"
+    else
+        toggleAutoScaleButton=1
+        #handle.auto, "!font arial 9"
+    end if
+    if mAxisNum=1 then
+        if toggleAutoScaleButton=0 then autoScaleY1=1 else autoScaleY1=0
+    else
+        if toggleAutoScaleButton=0 then autoScaleY2=1 else autoScaleY2=0
+    end if
+    call CalcAutoScale mAxisNum, axisMin, axisMax
+    if mAxisNum=1 then yForm$=y1Form$ else yForm$=y2Form$
+    topref$= uFormatted$(axisMax, yForm$): botref$=uFormatted$(axisMin, yForm$)  'ver115-4h
+    print #handle.TopRef, topref$  'ver115-3a
+    print #handle.BotRef, botref$  'ver115-3a
+    if (prevAutoScaleY1=0 and autoScaleY1=1) or (prevAutoScaleY2=0 and autoScaleY2=1) then _
+                            autoScaleTurnedOn=1 else autoScaleTurnedOn=0    'ver114-7a
+    if autoScaleY1=1 or autoScaleY2=1 then autoScaleIsOn=1 else autoScaleIsOn=0  'ver114-7a
+    call mChangeRange btn$
 end sub
 
 sub mChangeRange btn$
@@ -12939,15 +13182,23 @@ sub mChangeRange btn$
     print #handle.BotRef, botref$  'ver115-3a
     origData=newData
 
-    if axisNum=1 then
+    if mAxisNum=1 then
         if doTwoPort then call TwoPortSetY1Range newBot, newTop else call SetY1Range newBot, newTop 'ver116-1b
         if doTwoPort=0 then
-            if auto$="set" then autoScaleY1=1 else autoScaleY1=0
+            if toggleAutoScaleButton=0 or autoScaleY1=1 then
+                autoScaleY1=0
+                toggleAutoScaleButton=1
+                #handle.auto, "!font arial 9"
+            end if
         end if
     else
         if doTwoPort then call TwoPortSetY2Range newBot, newTop else call SetY2Range newBot, newTop   'ver116-1b
         if doTwoPort=0 then
-            if auto$="set" then autoScaleY2=1 else autoScaleY2=0
+                if toggleAutoScaleButton=0 or autoScaleY2=1 then
+                autoScaleY2=0
+                toggleAutoScaleButton=1
+                #handle.auto, "!font arial 9"
+            end if
         end if
     end if
     'call DetectChanges 0
@@ -12965,17 +13216,29 @@ sub mChangeRange btn$
         call gGetXAxisRange  xMin, xMax
     end if
     call RedrawGraph 0
+    call RememberState
+end sub
+
+sub hideShowTraceControl control$
+    #handle.AxisY1, control$
+    #handle.AxisY2, control$
+    call hideShowTraceY1Submenu "!hide", mAxisNum
+    #handle.AxisY1, "!font Arial 9"
+    toggleTraceY1Button=1
+    call hideShowTraceY2Submenu "!hide", mAxisNum
+    #handle.AxisY2, "!font Arial 9"
+    toggleTraceY2Button=1
 end sub
 
 sub hideShowAmplitudeControl control$
     #handle.AxisY1, control$
     #handle.AxisY2, control$
-    call hideShowAxisY1Submenu "!hide", mAxisNum
+    call hideShowAmplitudeY1Submenu "!hide", mAxisNum
     #handle.AxisY1, "!font Arial 9"
-    toggleAmplAxisY1Button=1
-    call hideShowAxisY2Submenu "!hide", mAxisNum
+    toggleAmplitudeY1Button=1
+    call hideShowAmplitudeY2Submenu "!hide", mAxisNum
     #handle.AxisY2, "!font Arial 9"
-    toggleAmplAxisY2Button=1
+    toggleAmplitudeY2Button=1
 end sub
 
 sub hideShowSweepControl control$
@@ -13210,22 +13473,40 @@ sub mMarkSelect markID$  'Program selection specified marker in combo box
     call mUserMarkSelect ""  'Take same action as though user selected the marker
 end sub
 
-sub mBtnAmplAxisY1 btn$
-    if toggleAmplAxisY1Button then toggleAmplAxisY1Button=0 else toggleAmplAxisY1Button=1
-    showButton$="AmplAxisY1Control"
-    call updateAmplAxisYSubmenu showButton$, toggleAmplAxisY1Button
+sub mBtnAxisY1 btn$
+    showButton$="AxisY1Control"
+    if toggleShowAmplitudeButton=0 then
+        if toggleAmplitudeY1Button then toggleAmplitudeY1Button=0 else toggleAmplitudeY1Button=1
+        call updateAmpliduteYSubmenu showButton$, toggleAmplitudeY1Button
+    end if
+    if toggleShowTraceButton=0 then
+        if toggleTraceY1Button then toggleTraceY1Button=0 else toggleTraceY1Button=1
+        call updateTraceYSubmenu showButton$, toggleTraceY1Button
+    end if
 end sub
 
-sub mBtnAmplAxisY2 btn$
-    if toggleAmplAxisY2Button then toggleAmplAxisY2Button=0 else toggleAmplAxisY2Button=1
-    showButton$="AmplAxisY2Control"
-    call updateAmplAxisYSubmenu showButton$, toggleAmplAxisY2Button
+sub mBtnAxisY2 btn$
+    showButton$="AxisY2Control"
+    if toggleShowAmplitudeButton=0 then
+        if toggleAmplitudeY2Button then toggleAmplitudeY2Button=0 else toggleAmplitudeY2Button=1
+        call updateAmpliduteYSubmenu showButton$, toggleAmplitudeY2Button
+    end if
+    if toggleShowTraceButton=0 then
+        if toggleTraceY2Button then toggleTraceY2Button=0 else toggleTraceY2Button=1
+        call updateTraceYSubmenu showButton$, toggleTraceY2Button
+    end if
 end sub
 
 sub mBtnShowAmplitudeControl btn$
     if toggleShowAmplitudeButton then toggleShowAmplitudeButton=0 else toggleShowAmplitudeButton=1
     showButton$="AmplitudeControl"
     call updatePanelButtons showButton$, toggleShowAmplitudeButton
+end sub
+
+sub mBtnShowTraceControl btn$
+    if toggleShowTraceButton then toggleShowTraceButton=0 else toggleShowTraceButton=1
+    showButton$="TraceControl"
+    call updatePanelButtons showButton$, toggleShowTraceButton
 end sub
 
 sub mBtnShowSweepControl btn$
