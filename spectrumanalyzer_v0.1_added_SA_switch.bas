@@ -5,7 +5,7 @@
 
     global msaVersion$, msaRevision$  'Version and revision numbers of this release
     msaVersion$="OK2FKU"   'OK2FKU..
-    msaRevision$=" 0"  'ver118 rev 0
+    msaRevision$=" 0"  'OK2FKU rev 0
 
 
 '------Changes and additions from version 117 Rev B to version 118 Rev 0_
