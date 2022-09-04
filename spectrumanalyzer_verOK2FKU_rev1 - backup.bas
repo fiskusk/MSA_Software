@@ -1,31 +1,256 @@
 'spectrumanalyzer.bas or
-'MSA_version OK2FKU rev 0, Original 28-08-19 6:30 am   The previously released version is 118 Rev 0
-'Created from version 118v0 28-08-19 6:30 am
+'MSA_version 118 rev 0, Original 8-11-17 6:30 pm   The previously released version is 117b and 118 Beta
+'Created from version 117c47 8-11-17 6:30 pm
 
 
     global msaVersion$, msaRevision$  'Version and revision numbers of this release
     msaVersion$="OK2FKU"   'OK2FKU..
     msaRevision$=" 1"  'OK2FKU rev 1
 
-'------Changes and additions from version OK2FKU Rev 0 to version OK2FKU Rev 1
-'1. Fix band borders for LO leaking suppresion 'OK2FKUd1
-'2. Remove delay in comunication with hardware (500us) OK2FKUd2
 
-'------Changes and additions from version 118 Rev 0 to version OK2FKU Rev 0
-'1. Window launched in maximized state 'OK2FKUc1
-'2. For screenshot images is now new subfolder Screenshot_images and screenshot images is numbered 'OK2FKUc2
-'3. Added new markers and new markers functions 'OK2FKUc3
-'4. Included VNA/SA switch 'OK2FKUc4
-'5. Added Menu buttons for better control 'OK2FKUc5
-'6. Added default Y2 min max loading form Prefs file 'OK2FKUc6
-'7. Display sweep time is default set 'OK2FKUc7
-'8. Edited behavior when L/R button double pressed - now continue sweeping 'OK2FKUc8
-'9. Delete Halt marker after frequency change was made 'OK2FKUc9
-'10. In frequency dialog is frequency textbox now formated 'OK2FKUc10
-'11. Added find next peak Marker function 'OK2FKUc11
-'12. Fix code bug from original scottys code 'OK2FKUc12
-'13. Disable behavior when marker deleted, that was selected marker set to blank "" 'OK2FKUc13
-'14. Fix message box. Fill by space (was 140, now 160) 'OK2FKUc14
+'------Changes and additions from version 117 Rev B to version 118 Rev 0_
+'1. removed multiscan option, and all code related to it. Code marked with '117cM
+'2. removed Special Graphing and all code related to it. Code marked with '117cS
+'3. add verbage to Message when B<A error occurs. Also change curser to normal when error occurs for better visibility.Code marked with  '117c3
+'4. The array: uWorkFormats$ is not used anywhere. Removed it. '117cuWF
+'5. fixed error: more than 799 steps caused a crash during line calibration.
+'   was: redim OSLBandA(maxPoints,1) : redim OSLBandB(800,1) : redim OSLBandC(800,1)
+'   now: redim OSLBandA(maxPoints,1) : redim OSLBandB(maxPoints,1) : redim OSLBandC(maxPoints,1) '117c5
+'   add code, redim uWorkArray(steps+10, 8)  '117c5
+'   added, redim OSLstdShort(maxPoints,1) '117c5      It was missing
+'6. dim axisGraphData$(40) : dim axisDataType(40) were being done twice. Deleted the second one. '117c6
+'7.  Deleted code for multiple Reads during [ReadStep] '117c7
+'8.  changed code in sub calConvertMagPhase to use linear interpolation  '117c8
+'9.  changed code in function calConvertFreqError(freq) to use linear interpolation '117c9
+'10. deleted: function calBinarySearch(dataType, searchVal) '117c10
+'11. Remove use of calMagCoeffTable and calFreqCoeffTable  '117c11
+'  Delete creation of MagCoeffTable and FreqCoeffTable (sub calCreateMagCubicCoeff and sub calCreateFreqCubicCoeff)  '117c11
+'  sub intReset is not used, delete it '117c11
+'  function calOpenFile$(pathNum) is not used, delete it  '117c11
+'12. Remove code pertaining to unused button in Cal Manager  '117c12
+'  dim calFileInfo$(10,3) was being done twice. Removed the first. '117c12
+'13.  remove everything associated with auto wait  '117c13
+'   deleted sub autoWaitPrecalculate  '117c13
+'   deleted [setAutoWait] and [clearAutoWait]  '117c13
+'   This includes deleting [VideoGlitchPDM]   '117c13
+'   deleted function calDataHadPhase. Not used    '117c13
+'14.  Change instructions within Calibration window    '117c14
+' Within[BandLineCal][OSLdoCal][PerformOSLCalUpdate], deleted both: call FunctSetVideoAndAutoWait and call FunctRestoreVideoAndAutoWait    '117c14
+' Within sub FunctChangeAndSaveSweepParams, deleted: call FunctSetVideoAndAutoWait saveSettings    '117c14
+' Within [FunctRestoreSweepParams], deleted: call FunctRestoreVideoAndAutoWait    '117c14
+' Delete both: sub FunctSetVideoAndAutoWait and sub FunctRestoreVideoAndAutoWait    '117c14
+' delete the following variables:  functSaveWate, functSaveAutoWait, functSaveAutoWaitPrecision$,   '117c14
+'  and, functSaveVideoFilter$, canUseAutoWait, UseAutoWait, autoWaitPrecision$, desiredVideoFilter$,   '117c14
+'  and, functSaveWate, calCanUseAutoWait, saveUseAutoWait   '117c14
+'15. global interpolateMarkerClicks not used anymore, delete   '117c15
+'  doSpecialRLCSpec$ and doSpecialCoaxName$ not used, delete them (names remain in prefs.txt)  '117c15
+'16. Change [CommandAllSlims] from "for/next" to single line commands. Increases speed by about 600 usec per step '115c16
+'17. Remove variables, hasDDS1 and hasDDS3 '117c17
+'  clean up titles in Config Mgr Window  '117c17
+'  Remove "STYLEBITS" in Conf Mgr Window.  (See re-installation in 117-c19)
+'18. Changes made to allow the Original MSA to work with old TG (Orig Control Board and no DDS3)
+'  changed the after line in:case "APPXDDS3"   to:  appxdds3=val     '117c18 now. Modifed to allow a zero when orig TG, PLL3 has no DDS3 driver
+'  change code:        if TGtop = 1 and gentrk = 1 then LO3 = LO2 - finalfreq - offset   '117c18  now
+'            'for original, fixed freq TG PLL,3, no DDS3. Any added offset will be inaccurate due to PLL3's pdf. '117c18
+'  add code:        if TGtop = 1 and gentrk = 0 then LO3=LO2-finalfreq-sgout+thisfreq    '117c18
+'            'sgout will be inaccurate due to PLL3's pdf.  '117c18
+'  change code in [configSelTGtop] so that when TG is selected to 1(orig), DDS3 box is auto filled with "0".
+'  change default: switchHasRBW=0  ( "1" allows auto switching which old Control Board cannot tolerate)
+'Delete code to fix crashing when Toggling between Trans and Refl. In the area of
+'     "if restoreSettingsAfterChange=0 then cursor normal : return"  '117c18
+'      It is possible that these deletions may cause an error in Two Port testing
+'19. Clean up Variables Window and positioning of Smith Chart Window
+'  various changes in [Showvar] and [updatevar],  for better frequency resolution '117c19
+'  Re-install "STYLEBITS" in Conf Mgr Window. To prevent user from typing in boxes. (removed in 117-c17)
+'  change code: smithLastWindowHeight=WindowHeight  '117c19 now (To prevent smith window from growing)
+'  Replace all "beep"s with (playwave "default.wav") '117c19.  Later versions of Windows will not "beep" from Liberty Basic
+'  Changes within [CalculateAllStepsForLO1Synth],[CalculateAllStepsForLO3Synth] '117c19
+'  Changes within [CreateFractionalNcounter], delete AutoSpur and ManSpur '117c19
+'  Add SG/TG to [Showvar],[updatevar] '117c19
+'20.  Add Path to title    if freqBand<>0 then call gPrintText freqBand; "G, Res ";path$, InfoX, 30   '117c20 now.
+'  Change Step Button to Step Right and add Step Left button to make One Step bi-directional. '117c20
+'  Add routine [StepLeft]  '117c20
+'  There are two global varwindow, delete the second one. '117c20
+'  Increase resolution of DDS outputs in Variables Window to 10 digits '117c20
+'  add raw PDM phase to phaarray(thisstep,5) and add to Variables Window
+'21.  Add ADC Samples Averaging 'ver117c21
+'  Each additional sample adds 500 usec to the step in LPT, 75 usec for Cypress USB
+'  add box in Sweep Parameters Window, Labeled, "Samples". New variable: "global adcsamples" 'ver117c21
+'  move code that places the phadata into arrays 'ver117c21
+'21a.  modified [InvertPDmodule] to change PDM state for this step and all future steps, only  'ver117c21a
+'22. Test only.  Not used.
+'23. adds read status of USB in LPT Port Test, and a little bit of clean-up
+'  Modify Special Tests, [LPTportTest] (delete a line) 'ver117c23
+'  Change [ReadLPTStatus] to read USB 'ver117c23
+'  Clean up, delete global menuMultiscanPosition 'ver117c23
+'  Clean up, delete the function uTickCount(). Not used anywhere 'ver117c23
+'24. use 117c24 to find following code changes
+' modification to accept a third ADC (adc3) and multiplexer  'ver117c24
+'  Third ADC (adc3) works only for LPT, 12 or 16 Bit Serial, Original or SLIM Control Board.
+'  Verif MSA Testing: adc3 output is inverted via FET and is sent to LPT pin 12, PE, Input bit 5.
+'  Verif MSA Testing: add temporary subroutine [ProcessAll3ADCsLPT] 'this subroutine is a test for adding ADC3 'ver117c24
+'  adds variable, adc3data. Will have value of 0 to 65535. add adc3data to bottom of variables window.
+' Multiplexer works now for LPT and SLIM Control Board. Will work for Orig CB if modified for serial ADC.
+'  adds variable, adc3mux = 0 to 7 (channels 0 thru 7), Control Board Buffer 3, P3-pins: 2=D0  3=D1  4=D2. ADC selection:
+'  0= Magnitude, 1= Phase, 2= Phase90(reserved), 3= tempMOsc, 4= tempFilter, 5= volts1, 6= volts2, 7= health(pwr on)
+' Verif MSA Testing: Using Wait time to control mux. (for testing only)
+'  [Read16wSlimCB]and[Read16wOrigCB] changed to accomodate LTC1864. It requires SCK and CNV to both be high during convert,
+'    it should not change the action of either LTC1860 or AD7685. Both use "adc3mux", which for now is tied to "wate" for testing.
+'  clean up [ReadPhase] and [ReadAD16Status]
+'  Verif MSA Testing: in [ReadPhase], substitute gosub [ProcessAll3ADCsLPT] instead of gosub [Process16MagPha]
+'  in [Showvar]and[updatevar] add adc3data and temperature to bottom of variables window, increase height to 470.
+'25. use 117c25 to find following code changes
+'  Delete 12 bit serial subroutines. Modified 16 bit subroutines to change 16 bit data to 12 bit data when necessary. 'ver117c25
+'  Deleted [ReadAD22Status][Read22wSlimCB][Read22wOrigCB][Process22Mag][Process22MagPha] 'ver117c25
+'  changed [ReadStep][ReadMagnitude][ReadPhase][ProcessAll3ADCsLPT][Process16MagPha][Process16Mag][ReadADCviaUSB] 'ver117c25
+'  moved pdminvalid zone test to [ReadPhase]
+'  global calMagFileHadPhase not used. Deleted. Should have been deleted in ver117c13
+'  PDM Calibration, changed instructions in [menuCalPDM] and moved [CalPDMinvdeg] for simplification  'ver117c25
+'  changed line of code: staticText #config.filtInstruct 'ver117c25
+'  ver117rev0 deleted ver116-1b code that compensated for phase data taken at frequencies other than 10.7 MHz. 117c25 puts the code back in.
+'  combine [ConvertMagPhaseData]and[CalcMagpowerPixel]. Delete [CalcMagpowerPixel], pixels no longer calculated there. 'ver117c25
+'  Add option in Special Tests Window to control Fmux output of the PLL's
+'  [SetADCmux] 'new subroutine to set bits for adc multiplexer, includes USB. new variables: adc1mux, adc1muxlast 'ver117c25
+'  deleted gosub [PartialRestart] in [calManSelectPath]. This causes a command requirement. Already commanded. 'ver117c25
+'  Auto calculate glitchpdm using "int(videoPhaseTC*10)"    10-4-15 'ver117c25
+'  10-9-15 change ADC and Mux variables in HW Manager window 'ver117c25
+'  Treat a 12 bit serial ADC as a 16 bit. Its max count is either 65535 or 65520, depending on adc floating at end of conversion.
+'  delete the divisions by 16 to convert 12 bit ADC's
+'  changed: the variable adconv can be 8, 12, 16, 17, or 18. 22 is no longer used. 8 and 12 are the orig parallel ladder adc's.
+'   16 is the default SLIM dual serial ADC with no Mux. 17 is dual serial ADC with Mux on ADC1. 18 is single serial ADC on ADC1.
+'  changes to function configRunManager(autoRun),[configSelADconv],sub configGetDisplayData,sub configDisplayData
+'26. use 117c26 to find following code changes
+'  add adc1muxlast = 0 during initialization because the multiplexer is set to 0. ADC is selected to Magnitude 'ver117c26"
+'  throughout the code, change the name: adc3mux to adc1mux to prevent confusion. The mux will always be on adc 1. Includes adc1muxlast
+'  throughout the code, change the name: change the name: [Process16MagPha] to [ProcessAdc1Adc2LPT] to prevent confusion.
+'  Inside of [ProcessAdc1Adc2LPT], change names: magdata to adc1data, and phadata to adc2data
+'  throughout the code, change the name: [Process16Mag] to [ProcessAdc1LPT] to prevent confusion.
+'  Inside of [ProcessAdc1LPT], change name: magdata to adc1data
+'  wrote [Read16wSlimCBfast] for speed up. Not used yet. 250 usec vs. 460 usec.
+'27. use 117c27 to find following code changes
+'  Inside of [ReadAD16Status], combine [Read16wOrigCB],[Read16wSlimCB]and[Read16wSlimCBfast]. Name it [ReadAdcStatusLPT].
+'   Sould satisfy using Original Control Board with two serial ADC's. 'ver117c27
+'28. use 117c28 to find following code changes
+'  delete variable, bUseUSB
+'  occasional crash when using left and right step buttons.Crash is Runtime error: Subscript out of range, -165,gTrace2$().See ver117c30 for fix.
+'  change line to: thisCmd$="line ";lastX; " ";lastY2;" "; xPix;" ";yPix;";line ";xPix;" ";yPix;" ";lastX; " ";lastY2 'now 'ver117c28
+'  (see 30. This line had nothing to do with the crash problem)
+'29. Try to fix reverse sweep option. [CalculateAllStepsForLO3Synth]
+'  fix error in code line: #config.PLL3mode, "select ";configPLLmodes$(PLL1mode). should be: (PLL3mode). ver117c29
+'29a.  In ver117c23 I removed the Date/Time Stamp in the graph. Put it back in. 'ver117c29a
+'  The variable "validPhaseThreshold" is no longer used in the code. However, leave it as a Global, as I may use it as a warning. 'ver117c29a.
+'29b.  Work Path calibration
+'  Add #calman.Measure, "Measuring" and #calman.Measure, "Measure" 'ver117c29b
+'29c.  [calManMenuMeasure] and [calManMeasure] are combined and simplified. 'ver117c29c
+'  Delete use of variable, suppressPDMInversion. Rather, use setpdm to "force the PDM state"  'ver117c29c
+'  Delete warning if Phase calibration value is too high. It is OK.
+'  fix error in [Command2350R]
+'working in [CalPDMinvdeg]. Nothing changed.
+'30. glitchhlt = 100 'was 10  'add extra settling time after a Halt 'ver117c30
+'  If halted during the first sweep and "Step Left" is clicked, and then "Continued", SW will crash. Not the best fix, but,
+'   modify sub DisplayButtonsForHalted to allow Left/Right button enabling only if the first scan is complete.'ver117c30 3-7-16
+'  make sweepDir variable a Global. 'ver117c30 3-7-16
+'  SW will crash when Sweep Parameters Window is opened when in SA mode is previous mode was SA with TG in Reverse mode.
+'  change line from: if normrev = 1 then print #axis.normReverse, "Reverse"
+'   to: if gentrk = 1 and normrev = 1 then print #axis.normReverse, "Reverse" 'now 'ver117c30  3-9-16
+'  When clicking between between Norm and Reverse, do not allow "Continue" button. See [NormRevbutton]. 'ver117c30  3-9-16
+'  deletions in [RestartSAmodes] so sw "remembers" when switching between SA and SA with TG 'ver117c30  3-9-16
+'30a. [SetADCmux], change the command structure for USB from "A6.." to "A0..." 'ver117c30a
+'  Simplify both [ResetDDS1serUSB] and [ResetDDS3serUSB]. Add new sub [ResetEitherDDSserUSB] 'ver117c30a
+'  clean up [CreateBaseForDDSarray] and add some comments. Made no changes to code. 'ver117c30a
+'  clean up [InitializeHardware] to reset CB Latches to zero  'ver117c30a
+'31. In [InitializeHardware], change call CommandFilter filtbank to call SelectFilter filtbank 'ver117c31
+'  clean up [InitializeHardware] to set CB Latches  'ver117c31
+'  delete call SelectFilter in sub DetectChanges. Done in [InitializeHardware] 'ver117c31
+'  Clean up descriptions in '4.measure computer speed 'ver117c31
+'  moved code line: restoreFileName$=DefaultDir$+"\MSA_Info\MSA_Prefs\Prefs.txt"  to under global restoreFileName$ 'ver117c31
+'32. Delete sub CommandFilter byref fbank and move its code (3 lines) into sub SelectFilter byref fbank
+'  Delete the branch lable: [BeginScanSeries]. It is not used anywhere as a pointer. 'ver117c32
+'33. Many globals have default values installed throuout code. Move some next to their declarations, up top. 'ver117c33
+'34. delete sub configInitFirstUse. move configModuleVersion and configFileFullName$ to Globals 'ver117c34
+'  delete function configVersion(), not needed. Use configModuleVersion in its place 'ver117c34
+'  function configFileVersion() has never been used. Delete it 'ver117c34
+'34a.  move defaults from [InitGraphParams] to globals area 'ver117c34a
+'35. Clean up commanding for Video Filter and Latch 4. Done too many times.
+'  call SelectVideoFilter now used only in: [InitializeHardware] and sub DetectChanges
+'  call SelectLatchedSwitches now used only in:
+'  Modify sub SelectVideoFilter to command Latch 4 via sub SelectLatchedSwitches. 'ver117c35
+'  delete function switchLatchBits(desiredFreqBand) and fold into sub SelectLatchedSwitches 'ver117c35
+'  while testing, add playwave "default.wav" inside sub SelectLatchedSwitches
+'  In sub SelectLatchedSwitches, delete the "if switches are present". Command Latch 4 even if no switches, 'ver117c35
+'35test. Delete the use of an external array for msadll.dll 'ver117c35test
+'  Delete subroutine [CommandAllSlimsUSB] ' USB: 15/08/10 and create new one:[CommandAllSlimsUSB]'new 'ver117c35test
+'  It deletes CALLDLL #USB, "UsbMSADevicePopulateAllArray" 'ver117c35test
+'  create new array:  dim USBcmdarray$(800,39) Used 'ver117c35test
+'35test2. Delete the use of an external array for msadll.dll (continued)
+'  delete CALLDLL #USB, "UsbMSADeviceAllSlimsAndLoadStruct", 'ver117c35test2
+'  instead, command all modules using CALLDLL #USB, "UsbMSADeviceWriteString"   'ver117c35test2
+'35test3. Delete the use of an external array for msadll.dll (continued)
+'  in [CommandPLLslimUSB] delete CALLDLL #USB, "UsbMSADeviceWriteInt64MsbFirst", 'ver117c35test3
+'  add CALLDLL #USB, "UsbMSADeviceWriteString", USBdevice as long, USBwrbuf$ as ptr, 27 as short, result as boolean 'ver117c35test3
+'  add subroutine [CreateUSBwrbuf] 'ver117c35test3
+'  delete creation of Int64N.lsLong.struct and Int64N.msLong.struct in all of code 'ver117c35test3
+'  Delete the use of CALLDLL #USB, "UsbMSADevicePopulateDDSArrayBitReverse" 'ver117c35test3
+'  Delete the use of CALLDLL #USB, "UsbMSADevicePopulateDDSArray" 'ver117c35test3
+'  Delete the use of CALLDLL #USB, "UsbMSADeviceSetAllArrayPtr" 'ver117c35test3
+'  delete MEMORY MANAGEMENT FUNCTIONS and all globals associated with it 'ver117c35test3
+'36. deleted sub uInitFirstUse and moved the code to Globals area. 'ver117c36
+'  moved call TwoPortInitVariables to globals area  'ver117c36
+'  in [WaitStatement] change waittime<15 to waittime<100, modify comments 'ver117c36
+'  move "check for file, Ntport" and "check for file, msadll.dll" to after "Load Hardware Configuration File" 'ver117c36
+'  change code from "  "Sweep", [menuFreqAxisPreference], "Show Variables", [Showvar], _" to
+'    "  "Sweep Parameters Window", [FreqAxisPreference], "Show Variables", [Showvar], _" 'ver117c36
+'  delete subroutine: [menuFreqAxisPreference] 'ver117c36 instead, just use [FreqAxisPreference] 'ver117c36
+'  modify button positions in bottom of Main Window. 'ver117c36 was
+'  delete:   OSLS11JigType$="Reflect"   'ver115-1b 'ver117c36 not used anywhere
+'  Delete functions, not used: intSrcFreq(),intDestFreq(),intMaxEntries(),intSrcEntries(),intDestEntries(). 'ver117c36
+'36Fail.  The following changes caused Liberty to show up a bug. It is fixed in 37.
+'  delete sub intClearSrc, instead, use intSrcPoints=0 'Set source table to zero entries. 'ver117c36
+'  delete sub intClearDest, instead, use intDestPoints=0 'Set destination table to zero entries. 'ver117c36
+'  delete function configFilterCount(), instead, use MSANumFilters 'ver117c36
+'  delete function calVersion(), instead, use calModuleVersion 'ver117c36
+'  delete sub calSetDoPhase doPhase, instead, use calDoPhase= 'ver117c36
+'  delete function calGetDoPhase(), instead, use calDoPhase 'ver117c36
+'  delete sub calClearComments, instead, use calFileComments$(1)="":calFileComments$(2)="" 'ver117c36
+'  delete function calNumMagPoints(), instead, use calMagPoints 'ver117c36
+'  delete function calNumFreqPoints(), instead, use calFreqPoints 'ver117c36
+'37.  Move all global and dim declarations to top of code. It seems that Liberty has a bug,
+'    by not recognizing a global that is defined late in the code (ex. CalFreqPoints) 'ver117c37
+'38.  Delete use of calDoPhase and substitute with hasVNA 'ver117c38
+'  in sub TwoPortInterpolateToNewRange, doPhase=1 :doParams=3 are not used, delete.'ver117c38
+'  delete both subroutines: sub calSortFreq and sub calSortMag. Modify function calLoadFromEditor$() 'ver117c38a
+'  function uDegreesPerRad() is not used. Delete it 'ver117c38
+'  function function uNatLog10() is not used. Delete it 'ver117c38
+'  function function uE() is not used. Delete it 'ver117c38
+'  global uKE is not used, delete it 'ver117c38
+'  delete function uPi(), instead, use uKPi 'ver117c38
+'  delete function uRadsPerDegree(), instead, use uKRadsPerDegree 'ver117c38
+'39. Fix crash if LPT Test Window is clicked twice 'ver117c39
+'  Change [LPTportTest]. One button to change to high or low. 'ver117c39
+'40. Re-write [CommandAllSlims] for simplification.  'ver117c40
+'41. Change sub CommandFilterSlimCBUSB to extend pulse time in USB  'ver117c41
+'42. Change code to allow Config Mgr save without having to restart the software. 'ver117c42
+'  MSANumFilters  fix error caused by my previous change in ver117c36 'ver117c42
+'-------------------Above included in ver118Beta0
+'43. Change values for Freq Bands: 0-1050, 960-2050, 1979-3070 'ver117c43 now
+'44. Reposition buttons on bottom of Main Window. see 'ver117c44 was -
+'  playwave "default.wav" inside sub SelectLatchedSwitches, is used for testing
+'  Modify code in [menuRunConfig]. Path switching does not occur. 'ver117c44
+'  No change to code. Eric changed EEPROM from Eric12msa-fw-cb.hex to Eric14 to fix Latch 3 setting using "A0..." string.
+'  Changed EEPROM from Eric14 to v16. It changes auto clocking during module commanding.
+'  Changed EEPROM from v16 to v17. It deleted Read Mag only and Read Phase only. Always read both. UsbAdcControl.Adcs.struct = 3
+'  Changed [CommandAllSlims] to long version of commanding all modules. 'ver117c44 5-9-17
+'  Changed EEPROM v21 to send back Firmware version as: fwver = USBrBuf.numreads.struct  'ver117c44
+'  Add: "USB Firmware Version = ";fwver to Variables Window 'ver117c44
+'  Add: thisfreq to Variables Window 'ver117c44
+'  Tested with USB Firmware Version 25 5-19-17
+'45. Change [CreateCmdAllArray] and [CommandAllSlimsUSB] from A1 to A7. Must use EEPROM ver 28 or later 'ver117c45
+'  The new A7 (EEPROM firmware) will command all modules and send LE's and FQUDs at the same time.
+'  Add: if adcsamples >255 then adcsamples = 25  'ver117c45
+'46. Add adc1mux value to UsbAdcControl structure to be used by new EEPROM fw version 31
+'47. Delete use of adc1mux in UsbAdcControl structure, not used by new EEPROM fw version 33 'ver117c47
+
+'All changes that created version 117 Rev B and earlier versions are at the end of the code.
 
 '-------------Sequence of Main Routine for Original or Slim MSA/TG/VNA---------------
 '1.Establish Globals, dimension arrays, and assign default values 'ver117c33
@@ -234,7 +459,7 @@
     crystalLastUsedID=0 'moved ver117c33
     global tranRLCLastRLCWasSeries, tranRLCLastNotchWasTop 'most recent settings for tran mode RLC analysis
     global imageSaveLastFolder$  'Folder in which last graph image was saved, regular or Smith chart ver115-2a
-    imageSaveLastFolder$=DefaultDir$+"\Screenshot_images"  'Folder in which image was last saved ver115-2a 'moved ver117c33 'Now in special folder 'ver OK2FKUc2
+    imageSaveLastFolder$=DefaultDir$+"\Screenshot_images"  'Folder in which image was last saved ver115-2a 'moved ver117c33
     dim Appearances$(10)    'Names of Appearances
     dim customPresetNames$(5)   'User names for custom color presets (1-5) ver115-2a
 
@@ -248,64 +473,61 @@
  '------SEWgraph globals for graph params
     global firstScan   'Set to 1 for first scan after background grid for graph is drawn
 'ver114-4e deleted global graphAppearance$
-    global maximize, maximize2 ' added for maximize on startup 'ver OK2FKUc1
-    maximize=1 : maximize2=0    ' auxiliary variables for maximizing on startup 'ver OK2FKUc1
+    global maximize, maximize2 ' added verOK2FKU for maximize on startup'
+    maximize=1 : maximize2=0    ' auxiliary variables for maximizing on startup
     global currGraphBoxHeight, currGraphBoxWidth    'Actual current height, width, adjusted when resizing 'ver115-1c
     global clientHeightOffset, clientWidthOffset    'Difference between window size and client area size; set from test window 'ver115-1c
     global smithLastWindowHeight, smithLastWindowWidth  'Determines size of smith chart; initialized and later adjusted when resizing
     global graphMarLeft, graphMarRight, graphMarTop, graphMarBot    'margins from graph box edge to grid
     global haltAtEnd    'Flag set to 1 to cause a halt at end of current sweep  'SEWgraph
     global hasMarkPeakPos, hasMarkPeakNeg, hasMarkL, hasMarkR, hasAnyMark       'Marker flags
-    global hasMarkPeakRightLeft, hasMarkNextMax     ' Marker flags, Right=1 Left=0 'OK2FKUc2
-    global numMarkers   'add by OK2FKU to easier initialize default markers. 'OK2FKUc2
-    numMarkers=17   ' Count of markers 'OK2FKUc2
-    dim markerIDs$(numMarkers)    'IDs of markers, used to fill combo box. marker numbers run from 1 so ID of marker N is markerIDs$(N-1) 'OK2FKUc3
+    global hasMarkPeakRightLeft, hasMarkNextMax     ' Marker flags, Right=1 Left=0 verOK2FKU
+    global numMarkers   'add by OK2FKU to easier initialize default markers. verOK2FKU
+    numMarkers=17   ' Count of markers verOK2FKU
+    dim markerIDs$(numMarkers)    'IDs of markers, used to fill combo box. marker numbers run from 1 so ID of marker N is markerIDs$(N-1)
     'fill markerIDs$ array with defaults. Moved here ver117c32
     markerIDs$(0)="1" : markerIDs$(1)="2" : markerIDs$(2)="3" : markerIDs$(3)="4"  'SEWgraph
     markerIDs$(4)="5" : markerIDs$(5)="6" : markerIDs$(6)="7" : markerIDs$(7)="8"   'SEWgraph
-    markerIDs$(8)="9"  : markerIDs$(9)="L" : markerIDs$(10)="R" : markerIDs$(11)="P+" 'added 7-9 markers 'OK2FKUc3
-    markerIDs$(12)="P-" : markerIDs$(13)="P1" : markerIDs$(14)="P2" ' add Markers for peaks P1-P5 'OK2FKUc3
+    markerIDs$(8)="9"  : markerIDs$(9)="L" : markerIDs$(10)="R" : markerIDs$(11)="P+" 'added 7-9 markers verOK2FKU
+    markerIDs$(12)="P-" : markerIDs$(13)="P1" : markerIDs$(14)="P2" ' add Markers for peaks P1-P5 verOK2FKU
     markerIDs$(15)="P3" : markerIDs$(16)="P4" : markerIDs$(17)="P5"
-    dim selMarkIDs$(numMarkers+1) ' We must initialize array for more than 11 items. Array must have numMarkers+1 items (plus item "none") 'OK2FKUc3
+    dim selMarkIDs$(numMarkers+1) ' We must initialize array for more than 11 items. Array must have numMarkers+1 items (plus item "none") 'verOK2FKU
     global selMarkerID$  ' ID of marker selected by user
-    global markNextMaxID$   ' ID of marker for next maximum peak 'OK2FKUc3
-    global markNextID$ ' ID of marker for next closest peak 'OK2FKUc3
-    global firstFindNextMarker    ' set/clean for state if first find next right/left Peak 'OK2FKUc3
-    firstFindNextMarker=1  ' default set for indicate that first searching must do 'OK2FKUc3
-    global findNextBtnPressed ' indicate if we again push Next button for next Peak 'OK2FKUc3
-    findNextBtnPressed=0    ' def not pressed' 'OK2FKUc3
-    global oldNextPeakNum 'backup previous number of x peak 'OK2FKUc3
-    global nextPeakNum    ' actual next peak number value of x 'OK2FKUc3
-
-    ' Added additional menu buttons for easy operations 'OK2FKUc5
-    global toggleShowMarkerButton   ' variable toggling state when button processed
-    toggleShowMarkerButton=1
-    global toggleShowFrequencyButton   ' variable toggling state when button processed
-    toggleShowFrequencyButton=1
-    global toggleShowBWButton   ' variable toggling state when button processed
-    toggleShowBWButton=1
-    global toggleShowSweepButton   ' variable toggling state when button processed
-    toggleShowSweepButton=1
+    global markNextMaxID$   ' ID of marker for next maximum peak verOK2FKU
+    global markNextID$ ' ID of marker for next closest peak verOK2FKU
+    global firstFindNextMarker    ' set/clean for state if first find next right/left Peak verOK2FKU
+    firstFindNextMarker=1  ' default set for indicate that first searching must do verOK2FKU
+    global findNextBtnPressed ' indicate if we again push Next button for next Peak verOK2FKU
+    findNextBtnPressed=0    ' def not pressed' verOK2FKU
+    global oldNextPeakNum 'backup previous number of x peak verOK2FKU
+    global nextPeakNum    ' actual next peak number value of x verOK2FKU
+    global toggleShowMarkerButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowMarkerButton=1    'verOK2FKU
+    global toggleShowFrequencyButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowFrequencyButton=1 'verOK2FKU
+    global toggleShowBWButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowBWButton=1 'verOK2FKU
+    global toggleShowSweepButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowSweepButton=1 'verOK2FKU
     global toggleMenu12Button   'global handle variable for menu 1/2
     toggleMenu12Button=0    ' if 0 then menu 1/2, if 1 then menu 2/2
-    global toggleShowAmplitudeButton   ' variable toggling state when button processed
-    toggleShowAmplitudeButton=1
-    global toggleShowTraceButton   ' variable toggling state when button processed
-    toggleShowTraceButton=1
-    global toggleAmplitudeY1Button   ' variable toggling state when button processed
-    toggleAmplitudeY1Button=1
-    global toggleAmplitudeY2Button   ' variable toggling state when button processed
-    toggleAmplitudeY2Button=1
-    global toggleTraceY1Button   ' variable toggling state when button processed
-    toggleTraceY1Button=1
-    global toggleTraceY2Button   ' variable toggling state when button processed
-    toggleTraceY2Button=1
-    global toggleAutoScaleButton   ' variable toggling state when button processed
-    toggleAutoScaleButton=1
-    global prevShowButton$  ' memory old pressed button
-    global prevAmplButton$  ' memory old pressed Y axis button
+    global toggleShowAmplitudeButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowAmplitudeButton=1 'verOK2FKU
+    global toggleShowTraceButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleShowTraceButton=1 'verOK2FKU
+    global toggleAmplitudeY1Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleAmplitudeY1Button=1 'verOK2FKU
+    global toggleAmplitudeY2Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleAmplitudeY2Button=1 'verOK2FKU
+    global toggleTraceY1Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleTraceY1Button=1 'verOK2FKU
+    global toggleTraceY2Button   ' variable toggling state when button processed 'verOK2FKU
+    toggleTraceY2Button=1 'verOK2FKU
+    global toggleAutoScaleButton   ' variable toggling state when button processed 'verOK2FKU
+    toggleAutoScaleButton=1 'verOK2FKU
+    global prevShowButton$  ' memory old pressed button 'verOK2FKU
+    global prevAmplButton$  ' memory old pressed Y axis button 'verOK2FKU
     global mAxisNum         ' memory which menu for axis Y1 or Y2 is or was show
-
     global doGraphMarkers   'Set/cleared by user to show or hide markers on graph
     doGraphMarkers=1 'default, show markers. move ver117c34
     global doPeaksBounded   '=1 to limit peak search between L and R markers; otherwise 0
@@ -317,8 +539,7 @@
     global graphBox$       'handle variable containing handle for current graph box. ver 114-3c
     graphBox$=""  'ver115-1a 'moved ver117c33
     global TwoPortGraphBox$     'Handle to graph box for two-port graphs, or blank if no window open ver116-1b
-    global displaySweepTime ' 1 to display sweep time in message area  'ver114-4f 'OK2FKUc7 preset to 1
-    displaySweepTime = 1
+    global displaySweepTime '=1 to display sweep time in message area  'ver114-4f
 '117c15    global interpolateMarkerClicks  '=1 to enable placing marker at exact click point; =0 to round to nearest step. ver115-1a
 '117c15    interpolateMarkerClicks=0    'Note user has no way to change this    ver115-1a
     dim axisGraphData$(40) : dim axisDataType(40)   'Graph data for dialog selecting graph types ver116-1b
@@ -584,7 +805,7 @@
     lastSetBand=freqBand 'default, used during Boot 'ver117c35
 
     global bandEnd1G, bandEnd2G     'Final frequencies for 1G and 2G when in auto-band mode. ver116-4s
-    bandEnd1G=975 : bandEnd2G=2050  'ver116-4s moved here in 'ver117c31 'OK2FKUd1 change to 975 and 2050 for LO leaking supression
+    bandEnd1G=975 : bandEnd2G=2050  'ver116-4s moved here in 'ver117c31 'verOK2FKU rev1 band 950-2050
     global sgout   'signal generator output freq when in plain SA mode
     sgout=10  'default (10 MHz) moved here in ver117c34
     global test     'SEWgraph  Contents get printed to message box on halt
@@ -671,8 +892,8 @@
     global switchTR 'VNA Reflection Bridge state, transmission/reflection (0=transmission) 'ver117c31
     switchTR=0  'default for VNA is "transmission", moved here in ver117c31
 
-    global switchSA 'VNA / SA switch state (0=SA) 'OK2FKUc4
-    switchSA=0 'default state is SA 'OK2FKUc4
+    global switchSA 'VNA / SA switch state (0=SA) 'verOK2FKU
+    switchSA=0 'default state is SA 'verOK2FKU
 
     'Globals used to remember state info to allow detection of user changes; added by ver114-6e
     'See RememberState and DetectChanges
@@ -1105,7 +1326,7 @@
     global gXAxisMin, gXAxisMax     'Axis max and min are the values at the end of each axis
     global gY1AxisMin, gY1AxisMax   'and are used for automatic calculation of axis and
     global gY2AxisMin, gY2AxisMax   'grid characteristics
-    global gY2AxisMinDef, gY2AxisMaxDef  'default values grid characteristics 'OK2FKUc6
+    global gY2AxisMinDef, gY2AxisMaxDef  'grid characteristics
     global gGraphColorPreset$  'Last selected graph color preset; may have been partially overridden since ver114-2a
     global gGraphTextPreset$   'Last selected graph text preset; may have been partially overridden since ver114-2a
     global gTrace1Width, gTrace2Width  'Width of graph trace (0,1,2 or 3)
@@ -1123,7 +1344,6 @@
      'In dynamic draw, erase gEraseLead ahead of drawing
     global gDoErase1, gDoErase2, gEraseLead
     global gHorDiv, gVertDiv    'Number of hor and vert divisions in graph
-    global gHorDivDef, gVertDivDef 
     global gXGridStyle$, gY1GridStyle$, gY2GridStyle$   'style of labeling grid lines
     global gXAxisForm$, gY1AxisForm$, gY2AxisForm$      'Formatter for grid line values. e.g. "##.##"
     global gXAxisLabel$, gY1AxisLabel$, gY2AxisLabel$  'Indentifier which prints by axis in axis color
@@ -1455,8 +1675,7 @@
         isErr=CreateOperatingCalFolder()  'Create OperatingCal folder if it does not exist
         if isErr then notice "Unable to create OperatingCal folder."
     end if
-
-' 2g2. Create Image Folder 'OK2FKUc2
+' 2g2. Create Image Folder
     isErr=CreateImageFolder()  'Create Image folder if it does not exist
     if isErr then notice "Unable to create Screenshot Images folder."
 
@@ -1631,9 +1850,8 @@
 'ver117c36 change '12.[InitializeGraphModule]Create Graph, using Working Window data
 '12.Create Graph (Erase old one if displayed) 'ver117c36
 'ver117c29c delete    suppressPDMInversion=0  'ver115-1a
-
-'OK2FKUc5 added this to preset controls on panel
-    xForm$="#####.######"
+    ' verOK2FKU added this to preset controls on panel
+    xForm$="#####.######"   'ver116-4k
     print #handle.SweepCent, uFormatted$(centfreq, xForm$)
     print #handle.SweepSpan, uFormatted$(sweepwidth, xForm$)
     print #handle.SweepStart, uFormatted$(startfreq, xForm$)
@@ -1838,7 +2056,7 @@
 'OneStep it continues only for a single point. If specialOneSweep=1 or HaltAtEnd=1, it
 'automatically stops at the end of a single sweep.
 [StartSweep]'enters from: above, or [IncrementOneStep]or[FocusKeyBox] [Continue]
-    if maximize then goto [Halted] 'OK2FKUc1
+    if maximize then goto [Halted]
     if specialOneSweep then haltAtEnd=1 else haltAtEnd=0   'ver115-8d moved this here
     if haltedAfterPartialRestart=0 and scanResumed=1 then   'ver116-1b
         'For a resumed scan, a halt occurred after the previous step and that step was fully processed.
@@ -1958,7 +2176,7 @@
         specialOneSweep=0
         return 'Sweep process was called by gosub; we return to caller.
     end if
-    if maximize then ' added for maximize on startup 'OK2FKUc1
+    if maximize then ' added verOK2FKU for maximize on startup'
         maximize=0
         maximize2=1
         hWnd = hWnd(#handle)
@@ -2067,7 +2285,7 @@ return 'to: ' 3a. Initialize Graphing Variables
     'Note: On resizing, all non-buttons seem to end up a few pixels higher than the original spec,
     'so the Y locations are adjusted accordingly via markTop
     'Note WindowHeight when window is created is entire height; on resizing, it is the client area only
-    markTop=currGraphBoxHeight+15' : markSelLeft=configLeft+65 'ver115-1b   'ver115-1c 'OK2FKUc1
+    markTop=currGraphBoxHeight+15' : markSelLeft=configLeft+65 'ver115-1b   'ver115-1c 'verOK2FKU
     'markEditLeft=markSelLeft+53
     'markMiscLeft=markEditLeft+177
     'configLeft=sweepWaitLeft+48+37
@@ -2093,7 +2311,7 @@ return 'to: ' 3a. Initialize Graphing Variables
     'the fact that no button has yet been pushed on the graph window, which somehow affects the
     'LB resizing process. The crash still sometimes occurs, so it is best to halt before resizing.
 
-    if maximize2 then maximize2=0 : haltsweep=0: goto [RestartButton] ' added for maximize on startup 'OK2FKUc1
+    if maximize2 then maximize2=0 : haltsweep=0: goto [RestartButton] ' added for maximize on startup verOK2FKU
     if haltsweep=1 then
         #graphBox$, "cls"
         notice "Warning: Halt before resizing to avoid LB bug."
@@ -7680,7 +7898,7 @@ end sub
 [CreateGraphWindow]'changed ver113-4b
   'We do this only once, at startup. After that, we work with the existing window, adjust its menus and redraw.
     BackgroundColor$="buttonface" : ForegroundColor$="black"
-    WindowWidth=DisplayWidth-300 : WindowHeight=DisplayHeight-100 'OK2FKUc1 using now DisplayWidth and DisplayHeight
+    WindowWidth=DisplayWidth-300 : WindowHeight=DisplayHeight-100
     UpperLeftX = 4
     UpperLeftY = 1
 
@@ -7760,7 +7978,7 @@ end sub
     currGraphBoxWidth=WindowWidth-clientWidthOffset 'ver115-1b  'ver115-1c
     graphicbox #handle.g, 0,0,currGraphBoxWidth,currGraphBoxHeight
 
-    ' Menu buttons for easy Control 'OK2FKUc5
+    'verOK2FKU Menu buttons for easy Control
     markControlLeft=5
     button #handle.showFrequecyControl, "Frequecy", mBtnShowFrequencyControl, LL, markControlLeft, -4, 68,18
     button #handle.showAmplitudeControl, "Amplitude", mBtnShowAmplitudeControl, LL, markControlLeft, -22, 68,18
@@ -7773,13 +7991,13 @@ end sub
 
         'Marker Selection buttons
     markTop=currGraphBoxHeight+15     'This isn't the top of anything in particular, just a reference point ver115-1b
-    markSelLeft=markControlThirdColLeft+60  'OK2FKUc5 edited position
+    markSelLeft=markControlThirdColLeft+60
     statictext #handle.selMarkLab "Marker", markSelLeft+3, markTop-9, 40, 14
-    selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i  'OK2FKUc5 using numMerkers
+    selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i
     combobox #handle.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+5, 50, 180
 
-        'Marker Editing Items ver114-4a changed marker edit buttons so none need to be hidden  'OK2FKUc5 edited position
-    markEditLeft=markSelLeft+53   'OK2FKUc5
+        'Marker Editing Items ver114-4a changed marker edit buttons so none need to be hidden
+    markEditLeft=markSelLeft+53
     button #handle.markDelete, "Delete",mBtnMarkDelete, LL, markEditLeft, -4, 65,18 'ver117c36 was -4 'ver117c44 was -8
     button #handle.markClear, "Clear Marks",mBtnMarkClear, LL, markEditLeft, -22, 65,18 'ver117c36 was -22 'ver117c44 was -26
     button #handle.markDec, "-",[btnDecPoint], LL, markEditLeft+69, -4, 14,15   'ver116-4j
@@ -7788,27 +8006,27 @@ end sub
     textbox #handle.markFreq, markEditLeft+65, markTop+7, 71,20
     button #handle.markEnterFreq, "Enter",mEnterMarker, LL, markEditLeft+140, -22, 35,18 'ver117c36 was -25 'ver117c44 was -27
 
-        'Misc Marker buttons 'OK2FKUc5 edited position
+        'Misc Marker buttons
     markMiscLeft=markEditLeft+177
     button #handle.ExpandLR, "Expand L-R", [menuExpandSweep],LL, markMiscLeft, -4,65,18 'ver117c36 was -4 'ver117c44 was -8
     button #handle.mMarkToCenter, "Mark->Cent", mMarkToCenter,LL, markMiscLeft, -22,65,18 'ver117c36 was -22 'ver117c44 was -27
     'ver114-7b deleted buttons for IncDecRef
 
-        'Marker Find Maximum/Minimum Button 'OK2FKUc5 added this
+        'Marker Find Maximum/Minimum Button 'verOK2FKU added this
     markFindMaxMinLeft=markMiscLeft+67
     button #handle.markFindMax, "Find Peak", mFindMaxMarker, LL, markFindMaxMinLeft, -4, 54, 18
     button #handle.markFindMin, "Find Min", mFindMinMarker, LL, markFindMaxMinLeft, -22, 54, 18
 
-        'Marker Find Next peak maximum Button 'OK2FKUc5 added this
+        'Marker Find Next peak maximum Button 'verOK2FKU added this
     markFindNextPeakLeft=markFindMaxMinLeft+56
     button #handle.markFindNextMax, "Next Peak", mFindNextMaxMarker, LL, markFindNextPeakLeft, -4, 56, 18
 
-        'Marker Find Next right/left peak Button 'OK2FKUc5 added this
+        'Marker Find Next right/left peak Button 'verOK2FKU added this
     markFindNextLRLeft=markFindNextPeakLeft+58
     button #handle.markFindNextRight, "Next Pk Right", mFindNextRightMarker, LL, markFindNextLRLeft, -4, 75, 18
     button #handle.markFindNextLeft, "Next Pk Left", mFindNextLeftMarker, LL, markFindNextLRLeft, -22, 75, 18
 
-        'Center/Span frequencies and Start/Stop frequencies, with radio buttons to select one pair 'OK2FKUc5
+        'Center/Span frequencies and Start/Stop frequencies, with radio buttons to select one pair 'verOK2FKU
     sweepFreqLeft=markSelLeft
     groupbox #handle.FreqGroup, "", sweepFreqLeft-1, markTop-16, 303, 44
     checkbox #handle.btnCentSpan, "", mSetCentSpan, mSetStartStop, sweepFreqLeft+2, markTop+4, 14, 12
@@ -7826,17 +8044,17 @@ end sub
     textbox #handle.SweepStart, sweepFreqLeft+197, markTop-10, 75,20
     textbox #handle.SweepStop, sweepFreqLeft+197, markTop+7, 75,20
 
-        'Steps per sweep 'OK2FKUc5
+        'Steps per sweep 'verOK2FKU
     sweepStepsLeft=markSelLeft
     groupbox #handle.AxisGroup, "", sweepStepsLeft-3, markTop-16, 175, 44
     statictext #handle.StepsLab, "Steps", sweepStepsLeft, markTop-6, 35,15
     textbox #handle.SweepSteps, sweepStepsLeft+43, markTop-10, 35,20
 
-        'Add box in Sweep Parameters window for ADC Averaging   'OK2FKUc5
+        'Add box in Sweep Parameters window for ADC Averaging   'verOK2FKU
     statictext #handle.SampleLab, "Samples", sweepStepsLeft, markTop+11, 40,15
     textbox #handle.SampleBox, sweepStepsLeft+43, markTop+7, 35,20    'manual text entry, number of samples of ADC to average. 0 is default, which is 1 sample
 
-        'Wait time 'OK2FKUc5
+        'Wait time 'verOK2FKU
     sweepWaitLeft=sweepStepsLeft+43+40
     statictext #handle.WaitLab, "Wait (ms)", sweepWaitLeft, markTop-6, 45,15
     textbox #handle.SweepWait, sweepWaitLeft+48, markTop-10, 35,18   'manual text entry
@@ -7858,7 +8076,7 @@ end sub
 
     button #handle.SweepSettingConfirm, "Confirm", [axisXFinishedByPanel], LL, sweepFreqLeft+350, -22, 65,18
 
-        'RBW Filter List OK2FKUc5
+        'RBW Filter List
         sweepBWLeft=markSelLeft
     statictext #handle.filter, "Select Final Filter Path:", sweepBWLeft, markTop-9, 130, 12
     ' must omit stylebits, if we have to take action, when we change value in combobox 'verOK2FKU
@@ -7872,7 +8090,7 @@ end sub
     checkbox #handle.linear, "Linear", [mAxisXSelLinear], [mAxisXSelLog],sweepLeft, markTop-8, 47, 15 'ver115-1c
     checkbox #handle.log, "Log", [mAxisXSelLog], [mAxisXSelLinear],sweepLeft, markTop+10, 47, 15 'ver115-1c
 
-                'OK2FKUc5
+                'ver114-4k added reverse
     checkbox #handle.LR, "L-R", [mAxisLRon], [mAxisLRoff],sweepLeft+17+30+25, markTop-8, 37, 15 'ver115-1c
     checkbox #handle.RL, "R-L", [mAxisRLon], [mAxisRLoff],sweepLeft+17+30+25, markTop+10, 37, 15 'ver115-1c
     checkbox #handle.Alternate, "Alternate", [mAxisALTon], mAxisALToff,sweepLeft+17+30+25+17+25, markTop-8, 67, 15 'ver115-1c
@@ -7896,25 +8114,25 @@ end sub
     staticText #handle.LabStyle "Trace Style", amplAxisYxStyleLeft,markTop-8,70,12
     combobox #handle.style, TraceStyles$(), [mChangeStyle],amplAxisYxStyleLeft, markTop+7, 80, 20   'Trace Style
 
-        ' Do cycle color OK2FKUc5
+        ' Do cycle color
     cycleColorsLeft=amplAxisYxStyleLeft+80+5
     checkbox #handle.cycleColors, "Cycle colors in Stick modes.",[doCycleColors], [doCycleColors], cycleColorsLeft, markTop-8, 175,15  'Cycling ver116-4s
 
-    '   Number of vertical divisions OK2FKUc5
+    '   Number of vertical divisions
     amplAxisYxVerDivLeft=amplitudeLeft+50+5
     staticText #handle.LabVDiv "Ver. Div.", amplAxisYxVerDivLeft,markTop-8,45,12
     NumVertDiv$(0)="4" : NumVertDiv$(1)="5" : NumVertDiv$(2)="6"    'ver115-1b changed to NumVertDiv$
     NumVertDiv$(3)="8" : NumVertDiv$(4)="10" : NumVertDiv$(5)="12"
     combobox #handle.VDiv, NumVertDiv$(), mChangeVertDiv,amplAxisYxVerDivLeft, markTop+7, 45, 20   'Number of vert divisions
 
-        'Top and bottom limits OK2FKUc5
+        'Top and bottom limits
     amplAxisYxRefLeft=amplAxisYxVerDivLeft+45+5
     staticText #handle.LabTopRef, "Top Ref", amplAxisYxRefLeft,markTop-6,42,15
     textbox #handle.TopRef, amplAxisYxRefLeft+45, markTop-10, 55,20     'Top Ref  ver115-2c
     staticText #handle.LabBotRef, "Bot Ref", amplAxisYxRefLeft,markTop+11,42,15
     textbox #handle.BotRef, amplAxisYxRefLeft+45, markTop+7, 55,20     'Bot Ref ver115-2c
 
-        'List of graphs OK2FKUc5
+        'List of graphs
         amplAxisYxGraphDataLeft=amplAxisYxRefLeft+45+55+5
     'staticText #handle.Instruct1, "Graph Data",amplAxisYxGraphDataLeft+68+30, markTop-8, 60,12
     'ver115-3a omitted the stylebits, because we have to take action when the graph changes
@@ -7925,7 +8143,7 @@ end sub
     button #handle.DefaultAxis, "Default", mDefAxis, LL, amplAxisYxGraphDataLeft+33+72, -2,45,18
 
         'Test Setup Button 'ver115-1g added this and deleted go/save config
-    button #handle.testsetup, "Test Setups", [ManageTestSetups], LR, 175, 13, 70, 19 'ver117c36 was -5 'ver117c44 was -8 ' OK2FKUc5 edited positon
+    button #handle.testsetup, "Test Setups", [ManageTestSetups], LR, 175, 13, 70, 19 'ver117c36 was -5 'ver117c44 was -8
 
         'Sweep Control Buttons
     button #handle.Redraw, "Redraw",btnRedraw, LR, 105,13,70,19
@@ -7952,13 +8170,13 @@ end sub
     #handle.g, "when leftButtonMove gMouseQuery" 'ver116-4j
     #handle.g, "when leftButtonUp gMouseQueryEnd" 'ver116-4h
     #handle.g, "when characterInput [mAddMarkerFromKeyboard]" 'ver116-4j
-    #handle.color, "when leftButtonDown mPickColor" 'OK2FKUc5
+    #handle.color, "when leftButtonDown mPickColor"
 
     hGraphWindow=hwnd(#handle)  'get graph window handle
 
-    #handle.g, "when characterInput mSweepCentTextBox"  'OK2FKUc5 (TAB pressed in graph jump to Span/Stop textbox)
+    #handle.g, "when characterInput mSweepCentTextBox"  'verOK2FKU (TAB pressed in graph jump to Span/Stop textbox)
 
-    if userFreqPref=0 then 'This is based on last user setting  'OK2FKUc5
+    if userFreqPref=0 then 'This is based on last user setting  'verOK2FKU
         #handle.btnCentSpan, "set"   'Start in center/span mode
         call mEnableCentSpan
     else
@@ -7997,7 +8215,7 @@ end sub
 
     menuMode$=""    'because menus don't conform to any mode now.
     call ConformMenusToMode 'Hide whatever menu items we don't need for current msaMode$
-    call hideAllControlButtons  'OK2FKUc5
+    call hideAllControlButtons  'verOK2FKU
 
     print #handle.g, "when rightButtonDown [RightButDown]"
     print #handle.g, "when leftButtonDouble [LeftButDouble]"
@@ -8011,8 +8229,8 @@ end sub
     #handle.StepLeft, "!disable"  '117c20
     #handle.Redraw, "!font Arial 9 bold" : #handle.Restart, "!font Arial 9 bold"   'SEWgraph
     #handle.Redraw, "!hide"     'We start out running so hide this
-    #handle.SweepSettingConfirm, "!font Arial 9 bold"   'OK2FKUc5
-    #handle.RefConfirm, "!font Arial 9 bold"            'OK2FKUc5
+    #handle.SweepSettingConfirm, "!font Arial 9 bold"
+    #handle.RefConfirm, "!font Arial 9 bold"
         'Tell graph module what size we are, and calculate scaling ver114-6f
     call gUpdateGraphObject graphBox$, currGraphBoxWidth, currGraphBoxHeight, _ 'ver115-1c
                                         graphMarLeft, graphMarRight, graphMarTop, graphMarBot
@@ -8022,7 +8240,7 @@ end sub
 
 sub ConformMenusToMode  'Make menus and window caption match mode.
     'msaMode$ is the current mode. menuMode$ is the mode to which the menus are currently conformed.
-    call updatePanelButtons prevShowButton$, toggle ' OK2FKUc5
+    call updatePanelButtons prevShowButton$, toggle ' verOK2FKU
     if msaMode$="SA" then
         if gentrk=0 then modeTitle$="Spectrum Analyzer Mode" else modeTitle$="Spectrum Analyzer with TG Mode"   'ver115-4f
     end if
@@ -8135,7 +8353,6 @@ sub mMarkToCenter btn$ 'Recenter around marker frequency
     end if
 end sub
 
-'OK2FKUc5
 sub mSweepCentTextBox hndl$, char$
     key$=Inkey$
     #handle.btnCentSpan, "value? resultCentSpan$"
@@ -9126,7 +9343,7 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 
 [GoSAmode] 'Switch to MSA mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
-    switchSA=0 : switchTR=0 : call SelectLatchedSwitches freqBand 'Set SA/VNA switch to SA 'OK2FKUc4
+    switchSA=0 : switchTR=0 : call SelectLatchedSwitches freqBand 'Set SA/VNA switch to SA 'verOK2FKU
     if graphBox$="" then 'See if window is created yet ver115-5d
         gosub [CreateGraphWindow]   'Note msaMode$ is new mode; menuMode$ is old mode
     else
@@ -9161,7 +9378,7 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 
 [GoTransmissionMode] 'Switch to Transmission mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
-    switchSA=1 'OK2FKUc4
+    switchSA=1 'verOK2FKU
     spurcheck = 0 'this assures Spur Test is OFF. ver116-1b
     switchTR=0 : call SelectLatchedSwitches freqBand 'Set transmission/reflection switch to transmission 'ver116-1b ver116-4s
     if graphBox$="" then 'See if window is created yet ver115-5d
@@ -9207,7 +9424,7 @@ return 'to:3b. Open Main Window,[DetectFullChanges],[ToggleTransmissionReflectio
 
 [GoReflectionMode] 'Switch to Reflection mode and return; Get here only from [ChangeMode]
     'We don't initialize variables here because they may have been set by loading Preferences ver115-2a
-    switchSA=1 'OK2FKUc4
+    switchSA=1 'verOK2FKU
     spurcheck = 0 'this assures Spur Test is OFF. ver116-1b
     switchTR=1 : call SelectLatchedSwitches freqBand 'Set transmission/reflection switch to reflection 'ver116-1b ver116-4s
     if graphBox$="" then 'See if window is created yet ver115-5d
@@ -9278,7 +9495,7 @@ sub GetDefaultGraphData axisNum, byref axisType, byref axisMin, byref axisMax 'g
             end if
         case else   ' "SA"
             if primaryAxisNum=axisNum then
-                axisType=constMagDBM : axisMin=gY2AxisMinDef : axisMax=gY2AxisMaxDef 'OK2FKUc6
+                axisType=constMagDBM : axisMin=gY2AxisMinDef : axisMax=gY2AxisMaxDef
             else
                 axisType=constNoGraph : axisMin=-1 : axisMax=0
             end if
@@ -9402,8 +9619,8 @@ end sub 'return to: Assign HW Configuration values(2001),[axisXFinished](globalS
     'If in midsweep, continue scan. Note that a subroutine called above may have set
     'continueCode to cause a halt or restart.
     if haltsweep=1 then goto [PostScan]
-    'wait 'comented by for continue sweeping 'OK2FKUc8
-    ' if previous clicked to Halt At End, after changing go to Halted, else continue 'OK2FKUc8
+    'wait 'comented by for continue sweeping verOK2FKU
+    ' if previous clicked to Halt At End, after changing go to Halted, else continue verOK2FKU
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
 [preupdatevar] 'ver111-36h
@@ -10936,8 +11153,8 @@ sub DisplayAxisYPreference axisNum, doTwoPort   'Display dialog to select Y axis
     else
         call TwoPortAdjustToYChanges (origData<>restoreData)
     end if
-    if toggleAmplitudeY2Button=0 or toggleAmplitudeY1Button=0 or toggleTraceY1Button=0 or toggleTraceY2Button=0 then 'OK2FKUc5
-        call loadAxisControls "!show", mAxisNum ' load changes into bottom menu 'OK2FKUc5
+    if toggleAmplitudeY2Button=0 or toggleAmplitudeY1Button=0 or toggleTraceY1Button=0 or toggleTraceY2Button=0 then
+        call loadAxisControls "!show", mAxisNum ' load changes into bottom menu
     end if
 end sub  'return to: sub DisplayAxisYPreference
 
@@ -11023,7 +11240,6 @@ sub FillAppearancesArray
     next i
 end sub
 
-'OK2FKUc5
 [changeRBWfilt]
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
     #handle.FiltList, "selectionindex? filtIndex"   'Filter N is at index N in list
@@ -11038,13 +11254,11 @@ end sub
     continueCode=0
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
-'OK2FKUc5
 sub changeVBWfilt handle$
     #handle.VideoFilt, "contents? videoFilter$" 'get selected video filter  ver114-5p
     call SelectVideoFilter
 end sub
 
-'OK2FKUc5
 sub mMenu12 btn$
     if toggleMenu12Button=0  then
         toggleMenu12Button=1
@@ -11056,6 +11270,7 @@ sub mMenu12 btn$
     call hideShowFreqX2Control "!show"
 end sub
 
+
 'ver117c36 this subroutine is not needed
 'ver117c36 del 'ver114-5o added [menuFreqAxisPreference] as wrapper to be invoked by menu;
 'ver117c36 del 'ends in wait instead of return
@@ -11063,24 +11278,24 @@ end sub
 'ver117c36 del     gosub [FreqAxisPreference]
 'ver117c36 del     wait
 
-[mSetDUTForward] 'OK2FKUc5
+[mSetDUTForward] 'ver116-1b
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
     #handle.DirectionF, "set" : #handle.DirectionR, "reset"
     goto [mSetDUTFR]
 
-[mSetDUTReverse]  'OK2FKUc5
+[mSetDUTReverse]  'ver116-1b
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
     #handle.DirectionF, "reset" : #handle.DirectionR, "set"
     goto [mSetDUTFR]
 
-[mSetDUTFR] 'OK2FKUc5
+[mSetDUTFR]
     #handle.DirectionF, "value? DUTDirect$"
     if DUTDirect$="set" then switchFR=0 else switchFR=1
     gosub [PartialRestart]
     continueCode=0
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
-[mAxisXHorDiv] 'OK2FKUc5
+[mAxisXHorDiv]
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
     #handle.HDiv, "contents? nDiv$"   'Get user specified number of divisions
     nHorDiv=val(nDiv$) : if nHorDiv<2 then nHorDiv=2 else if nHorDiv>12 then nHorDiv=10 'ver116-1b
@@ -11094,7 +11309,7 @@ end sub
     continueCode=0
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
-[mNormRevbutton] 'OK2FKUc5
+[mNormRevbutton]
     if haltsweep then gosub [FinishSweeping]
     if normrev = 0 then
         print #handle.normReverse, "Reverse"
@@ -11105,7 +11320,7 @@ end sub
     end if
 
 
-[axisXFinishedByPanel] ''OK2FKUc5 added this for easy control from panel
+[axisXFinishedByPanel] 'verOK2FKU added this for easy control from panel
     if haltsweep then gosub [FinishSweeping]    'ver115-8d
     call RememberState
 
@@ -11200,11 +11415,11 @@ end sub
 '117c13    if (calCanUseAutoWait=0) and useAutoWait then   'ver116-4e
 '117c13        useAutoWait=0 : wate=100
 '117c13    end if
-    if needRestart=1 then gosub [PartialRestart] else call mDeleteMarker "Halt" : call RefreshGraph 0 'OK2FKUc9 delete Halt
+    if needRestart=1 then gosub [PartialRestart] else call mDeleteMarker "Halt" : call RefreshGraph 0 ' verOK2FKU delete Halt
     continueCode=0  'signal to keep going ver115-8d
 '117cM    if multiscanIsOpen then call multiscanSaveContexts 0 'zero means main graph  ver115-8d
-    'wait 'entered from: [LeftButDouble],[menuFreqAxisPreference] 'commented by OK2FKUc5
-    ' if previous clicked to Halt At End, after changing go to Halted, else continue OK2FKUc5
+    'wait 'entered from: [LeftButDouble],[menuFreqAxisPreference] 'commented by OK2FKU
+    ' if previous clicked to Halt At End, after changing go to Halted, else continue verOK2FKU
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
 function DisplayAxisXPreference()   'Display dialog to select axis preferences
@@ -11457,13 +11672,13 @@ function DisplayAxisXPreference()   'Display dialog to select axis preferences
     if spurcheck=1 then #axis.spurbox, "set" else #axis.spurbox, "reset"  'ver115-4g
 
     if msaMode$="SA" then 'ver115-4f
-        xForm$="#####.######"   ' formatted print OK2FKUc10
+        xForm$="#####.######"   ' formatted print verOK2FKU
         if TGtop = 2 then 'ver114-4j print proper label; button only exists for SA mode with TGtop=2
 'ver117c30 was: if normrev = 1 then print #axis.normReverse, "Reverse"
         if gentrk = 1 and normrev = 1 then print #axis.normReverse, "Reverse" 'now 'ver117c30
         end if
         if TGtop>0 then 'Do if we have the TG--print either SG freq or TG offset
-            if gentrk=0 then print #axis.freqoffbox, uFormatted$(sgout, xForm$) else print #axis.freqoffbox, uFormatted$(offset, xForm$) 'ver115-4f 'OK2FKUc10 formatted
+            if gentrk=0 then print #axis.freqoffbox, uFormatted$(sgout, xForm$) else print #axis.freqoffbox, uFormatted$(offset, xForm$) 'ver115-4f 'verOK2FKU formatted
         end if
     else
         if switchFR=0 then  'ver116-1b
@@ -11486,7 +11701,6 @@ function DisplayAxisXPreference()   'Display dialog to select axis preferences
         #axis.btnStartStop, "set"   'Start in start/stop mode
         gosub [enableStartStop]
     end if
-
     wait    'Wait for user to make choices
 
 'User gets here by double-click. If he double clicks again before we are open, we may end up
@@ -11908,8 +12122,6 @@ return
         continueCode=0
         DisplayAxisXPreference=0
     end if
-
-    'Update menu controls from dialog window 'OK2FKUc5
     print #handle.SweepSteps, globalSteps
     print #handle.SweepWait, "";wate
     print #handle.SampleBox, "";adcsamples
@@ -12069,7 +12281,7 @@ sub mUpdateMarkerLocations   'Find point numbers for peak markers and for L and 
         if hasMarkPeakPos then call gUpdateMarkerPointNum mMarkerNum("P+"),maxNum
         if hasMarkPeakNeg then call gUpdateMarkerPointNum mMarkerNum("P-"),minNum
     end if
-    ' find Next Right peak Added by OK2FKU 'OK2FKUc11
+    ' find Next Right peak Added by OK2FKU verOK2FKU
     if markNextID$<>"" then ' if pressed Next left/right Peak
         if hasMarkPeakRightLeft then pEnd=gPointCount() else pEnd=1 ' if next right else next left
         if firstFindNextMarker then   ' first finding in progress
@@ -12085,7 +12297,7 @@ sub mUpdateMarkerLocations   'Find point numbers for peak markers and for L and 
         call gFindNextPeak primaryAxisNum, pStart, pEnd, nextPeakNum, nextPeakY
         call gUpdateMarkerPointNum mMarkerNum(markNextID$), nextPeakNum
     end if
-    ' find next maximum peak 'OK2FKUc11
+    ' find next maximum peak verOK2FKU
     if hasMarkNextMax  then ' if pressed Next Max Peak
         pStart=maxNum : pEnd=gPointCount()
         call gFindNextMax primaryAxisNum, pStart, pEnd, nextMaxNum, nextMaxY
@@ -12136,7 +12348,7 @@ function mMarkerNum(markID$) 'Return ordinal marker number for this marker ID$
     'arbitrary storage locations. When marker info is printed, it is
     'printed in the same order as the ordinal marker numbers. This is the only place
     'that ID's are tied to specific ordinals, to make it easy to change.
-    'Marker P1-5 for next peaks find 'OK2FKUc3 added this
+    'Marker P1-5 for next peaks find 'verOK2FKU added this
     select case markID$
         case "Halt"       'ver114-4c added Halt and renumbered
             mMarkerNum=1
@@ -12160,21 +12372,21 @@ function mMarkerNum(markID$) 'Return ordinal marker number for this marker ID$
             mMarkerNum=10
         case "6"
             mMarkerNum=11
-        case "7"    'OK2FKUc3
+        case "7"    'verOK2FKU
             mMarkerNum=12
-        case "8"    'OK2FKUc3
+        case "8"    'verOK2FKU
             mMarkerNum=13
-        case "9"    'OK2FKUc3
+        case "9"    'verOK2FKU
             mMarkerNum=14
-        case "P1"   'OK2FKUc3
+        case "P1"   'verOK2FKU
             mMarkerNum=15
-        case "P2"   'OK2FKUc3
+        case "P2"   'verOK2FKU
             mMarkerNum=16
-        case "P3"   'OK2FKUc3
+        case "P3"   'verOK2FKU
             mMarkerNum=17
-        case "P4"   'OK2FKUc3
+        case "P4"   'verOK2FKU
             mMarkerNum=18
-        case "P5"   'OK2FKUc3
+        case "P5"   'verOK2FKU
             mMarkerNum=19
         case else
             mMarkerNum=-1
@@ -12194,16 +12406,16 @@ sub mDeleteMarker markID$
             hasMarkPeakPos=0
         case "P-"
             hasMarkPeakNeg=0
-        case "P1", "P2", "P3", "P4", "P5"   'OK2FKUc3
+        case "P1", "P2", "P3", "P4", "P5"   'verOK2FKU'
             if markID$=markNextMaxID$ then markNextMaxID$="" : hasMarkNextMax=0
             if markID$=markNextID$ then markNextID$="" : firstFindNextMarker=1
-        case "1", "2","3","4","5", "6", "7", "8", "9", "Halt"  'ver114-4c 'OK2FKUc3 add 7,8,9
+        case "1", "2","3","4","5", "6", "7", "8", "9", "Halt"  'ver114-4c 'verOK2FKU add 7,8,9
             'valid markers but nothing special to do
         case else
             exit sub    'Not valid marker ID
     end select
-    if gValidMarkerCount()>0 then hasAnyMark=1 else hasAnyMark=0 'OK2FKUc12
-'   if markID$=selMarkerID$ then        'Disable this behavior 'OK2FKUc13
+    if gValidMarkerCount()>0 then hasAnyMark=1 else hasAnyMark=0
+'   if markID$=selMarkerID$ then
     ''    call mMarkSelect ""  'ver114-5L
     'end if
 end sub
@@ -12232,12 +12444,12 @@ sub mAddMarker markID$, pointNum, trace$     'Add specified marker at specified 
             hasMarkPeakNeg=1
             markTrace$=str$(primaryAxisNum)   'Always do peak markers on primary trace
             markStyle$="LabeledInvertedWedge"
-        case "P1", "P2", "P3", "P4", "P5"       'OK2FKUc3
+        case "P1", "P2", "P3", "P4", "P5"       'verOK2FKU
             markTrace$=str$(primaryAxisNum)   'Always do peak markers on primary trace
         case "Halt"   'ver114-4c
             markTrace$="Xaxis"  'ver114-6d
             markStyle$="HaltPointer"    'ver114-5m
-        case "1", "2","3","4","5", "6", "7", "8", "9"   'OK2FKUc3 added 7-9
+        case "1", "2","3","4","5", "6", "7", "8", "9"   'verok2FKU added 7-9
             'valid markers but nothing special to do
         case else
             exit sub    'not valid marker
@@ -12274,8 +12486,8 @@ wait
 
 sub mClearMarkers
     hasMarkL=0 : hasMarkR=0 : hasMarkPeakPos=0 : hasMarkPeakNeg=0 : hasAnyMark=0
-    hasMarkNextMax=0 : firstFindNextMarker=1 ' added OK2FKUc3
-    markNextMaxID$="" : markNextID$="" 'added OK2FKUc3
+    hasMarkNextMax=0 : firstFindNextMarker=1 ' added verOK2FKU
+    markNextMaxID$="" : markNextID$="" 'added verOK2FKU
     call gClearMarkers
     call gDrawMarkerInfo    'to clear info area ver114-7n
     call mMarkSelect ""  'ver114-5L
@@ -12428,7 +12640,6 @@ sub mMenuMarkerOptions     'Button handler to set marker options
     if haltsweep=0 then call RefreshGraph 0   'if not sweeping redraw graph ver114-7d
 end sub
 
-'OK2FKUc5
 sub updateAmpliduteYSubmenu button$, buttToggle
     call hideAmplitudeYxSubmenu
     call hideTraceYxSubmenu
@@ -12459,7 +12670,6 @@ sub updateAmpliduteYSubmenu button$, buttToggle
     prevAmplButton$=button$ ' remember button press
 end sub
 
-'OK2FKUc5
 sub updateTraceYSubmenu button$, buttToggle
     call hideAmplitudeYxSubmenu
     call hideTraceYxSubmenu
@@ -12490,7 +12700,6 @@ sub updateTraceYSubmenu button$, buttToggle
     prevAmplButton$=button$ ' remember button press
 end sub
 
-'OK2FKUc5
 sub updatePanelButtons button$, toggle ' called if any menu botton for easy control is pressed verOK2FKU
     call hideAllControlButtons  ' hide all controls
     select case button$
@@ -12578,7 +12787,6 @@ sub updatePanelButtons button$, toggle ' called if any menu botton for easy cont
     prevShowButton$=button$ ' remember button press
 end sub
 
-'OK2FKUc5
 sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
     #handle.showFrequecyControl, "!font Arial 9"
     #handle.showAmplitudeControl, "!font Arial 9"
@@ -12596,43 +12804,36 @@ sub hideAllControlButtons ' hide all controls on Panel verOK2FKU
     call hideTraceYxSubmenu
 end sub
 
-'OK2FKUc5
 sub hideAmplitudeYxSubmenu
     call hideShowAmplitudeY1Submenu "!hide", mAxisNum
     call hideShowAmplitudeY2Submenu "!hide", mAxisNum
 end sub
 
-'OK2FKUc5
 sub hideTraceYxSubmenu
     call hideShowTraceY1Submenu "!hide", mAxisNum
     call hideShowTraceY2Submenu "!hide", mAxisNum
 end sub
 
-'OK2FKUc5
 sub hideShowAmplitudeY1Submenu control$, mAxisNum
     call loadAxisControls control$, mAxisNum
     call hideShowAmplitudeYxControl control$
 end sub
 
-'OK2FKUc5
 sub hideShowTraceY1Submenu control$, mAxisNum
     call loadAxisControls control$, mAxisNum
     call hideShowTraceYxControl control$
 end sub
 
-'OK2FKUc5
 sub hideShowAmplitudeY2Submenu control$, mAxisNum
     call loadAxisControls control$, mAxisNum
     call hideShowAmplitudeYxControl control$
 end sub
 
-'OK2FKUc5
 sub hideShowTraceY2Submenu control$, mAxisNum
     call loadAxisControls control$, mAxisNum
     call hideShowTraceYxControl control$
 end sub
 
-'OK2FKUc5
 sub hideShowAmplitudeYxControl control$
     if control$="!hide" then
         #handle.VDiv, "hide"
@@ -12651,7 +12852,6 @@ sub hideShowAmplitudeYxControl control$
     #handle.auto, control$
 end sub
 
-'OK2FKUc5
 sub hideShowTraceYxControl control$
     if control$="!hide" then
         #handle.color, "hide"
@@ -12669,7 +12869,6 @@ sub hideShowTraceYxControl control$
     #handle.LabStyle, control$
 end sub
 
-'OK2FKUc5
 sub loadAxisControls control$, mAxisNum
     if control$="!show" then
         if (msaMode$="SA" or msaMode$="ScalarTrans") and mAxisNum=primaryAxisNum then    'ver115-3b
@@ -12740,7 +12939,6 @@ sub loadAxisControls control$, mAxisNum
     end if
 end sub
 
-'OK2FKUc5
 sub mSelectGraphType selectDataType  'select graph to match selectDataType
     sel=0
     for i=0 to 40
@@ -12752,7 +12950,6 @@ sub mSelectGraphType selectDataType  'select graph to match selectDataType
     #handle.TopRef, "!setfocus" : call uHighlightText "#handle.TopRef"      'Highlite axis max box  'ver115-2c
 end sub
 
-'OK2FKUc5
 sub mPickColor handle$,x,y
     call gGetTextColors xCol$, y1Col$, y2Col$,gridCol$
     call gGetTraceColors c1$, c2$   'Trace colors
@@ -12778,7 +12975,6 @@ sub mPickColor handle$,x,y
     end if
 end sub
 
-'OK2FKUc5
 sub mChangeWidth handle$
     call gGetTraceWidth w1, w2  ' Actual Trace widths
     #handle.width, "contents? newWidth$"    ' get new set value
@@ -12795,7 +12991,6 @@ sub mChangeWidth handle$
     if isStickMode=0 then call RefreshGraph doErasure
 end sub
 
-'OK2FKUc5
 [doCycleColors]
     if haltsweep=1 then gosub [FinishSweeping]
     call RefreshGraph 0
@@ -12815,7 +13010,6 @@ end sub
     ' if previous clicked to Halt At End, after changing go to Halted, else continue verOK2FKU
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
-'OK2FKUc5
 [mChangeGraphData]
     if haltsweep=1 then gosub [FinishSweeping]
     call RememberState
@@ -12896,7 +13090,6 @@ end sub
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
 
-'OK2FKUc5
 [mChangeStyle]
     if haltsweep=1 then gosub [FinishSweeping]
     prevY1Disp=Y1DisplayMode : prevY2Disp=Y2DisplayMode
@@ -12932,7 +13125,7 @@ end sub
     ' if previous clicked to Halt At End, after changing go to Halted, else continue verOK2FKU
     if haltWasAtEnd=0 then goto [Continue] else goto [Halted]
 
-'OK2FKUc5
+
 sub mChangeVertDiv handle$
     call gGetNumDivisions nHorDiv, nVertDiv
     #handle.VDiv, "contents? nDiv$"
@@ -12943,7 +13136,6 @@ sub mChangeVertDiv handle$
     call RedrawGraph 0
 end sub
 
-'OK2FKUc5
 sub mAxisAutoScaleOn btn$
     if toggleAutoScaleButton then
         toggleAutoScaleButton=0
@@ -12968,7 +13160,6 @@ sub mAxisAutoScaleOn btn$
     call mChangeRange btn$
 end sub
 
-'OK2FKUc5
 sub mChangeRange btn$
     'Get current range
     #handle.TopRef "!contents? newTop$"
@@ -13030,7 +13221,6 @@ sub mChangeRange btn$
     call RememberState
 end sub
 
-'OK2FKUc5
 sub hideShowTraceControl control$
     #handle.AxisY1, control$
     #handle.AxisY2, control$
@@ -13042,7 +13232,6 @@ sub hideShowTraceControl control$
     toggleTraceY2Button=1
 end sub
 
-'OK2FKUc5
 sub hideShowAmplitudeControl control$
     #handle.AxisY1, control$
     #handle.AxisY2, control$
@@ -13054,7 +13243,6 @@ sub hideShowAmplitudeControl control$
     toggleAmplitudeY2Button=1
 end sub
 
-'OK2FKUc5
 sub hideShowSweepControl control$
     if control$="!hide" then
         #handle.linear, "hide"
@@ -13075,7 +13263,6 @@ sub hideShowSweepControl control$
     end if
 end sub
 
-'OK2FKUc5
 sub hideShowBWControl control$
     if control$="!hide" then
         #handle.FiltList, "hide"
@@ -13088,7 +13275,6 @@ sub hideShowBWControl control$
     #handle.filter, control$
 end sub
 
-'OK2FKUc5
 sub hideShowFreqX2Control control$ ' hide or show control for Frequency ' verOK2FKU
     call hideAllFreqControl
     if toggleMenu12Button=0 then call hideShowFreq12Control control$ else call hideShowFreq22Control control$
@@ -13096,7 +13282,6 @@ sub hideShowFreqX2Control control$ ' hide or show control for Frequency ' verOK2
     #handle.Menu12, control$
 end sub
 
-'OK2FKUc5
 sub hideShowFreq12Control control$
     if control$="!hide" then
         #handle.btnCentSpan, "hide"
@@ -13153,7 +13338,6 @@ sub hideShowFreq22Control control$
     end if
 end sub
 
-'OK2FKUc5
 sub hideAllFreqControl
     control$="!hide"
     #handle.SweepSettingConfirm, control$
@@ -13193,7 +13377,6 @@ sub hideAllFreqControl
     #handle.DivLab1, control$
 end sub
 
-'OK2FKUc5
 sub hideShowMarkerControl control$  ' hide or show control for Markers ' verOK2FKU
     if control$="!show" then #handle.selMark, "show" else #handle.selMark, "hide"
     #handle.selMarkLab, control$
@@ -13221,9 +13404,9 @@ sub mUpdateMarkerEditButtons     'Enable/disable buttons based on selected marke
         pointNum=gMarkerPointNum(mMarkerNum(selMarkerID$))
         if pointNum<0 then noMarker=1 else noMarker=0
     end if
-    if selMarkerID$="P+" or selMarkerID$="P-" or selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then notManual=1 else notManual=0  'ver114-4a 'OK2FKUc3
+    if selMarkerID$="P+" or selMarkerID$="P-" or selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then notManual=1 else notManual=0  'ver114-4a
     if twoPortWinHndl$="" then    'main graph window
-        if hasMarkPeakPos=0 then   ' 'OK2FKUc3
+        if hasMarkPeakPos=0 then   ' verOK2FKU
             #handle.markFindNextRight, "!disable"
             #handle.markFindNextLeft, "!disable"
             #handle.markFindNextMax, "!disable"
@@ -13292,7 +13475,6 @@ sub mMarkSelect markID$  'Program selection specified marker in combo box
     call mUserMarkSelect ""  'Take same action as though user selected the marker
 end sub
 
-'OK2FKUc5
 sub mBtnAxisY1 btn$
     showButton$="AxisY1Control"
     if toggleShowAmplitudeButton=0 then
@@ -13305,7 +13487,6 @@ sub mBtnAxisY1 btn$
     end if
 end sub
 
-'OK2FKUc5
 sub mBtnAxisY2 btn$
     showButton$="AxisY2Control"
     if toggleShowAmplitudeButton=0 then
@@ -13318,42 +13499,36 @@ sub mBtnAxisY2 btn$
     end if
 end sub
 
-'OK2FKUc5
 sub mBtnShowAmplitudeControl btn$
     if toggleShowAmplitudeButton then toggleShowAmplitudeButton=0 else toggleShowAmplitudeButton=1
     showButton$="AmplitudeControl"
     call updatePanelButtons showButton$, toggleShowAmplitudeButton
 end sub
 
-'OK2FKUc5
 sub mBtnShowTraceControl btn$
     if toggleShowTraceButton then toggleShowTraceButton=0 else toggleShowTraceButton=1
     showButton$="TraceControl"
     call updatePanelButtons showButton$, toggleShowTraceButton
 end sub
 
-'OK2FKUc5
 sub mBtnShowSweepControl btn$
     if toggleShowSweepButton then toggleShowSweepButton=0 else toggleShowSweepButton=1
     showButton$="SweepControl"
     call updatePanelButtons showButton$, toggleShowSweepButton
 end sub
 
-'OK2FKUc5
 sub mBtnShowBWControl btn$
     if toggleShowBWButton then toggleShowBWButton=0 else toggleShowBWButton=1
     showButton$="BWControl"
     call updatePanelButtons showButton$, toggleShowBWButton
 end sub
 
-'OK2FKUc5
 sub mBtnShowMarkerControl btn$  'called if menu button Marker was pressed verOK2FKU
     if toggleShowMarkerButton then toggleShowMarkerButton=0 else toggleShowMarkerButton=1
     showButton$="MarkerControl"
     call updatePanelButtons showButton$, toggleShowMarkerButton
 end sub
 
-'OK2FKUc5
 sub mBtnShowFrequencyControl btn$ 'called if menu button Frequency was pressed verOK2FKU
     if toggleShowFrequencyButton then toggleShowFrequencyButton=0 else toggleShowFrequencyButton=1
     showButton$="FrequencyControl"
@@ -13432,21 +13607,21 @@ sub IncDecPoint btn$   'Button to increment or decrement frequency was clicked
     leftstep=markPoint-1     'Make leftstep a step number, not point number, for [preupdatevar] ver115-1a
 end sub
 
-'OK2FKUc5 added this. Find Maximum Peak
+' verOK2FKU added this. Find Maximum Peak
 sub mFindMaxMarker btn$
     call mAddMarker "P+", 1, "2"
     call mUpdateMarkerEditButtons
     if haltsweep = 0 then call RefreshGraph 0
 end sub
 
-'OK2FKUc5 added this. Find Minimum Peak
+' verOK2FKU added this. Find Minimum Peak
 sub mFindMinMarker btn$
     call mAddMarker "P-", 1, "2"
     call mUpdateMarkerEditButtons
     if haltsweep = 0 then call RefreshGraph 0
 end sub
 
-'OK2FKUc5 added this. Find Next maximum peak
+' verOK2FKU added this. Find Next maximum peak
 sub mFindNextMaxMarker btn$
     message$="" : call PrintMessage
     if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
@@ -13465,7 +13640,7 @@ sub mFindNextMaxMarker btn$
     end if
 end sub
 
-'OK2FKUc5 added this. FInd next peak from right
+' verOK2FKU added this. FInd next peak from right
 sub mFindNextRightMarker btn$
     hasMarkPeakRightLeft=1
     call mFindNexRightLeftMarker
@@ -13476,7 +13651,6 @@ sub mFindNextLeftMarker btn$
     call mFindNexRightLeftMarker
 end sub
 
-'OK2FKUc5
 sub mFindNexRightLeftMarker
     message$="" : call PrintMessage
     if selMarkerID$="P1" or selMarkerID$="P2" or selMarkerID$="P3" or selMarkerID$="P4" or selMarkerID$="P5" then
@@ -13657,7 +13831,7 @@ sub SelectLatchedSwitches desiredFreqBand  'ver116-1b ver116-4s. change 'ver117c
     'control is not a global, so we have to recreate it here
     control=globalPort+2
 'ver117c35 was   switchData=switchLatchBits(desiredFreqBand)    'All bits, with latch pulse set high ver116-4s
-    switchData=videoFilterAddress + 4*desiredFreqBand + 16*switchFR + 32*switchTR + 64*switchSA + 128 'now 'ver117c35 'OK2FKUc4
+    switchData=videoFilterAddress + 4*desiredFreqBand + 16*switchFR + 32*switchTR + 64*switchSA + 128 'now 'ver117c35 'verOK2FKU'
         'We output the required bits with the pulse line high (128), then briefly bring the pulse line low,
         'then back high. The pulse is about 100 usec for LPT and somewhere between 75 us and 200 us for USB.
     select case cb
@@ -13669,7 +13843,7 @@ sub SelectLatchedSwitches desiredFreqBand  'ver116-1b ver116-4s. change 'ver117c
             out globalPort, switchData       'presents switch data to control buffer with latch pulse line high
             out control, globalSTRB          'enters data to control board latch #4
             out control, globalContClear     'freezes latch data
-            'call uSleep 500 'in milliseconds. see *Note below.  'ver117c35 ' OK2FKUd2 commented this line
+            'call uSleep 500 'in milliseconds. see *Note below.  'ver117c35 ' verOK2FKU rev1 commented this line
             out globalPort, switchData-128   'presents switch data to control buffer with latch pulse low
             for i=1 to 25   'loop to create a pulse width of about 100 usec 'ver117c32
                 out control, globalSTRB          'enters data to control board latch #4; basically just activates latch pulse
@@ -13683,7 +13857,7 @@ sub SelectLatchedSwitches desiredFreqBand  'ver116-1b ver116-4s. change 'ver117c
             USBwrbuf$ = "A20100"+ToHex$(switchData)      'Latch 4 data with pulse line high  'ver117c31
             USBwrbuf2$ = "A20100"+ToHex$(switchData-128) 'Latch 4 data with pulse line low  'ver117c31
             if USBdevice <> 0 then CALLDLL #USB, "UsbMSADeviceWriteString", USBdevice as long, USBwrbuf$ as ptr, 4 as short, result as boolean
-            'call uSleep 500 'see *Note below.  'ver117c35 ' OK2FKUd2 commented this line
+            'call uSleep 500 'see *Note below.  'ver117c35 ' verOK2FKU rev1 commented this line
             if USBdevice <> 0 then CALLDLL #USB, "UsbMSADeviceWriteString", USBdevice as long, USBwrbuf2$ as ptr, 4 as short, result as boolean
             if USBdevice <> 0 then CALLDLL #USB, "UsbMSADeviceWriteString", USBdevice as long, USBwrbuf$ as ptr, 4 as short, result as boolean
             'There is substantial delay in the DLL calls so the pulse width will be at least 75 us.
@@ -15139,15 +15313,14 @@ end function
     end if
     if isStickMode=0 then refreshGridDirty=1 : call RefreshGraph 0  'Redraw without erasure mark; but not if we are in stick mode ver114-7d
 
-    ''OK2FKUc2
     files DefaultDir$;"\Screenshot_images", "screenshot_*.bmp", fileInfo$()
     filesQty$=fileInfo$(0,0)
     if val(filesQty$)<=9 then prefix$="0" else prefix$=""
 
     filter$="Bitmap files" + chr$(0) + "*.bmp" + chr$(0) + "All files" + chr$(0) + "*.*" 'ver115-6b
     defaultExt$="bmp"
-    initialDir$=imageSaveLastFolder$+"\"
-    initialFile$="screenshot_"+prefix$+filesQty$ 'OK2FKUc2
+    initialDir$=imageSaveLastFolder$+"\" '"
+    initialFile$="screenshot_"+prefix$+filesQty$
     graphFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Image To File")
     if graphFileName$<>"" then   'blank means cancelled
         bmpName$=FullGraphBmp$()    'name of bitmap of entire graph window
@@ -15157,7 +15330,6 @@ end function
     end if
     wait
 
-'OK2FKUc2
 function CreateImageFolder()
     CreateImageFolder=0
     files DefaultDir$, "", fileInfo$()  'get directory list
@@ -15239,7 +15411,7 @@ sub SetFilterAnalysis  'Display dialog for filter analysis and set parameters
     if hasMarkL then markIDs$(1)="L" else markIDs$(1)=""
     if hasMarkR then markIDs$(2)="R" else markIDs$(2)=""
     markIDs$(3)="P+"
-    number=3 ' added by OK2FKU to ability choose P1-P5 'OK2FKUc3
+    number=3 ' added by OK2FKU to ability choose P1-P5
     for i=1 to gNumMarkers
         markPointNum=gMarkerPoints(i,0)
         if markPointNum>0 then
@@ -17641,7 +17813,7 @@ end sub
                 "Parameter files" + chr$(0) + "*.s1p" + chr$(0) + _
                 "Text files" + chr$(0) + "*.txt"   'ver115-6b
     defaultExt$="s1p"
-    initialDir$=touchLastFolder$+"\"
+    initialDir$=touchLastFolder$+"\" '"
     initialFile$=""
     dataFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Data To File")
     if dataFileName$="" then wait 'blank means cancelled
@@ -17811,7 +17983,7 @@ return
                 "CSV files" + chr$(0) + "*.csv" + chr$(0) + _
                 "All files" + chr$(0) + "*.*" 'ver115-6b
     defaultExt$="s1p"
-    initialDir$=touchLastFolder$+"\"
+    initialDir$=touchLastFolder$+"\" '"
     initialFile$=""
     dataFileName$=uOpenFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Open Data File")
     if dataFileName$="" then wait   'user cancelled
@@ -18795,7 +18967,7 @@ function mMarkerContext$()     'Return marker context as string
     s$=","  'comma to separate items
     j$=""
     s1$=""
-    for i=0 to numMarkers 'OK2FKUc3 using numMarkers
+    for i=0 to numMarkers
         id$=markerIDs$(i) :markNum=mMarkerNum(id$)
         call gGetMarkerByNum markNum, pointNum, id$, trace$, style$
         if pointNum>0 then
@@ -22394,7 +22566,7 @@ function calFileName$(pathNum)   'Return file name for the specified pathNum
 end function
 
 function calFilePath$()   'Return path name for cal files, ending in "\"
-     calFilePath$=DefaultDir$ + "\MSA_Info\MSA_Cal\"
+     calFilePath$=DefaultDir$ + "\MSA_Info\MSA_Cal\" '"
 end function
 
 function calLoadFromEditor$(editor$,pathNum) 'Read data from text editor. Return error message
@@ -25342,7 +25514,7 @@ end sub
                 "Parameter files" + chr$(0) + "*.s1p" + chr$(0) + _
                 "Text files" + chr$(0) + "*.txt"   'ver115-6b
     defaultExt$="s1p"
-    initialDir$=touchLastFolder$+"\"
+    initialDir$=touchLastFolder$+"\" '"
     initialFile$=""
     dataFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Data To File")
     if dataFileName$="" then wait 'blank means cancelled
@@ -25967,7 +26139,7 @@ end sub
     'Note: On resizing, all non-buttons seem to end up a few pixels higher than the original spec,
     'so the Y locations are adjusted accordingly via markTop
     'Note WindowHeight when window is created is entire height; on resizing, it is the client area only
-    markTop=TwoPortGraphBoxHeight+15 : markSelLeft=configLeft+65 'ver115-1b   'ver115-1c 'OK2FKUc1
+    markTop=TwoPortGraphBoxHeight+15 : markSelLeft=configLeft+65 'ver115-1b   'ver115-1c
     markEditLeft=markSelLeft+53
     twoPortPBLeft=TwoPortGraphBoxWidth-100
     twoPortPBTop=graphMarTop+50
@@ -26029,7 +26201,7 @@ end sub
     markTop=TwoPortGraphBoxHeight+15     'This isn't the top of anything in particular, just a reference point ver115-1b
     markSelLeft=configLeft+65
     statictext #twoPortWin.selMarkLab "Marker", markSelLeft+3, markTop-9, 40, 14    'ver116-4b
-    selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i 'OK2FKUc3
+    selMarkIDs$(0)="None" : for i=0 to numMarkers : selMarkIDs$(i+1)=markerIDs$(i) : next i
     'Stylebits #twoPortWin.selMark, _CBS_DROPDOWNLIST, 0, 0, 0   'ver115-1a del115_1a so box generates click event
     combobox #twoPortWin.selMark, selMarkIDs$(), mUserMarkSelect, markSelLeft, markTop+5, 50, 180   'ver116-4b
 
@@ -27249,7 +27421,7 @@ end sub
 [TwoPortSaveImage]     'Save graph image to file
     filter$="Bitmap files" + chr$(0) + "*.bmp" + chr$(0) + "All files" + chr$(0) + "*.*" 'ver115-6b
     defaultExt$="bmp"
-    initialDir$=imageSaveLastFolder$+"\"
+    initialDir$=imageSaveLastFolder$+"\" '"
     initialFile$=""
     graphFileName$=uSaveFileDialog$(filter$, defaultExt$, initialDir$, initialFile$, "Save Image To File")
     if graphFileName$<>"" then   'blank means cancelled
@@ -27766,7 +27938,7 @@ sub TwoPortTermAutoMatch btn$  'Calculate independent or simultaneous conjugate 
             loadR=TwoPortZ0 : loadI=0
             call TwoPortSingleConjugateMatch TwoPortArray(TwoPortTermCalcStep, 1), _
                                     TwoPortArray(TwoPortTermCalcStep, 2), srcR, srcI    'call with S11
-        case "#twoPortTermWin.AutoMatchOut"
+        case "#twoPortTermWin.AutoMatchOut" '"
             'source termination will change S22, so we can't have any
             srcR=TwoPortZ0 : srcI=0
             call TwoPortSingleConjugateMatch TwoPortArray(TwoPortTermCalcStep, 7), _
@@ -28013,7 +28185,7 @@ sub gInitDefaults       'Initialize graphing variables to default values
     gY1IsPhase=1  'ver114-5e
     gY2IsPhase=0    'ver114-6f
     call gActivateGraphs 1,1
-    gHorDiv=10 : gVertDiv=gVerDivDef
+    gHorDiv=10 : gVertDiv=10
     call gUsePresetColors "LIGHT"   'ver115-3c
     call gUsePresetText "BasicText"
     gDoHist=0
@@ -28612,7 +28784,7 @@ sub gFindPeaks traceNum, p1, p2, byRef minNum, byref maxNum, byref minY, byref m
     maxNum=int((maxNumEnd+maxNumStart)/2)   'ver115-4b
     minNum=int((minNumEnd+minNumStart)/2)   'ver115-4b
 end sub
-' Added by OK2FKUc3 to find next peak Right
+' Added by OK2FKU to find next peak Right
 sub gFindNextPeak traceNum, p1, p2, byref nextPeakNum, byref nextPeakY    'find next possible peak
     'Search includes points from p1 to p2, inclusive. traceNum(1 or 2) indicates which trace to examine.
     'maxNum will be set to the point number (1...gDynamicSteps+1) where the peaks occur;
@@ -28684,8 +28856,7 @@ sub gFindNextPeak traceNum, p1, p2, byref nextPeakNum, byref nextPeakY    'find 
     'the actual peak to be in the middle.
     'maxNum=int((maxNumEnd+maxNumStart)/2)   'ver115-4b
 end sub
-
-' Added by OK2FKUc1 to find next peak behind maximum peak
+' Added by OK2FKU to find next peak behind maximum peak
 sub gFindNextMax traceNum, p1, p2, byref nextMaxNum, byref nextMaxY    'find positive and negative peak
     'Search includes points from p1 to p2, inclusive. traceNum(1 or 2) indicates which trace to examine.
     'maxNum will be set to the point number (1...gDynamicSteps+1) where the peaks occur;
@@ -28922,7 +29093,7 @@ sub gPrintMessage msg$   'Print message above top of marker info area; Limited t
     call gGetInfoColors textColor$, backColor$
     cmd$="font Tahoma 8 bold;color ";textColor$;";backcolor ";backColor$    'ver116-4i
     #gGraphHandle$, cmd$    'ver116-4i
-    call gPrintText space$(160), x, y   'note spaces are smaller than letters ver116-4j 'OK2FKUc14 fix 140 to 160 
+    call gPrintText space$(160), x, y   'note spaces are smaller than letters ver116-4j
     if msg$<>"" then call gPrintText "MESSAGE: ";Left$(msg$,75), x, y 'Don't print if blank
 end sub
 
@@ -30192,7 +30363,7 @@ end function
 sub gSetMarkerNum markNum, pointNum, ID$, trace$, style$ 'set marker by position in the list
     'Enter marker data and update gNumMarkers to have the max entryNum of any entered marker
     if markNum<1 or markNum>20 then notice "Invalid marker number" : exit sub 'for debugging
-    gMarkerPoints(markNum,0)=pointNum 'note by OK2FKUc3: 'Up to 20 markers(markNum); point number (0) and frequency (1)
+    gMarkerPoints(markNum,0)=pointNum 'note by OK2FKU: 'Up to 20 markers(markNum); point number (0) and frequency (1)
     gMarkerPoints(markNum,1)=gGetPointXVal(pointNum) 'Copy current x value (freq)
     gMarkers$(markNum,0)=ID$
     gMarkers$(markNum,1)=trace$ :gMarkers$(markNum,2)=style$
@@ -30370,7 +30541,7 @@ sub gDrawMarkerInfo 'Draw marker info in specified area
     markerY=gMarkerInfoTop
     a=gWindowHeight: b=gMarkerInfoTop
     markPerCol=int((gWindowHeight-5-gMarkerInfoTop-headHeight)/13)
-    maxBoxWidth=3*headWidth+24  'widest possible box area 'ver115-1b ' edit OK2FKUc3 to 3 and + 24
+    maxBoxWidth=3*headWidth+24  'widest possible box area 'ver115-1b ' edit OK2FKU to 3 and + 24
     if nMarkers>markPerCol then _
             boxWidth=maxBoxWidth else boxWidth=headWidth+4      'ver115-1b
     boxHt= 4+ headHeight + (markPerCol)*13
@@ -30383,7 +30554,7 @@ sub gDrawMarkerInfo 'Draw marker info in specified area
 
     call gPrivateDrawMarkerInfo 1, markPerCol, markerX, markerY, firstEnd
     if nMarkers>markPerCol then call gPrivateDrawMarkerInfo firstEnd+1, markPerCol, markerX+headWidth+10, markerY, firstEnd
-    if nMarkers>2*markPerCol then call gPrivateDrawMarkerInfo firstEnd+1, markPerCol, markerX+20+2*headWidth, markerY, firstEnd 'OK2FKUc3
+    if nMarkers>2*markPerCol then call gPrivateDrawMarkerInfo firstEnd+1, markPerCol, markerX+20+2*headWidth, markerY, firstEnd 'verOK2FKU
     gMarkerInfoRight=markerX+boxWidth    'Rightmost pixel drawn, so area to right is still available
 end sub
 
@@ -30972,8 +31143,8 @@ function gSweepContext$() 'Return string with context info on trace graphing
     s1$= s1$; newLine$; "SweepDir="; gSweepDir    'Sweep direction ver114-4k
     'Note gMode$ is handled by saving msaMode$ ver114-6f
     gSweepContext$=s1$
-    gY2AxisMinDef=gY2AxisMin 'OK2FKUc6
-    gY2AxisMaxDef=gY2AxisMax 'OK2FKUc6
+    gY2AxisMinDef=gY2AxisMin
+    gY2AxisMaxDef=gY2AxisMax
     gVerDivDef=gVerDiv
 end function
 
@@ -33344,248 +33515,6 @@ end function
 'ver117c35test3     CallDll #kernel32, "GlobalFree", hMem as long, GlobalFree as long
 'ver117c35test3     End Function
 '==========================END MEMORY MANAGEMENT FUNCTIONS===============================
-
-'------------Changes and additions for version 118 Rev 0------------
-'1. removed multiscan option, and all code related to it. Code marked with '117cM
-'2. removed Special Graphing and all code related to it. Code marked with '117cS
-'3. add verbage to Message when B<A error occurs. Also change curser to normal when error occurs for better visibility.Code marked with  '117c3
-'4. The array: uWorkFormats$ is not used anywhere. Removed it. '117cuWF
-'5. fixed error: more than 799 steps caused a crash during line calibration.
-'   was: redim OSLBandA(maxPoints,1) : redim OSLBandB(800,1) : redim OSLBandC(800,1)
-'   now: redim OSLBandA(maxPoints,1) : redim OSLBandB(maxPoints,1) : redim OSLBandC(maxPoints,1) '117c5
-'   add code, redim uWorkArray(steps+10, 8)  '117c5
-'   added, redim OSLstdShort(maxPoints,1) '117c5      It was missing
-'6. dim axisGraphData$(40) : dim axisDataType(40) were being done twice. Deleted the second one. '117c6
-'7.  Deleted code for multiple Reads during [ReadStep] '117c7
-'8.  changed code in sub calConvertMagPhase to use linear interpolation  '117c8
-'9.  changed code in function calConvertFreqError(freq) to use linear interpolation '117c9
-'10. deleted: function calBinarySearch(dataType, searchVal) '117c10
-'11. Remove use of calMagCoeffTable and calFreqCoeffTable  '117c11
-'  Delete creation of MagCoeffTable and FreqCoeffTable (sub calCreateMagCubicCoeff and sub calCreateFreqCubicCoeff)  '117c11
-'  sub intReset is not used, delete it '117c11
-'  function calOpenFile$(pathNum) is not used, delete it  '117c11
-'12. Remove code pertaining to unused button in Cal Manager  '117c12
-'  dim calFileInfo$(10,3) was being done twice. Removed the first. '117c12
-'13.  remove everything associated with auto wait  '117c13
-'   deleted sub autoWaitPrecalculate  '117c13
-'   deleted [setAutoWait] and [clearAutoWait]  '117c13
-'   This includes deleting [VideoGlitchPDM]   '117c13
-'   deleted function calDataHadPhase. Not used    '117c13
-'14.  Change instructions within Calibration window    '117c14
-' Within[BandLineCal][OSLdoCal][PerformOSLCalUpdate], deleted both: call FunctSetVideoAndAutoWait and call FunctRestoreVideoAndAutoWait    '117c14
-' Within sub FunctChangeAndSaveSweepParams, deleted: call FunctSetVideoAndAutoWait saveSettings    '117c14
-' Within [FunctRestoreSweepParams], deleted: call FunctRestoreVideoAndAutoWait    '117c14
-' Delete both: sub FunctSetVideoAndAutoWait and sub FunctRestoreVideoAndAutoWait    '117c14
-' delete the following variables:  functSaveWate, functSaveAutoWait, functSaveAutoWaitPrecision$,   '117c14
-'  and, functSaveVideoFilter$, canUseAutoWait, UseAutoWait, autoWaitPrecision$, desiredVideoFilter$,   '117c14
-'  and, functSaveWate, calCanUseAutoWait, saveUseAutoWait   '117c14
-'15. global interpolateMarkerClicks not used anymore, delete   '117c15
-'  doSpecialRLCSpec$ and doSpecialCoaxName$ not used, delete them (names remain in prefs.txt)  '117c15
-'16. Change [CommandAllSlims] from "for/next" to single line commands. Increases speed by about 600 usec per step '115c16
-'17. Remove variables, hasDDS1 and hasDDS3 '117c17
-'  clean up titles in Config Mgr Window  '117c17
-'  Remove "STYLEBITS" in Conf Mgr Window.  (See re-installation in 117-c19)
-'18. Changes made to allow the Original MSA to work with old TG (Orig Control Board and no DDS3)
-'  changed the after line in:case "APPXDDS3"   to:  appxdds3=val     '117c18 now. Modifed to allow a zero when orig TG, PLL3 has no DDS3 driver
-'  change code:        if TGtop = 1 and gentrk = 1 then LO3 = LO2 - finalfreq - offset   '117c18  now
-'            'for original, fixed freq TG PLL,3, no DDS3. Any added offset will be inaccurate due to PLL3's pdf. '117c18
-'  add code:        if TGtop = 1 and gentrk = 0 then LO3=LO2-finalfreq-sgout+thisfreq    '117c18
-'            'sgout will be inaccurate due to PLL3's pdf.  '117c18
-'  change code in [configSelTGtop] so that when TG is selected to 1(orig), DDS3 box is auto filled with "0".
-'  change default: switchHasRBW=0  ( "1" allows auto switching which old Control Board cannot tolerate)
-'Delete code to fix crashing when Toggling between Trans and Refl. In the area of
-'     "if restoreSettingsAfterChange=0 then cursor normal : return"  '117c18
-'      It is possible that these deletions may cause an error in Two Port testing
-'19. Clean up Variables Window and positioning of Smith Chart Window
-'  various changes in [Showvar] and [updatevar],  for better frequency resolution '117c19
-'  Re-install "STYLEBITS" in Conf Mgr Window. To prevent user from typing in boxes. (removed in 117-c17)
-'  change code: smithLastWindowHeight=WindowHeight  '117c19 now (To prevent smith window from growing)
-'  Replace all "beep"s with (playwave "default.wav") '117c19.  Later versions of Windows will not "beep" from Liberty Basic
-'  Changes within [CalculateAllStepsForLO1Synth],[CalculateAllStepsForLO3Synth] '117c19
-'  Changes within [CreateFractionalNcounter], delete AutoSpur and ManSpur '117c19
-'  Add SG/TG to [Showvar],[updatevar] '117c19
-'20.  Add Path to title    if freqBand<>0 then call gPrintText freqBand; "G, Res ";path$, InfoX, 30   '117c20 now.
-'  Change Step Button to Step Right and add Step Left button to make One Step bi-directional. '117c20
-'  Add routine [StepLeft]  '117c20
-'  There are two global varwindow, delete the second one. '117c20
-'  Increase resolution of DDS outputs in Variables Window to 10 digits '117c20
-'  add raw PDM phase to phaarray(thisstep,5) and add to Variables Window
-'21.  Add ADC Samples Averaging 'ver117c21
-'  Each additional sample adds 500 usec to the step in LPT, 75 usec for Cypress USB
-'  add box in Sweep Parameters Window, Labeled, "Samples". New variable: "global adcsamples" 'ver117c21
-'  move code that places the phadata into arrays 'ver117c21
-'21a.  modified [InvertPDmodule] to change PDM state for this step and all future steps, only  'ver117c21a
-'22. Test only.  Not used.
-'23. adds read status of USB in LPT Port Test, and a little bit of clean-up
-'  Modify Special Tests, [LPTportTest] (delete a line) 'ver117c23
-'  Change [ReadLPTStatus] to read USB 'ver117c23
-'  Clean up, delete global menuMultiscanPosition 'ver117c23
-'  Clean up, delete the function uTickCount(). Not used anywhere 'ver117c23
-'24. use 117c24 to find following code changes
-' modification to accept a third ADC (adc3) and multiplexer  'ver117c24
-'  Third ADC (adc3) works only for LPT, 12 or 16 Bit Serial, Original or SLIM Control Board.
-'  Verif MSA Testing: adc3 output is inverted via FET and is sent to LPT pin 12, PE, Input bit 5.
-'  Verif MSA Testing: add temporary subroutine [ProcessAll3ADCsLPT] 'this subroutine is a test for adding ADC3 'ver117c24
-'  adds variable, adc3data. Will have value of 0 to 65535. add adc3data to bottom of variables window.
-' Multiplexer works now for LPT and SLIM Control Board. Will work for Orig CB if modified for serial ADC.
-'  adds variable, adc3mux = 0 to 7 (channels 0 thru 7), Control Board Buffer 3, P3-pins: 2=D0  3=D1  4=D2. ADC selection:
-'  0= Magnitude, 1= Phase, 2= Phase90(reserved), 3= tempMOsc, 4= tempFilter, 5= volts1, 6= volts2, 7= health(pwr on)
-' Verif MSA Testing: Using Wait time to control mux. (for testing only)
-'  [Read16wSlimCB]and[Read16wOrigCB] changed to accomodate LTC1864. It requires SCK and CNV to both be high during convert,
-'    it should not change the action of either LTC1860 or AD7685. Both use "adc3mux", which for now is tied to "wate" for testing.
-'  clean up [ReadPhase] and [ReadAD16Status]
-'  Verif MSA Testing: in [ReadPhase], substitute gosub [ProcessAll3ADCsLPT] instead of gosub [Process16MagPha]
-'  in [Showvar]and[updatevar] add adc3data and temperature to bottom of variables window, increase height to 470.
-'25. use 117c25 to find following code changes
-'  Delete 12 bit serial subroutines. Modified 16 bit subroutines to change 16 bit data to 12 bit data when necessary. 'ver117c25
-'  Deleted [ReadAD22Status][Read22wSlimCB][Read22wOrigCB][Process22Mag][Process22MagPha] 'ver117c25
-'  changed [ReadStep][ReadMagnitude][ReadPhase][ProcessAll3ADCsLPT][Process16MagPha][Process16Mag][ReadADCviaUSB] 'ver117c25
-'  moved pdminvalid zone test to [ReadPhase]
-'  global calMagFileHadPhase not used. Deleted. Should have been deleted in ver117c13
-'  PDM Calibration, changed instructions in [menuCalPDM] and moved [CalPDMinvdeg] for simplification  'ver117c25
-'  changed line of code: staticText #config.filtInstruct 'ver117c25
-'  ver117rev0 deleted ver116-1b code that compensated for phase data taken at frequencies other than 10.7 MHz. 117c25 puts the code back in.
-'  combine [ConvertMagPhaseData]and[CalcMagpowerPixel]. Delete [CalcMagpowerPixel], pixels no longer calculated there. 'ver117c25
-'  Add option in Special Tests Window to control Fmux output of the PLL's
-'  [SetADCmux] 'new subroutine to set bits for adc multiplexer, includes USB. new variables: adc1mux, adc1muxlast 'ver117c25
-'  deleted gosub [PartialRestart] in [calManSelectPath]. This causes a command requirement. Already commanded. 'ver117c25
-'  Auto calculate glitchpdm using "int(videoPhaseTC*10)"    10-4-15 'ver117c25
-'  10-9-15 change ADC and Mux variables in HW Manager window 'ver117c25
-'  Treat a 12 bit serial ADC as a 16 bit. Its max count is either 65535 or 65520, depending on adc floating at end of conversion.
-'  delete the divisions by 16 to convert 12 bit ADC's
-'  changed: the variable adconv can be 8, 12, 16, 17, or 18. 22 is no longer used. 8 and 12 are the orig parallel ladder adc's.
-'   16 is the default SLIM dual serial ADC with no Mux. 17 is dual serial ADC with Mux on ADC1. 18 is single serial ADC on ADC1.
-'  changes to function configRunManager(autoRun),[configSelADconv],sub configGetDisplayData,sub configDisplayData
-'26. use 117c26 to find following code changes
-'  add adc1muxlast = 0 during initialization because the multiplexer is set to 0. ADC is selected to Magnitude 'ver117c26"
-'  throughout the code, change the name: adc3mux to adc1mux to prevent confusion. The mux will always be on adc 1. Includes adc1muxlast
-'  throughout the code, change the name: change the name: [Process16MagPha] to [ProcessAdc1Adc2LPT] to prevent confusion.
-'  Inside of [ProcessAdc1Adc2LPT], change names: magdata to adc1data, and phadata to adc2data
-'  throughout the code, change the name: [Process16Mag] to [ProcessAdc1LPT] to prevent confusion.
-'  Inside of [ProcessAdc1LPT], change name: magdata to adc1data
-'  wrote [Read16wSlimCBfast] for speed up. Not used yet. 250 usec vs. 460 usec.
-'27. use 117c27 to find following code changes
-'  Inside of [ReadAD16Status], combine [Read16wOrigCB],[Read16wSlimCB]and[Read16wSlimCBfast]. Name it [ReadAdcStatusLPT].
-'   Sould satisfy using Original Control Board with two serial ADC's. 'ver117c27
-'28. use 117c28 to find following code changes
-'  delete variable, bUseUSB
-'  occasional crash when using left and right step buttons.Crash is Runtime error: Subscript out of range, -165,gTrace2$().See ver117c30 for fix.
-'  change line to: thisCmd$="line ";lastX; " ";lastY2;" "; xPix;" ";yPix;";line ";xPix;" ";yPix;" ";lastX; " ";lastY2 'now 'ver117c28
-'  (see 30. This line had nothing to do with the crash problem)
-'29. Try to fix reverse sweep option. [CalculateAllStepsForLO3Synth]
-'  fix error in code line: #config.PLL3mode, "select ";configPLLmodes$(PLL1mode). should be: (PLL3mode). ver117c29
-'29a.  In ver117c23 I removed the Date/Time Stamp in the graph. Put it back in. 'ver117c29a
-'  The variable "validPhaseThreshold" is no longer used in the code. However, leave it as a Global, as I may use it as a warning. 'ver117c29a.
-'29b.  Work Path calibration
-'  Add #calman.Measure, "Measuring" and #calman.Measure, "Measure" 'ver117c29b
-'29c.  [calManMenuMeasure] and [calManMeasure] are combined and simplified. 'ver117c29c
-'  Delete use of variable, suppressPDMInversion. Rather, use setpdm to "force the PDM state"  'ver117c29c
-'  Delete warning if Phase calibration value is too high. It is OK.
-'  fix error in [Command2350R]
-'working in [CalPDMinvdeg]. Nothing changed.
-'30. glitchhlt = 100 'was 10  'add extra settling time after a Halt 'ver117c30
-'  If halted during the first sweep and "Step Left" is clicked, and then "Continued", SW will crash. Not the best fix, but,
-'   modify sub DisplayButtonsForHalted to allow Left/Right button enabling only if the first scan is complete.'ver117c30 3-7-16
-'  make sweepDir variable a Global. 'ver117c30 3-7-16
-'  SW will crash when Sweep Parameters Window is opened when in SA mode is previous mode was SA with TG in Reverse mode.
-'  change line from: if normrev = 1 then print #axis.normReverse, "Reverse"
-'   to: if gentrk = 1 and normrev = 1 then print #axis.normReverse, "Reverse" 'now 'ver117c30  3-9-16
-'  When clicking between between Norm and Reverse, do not allow "Continue" button. See [NormRevbutton]. 'ver117c30  3-9-16
-'  deletions in [RestartSAmodes] so sw "remembers" when switching between SA and SA with TG 'ver117c30  3-9-16
-'30a. [SetADCmux], change the command structure for USB from "A6.." to "A0..." 'ver117c30a
-'  Simplify both [ResetDDS1serUSB] and [ResetDDS3serUSB]. Add new sub [ResetEitherDDSserUSB] 'ver117c30a
-'  clean up [CreateBaseForDDSarray] and add some comments. Made no changes to code. 'ver117c30a
-'  clean up [InitializeHardware] to reset CB Latches to zero  'ver117c30a
-'31. In [InitializeHardware], change call CommandFilter filtbank to call SelectFilter filtbank 'ver117c31
-'  clean up [InitializeHardware] to set CB Latches  'ver117c31
-'  delete call SelectFilter in sub DetectChanges. Done in [InitializeHardware] 'ver117c31
-'  Clean up descriptions in '4.measure computer speed 'ver117c31
-'  moved code line: restoreFileName$=DefaultDir$+"\MSA_Info\MSA_Prefs\Prefs.txt"  to under global restoreFileName$ 'ver117c31
-'32. Delete sub CommandFilter byref fbank and move its code (3 lines) into sub SelectFilter byref fbank
-'  Delete the branch lable: [BeginScanSeries]. It is not used anywhere as a pointer. 'ver117c32
-'33. Many globals have default values installed throuout code. Move some next to their declarations, up top. 'ver117c33
-'34. delete sub configInitFirstUse. move configModuleVersion and configFileFullName$ to Globals 'ver117c34
-'  delete function configVersion(), not needed. Use configModuleVersion in its place 'ver117c34
-'  function configFileVersion() has never been used. Delete it 'ver117c34
-'34a.  move defaults from [InitGraphParams] to globals area 'ver117c34a
-'35. Clean up commanding for Video Filter and Latch 4. Done too many times.
-'  call SelectVideoFilter now used only in: [InitializeHardware] and sub DetectChanges
-'  call SelectLatchedSwitches now used only in:
-'  Modify sub SelectVideoFilter to command Latch 4 via sub SelectLatchedSwitches. 'ver117c35
-'  delete function switchLatchBits(desiredFreqBand) and fold into sub SelectLatchedSwitches 'ver117c35
-'  while testing, add playwave "default.wav" inside sub SelectLatchedSwitches
-'  In sub SelectLatchedSwitches, delete the "if switches are present". Command Latch 4 even if no switches, 'ver117c35
-'35test. Delete the use of an external array for msadll.dll 'ver117c35test
-'  Delete subroutine [CommandAllSlimsUSB] ' USB: 15/08/10 and create new one:[CommandAllSlimsUSB]'new 'ver117c35test
-'  It deletes CALLDLL #USB, "UsbMSADevicePopulateAllArray" 'ver117c35test
-'  create new array:  dim USBcmdarray$(800,39) Used 'ver117c35test
-'35test2. Delete the use of an external array for msadll.dll (continued)
-'  delete CALLDLL #USB, "UsbMSADeviceAllSlimsAndLoadStruct", 'ver117c35test2
-'  instead, command all modules using CALLDLL #USB, "UsbMSADeviceWriteString"   'ver117c35test2
-'35test3. Delete the use of an external array for msadll.dll (continued)
-'  in [CommandPLLslimUSB] delete CALLDLL #USB, "UsbMSADeviceWriteInt64MsbFirst", 'ver117c35test3
-'  add CALLDLL #USB, "UsbMSADeviceWriteString", USBdevice as long, USBwrbuf$ as ptr, 27 as short, result as boolean 'ver117c35test3
-'  add subroutine [CreateUSBwrbuf] 'ver117c35test3
-'  delete creation of Int64N.lsLong.struct and Int64N.msLong.struct in all of code 'ver117c35test3
-'  Delete the use of CALLDLL #USB, "UsbMSADevicePopulateDDSArrayBitReverse" 'ver117c35test3
-'  Delete the use of CALLDLL #USB, "UsbMSADevicePopulateDDSArray" 'ver117c35test3
-'  Delete the use of CALLDLL #USB, "UsbMSADeviceSetAllArrayPtr" 'ver117c35test3
-'  delete MEMORY MANAGEMENT FUNCTIONS and all globals associated with it 'ver117c35test3
-'36. deleted sub uInitFirstUse and moved the code to Globals area. 'ver117c36
-'  moved call TwoPortInitVariables to globals area  'ver117c36
-'  in [WaitStatement] change waittime<15 to waittime<100, modify comments 'ver117c36
-'  move "check for file, Ntport" and "check for file, msadll.dll" to after "Load Hardware Configuration File" 'ver117c36
-'  change code from "  "Sweep", [menuFreqAxisPreference], "Show Variables", [Showvar], _" to
-'    "  "Sweep Parameters Window", [FreqAxisPreference], "Show Variables", [Showvar], _" 'ver117c36
-'  delete subroutine: [menuFreqAxisPreference] 'ver117c36 instead, just use [FreqAxisPreference] 'ver117c36
-'  modify button positions in bottom of Main Window. 'ver117c36 was
-'  delete:   OSLS11JigType$="Reflect"   'ver115-1b 'ver117c36 not used anywhere
-'  Delete functions, not used: intSrcFreq(),intDestFreq(),intMaxEntries(),intSrcEntries(),intDestEntries(). 'ver117c36
-'36Fail.  The following changes caused Liberty to show up a bug. It is fixed in 37.
-'  delete sub intClearSrc, instead, use intSrcPoints=0 'Set source table to zero entries. 'ver117c36
-'  delete sub intClearDest, instead, use intDestPoints=0 'Set destination table to zero entries. 'ver117c36
-'  delete function configFilterCount(), instead, use MSANumFilters 'ver117c36
-'  delete function calVersion(), instead, use calModuleVersion 'ver117c36
-'  delete sub calSetDoPhase doPhase, instead, use calDoPhase= 'ver117c36
-'  delete function calGetDoPhase(), instead, use calDoPhase 'ver117c36
-'  delete sub calClearComments, instead, use calFileComments$(1)="":calFileComments$(2)="" 'ver117c36
-'  delete function calNumMagPoints(), instead, use calMagPoints 'ver117c36
-'  delete function calNumFreqPoints(), instead, use calFreqPoints 'ver117c36
-'37.  Move all global and dim declarations to top of code. It seems that Liberty has a bug,
-'    by not recognizing a global that is defined late in the code (ex. CalFreqPoints) 'ver117c37
-'38.  Delete use of calDoPhase and substitute with hasVNA 'ver117c38
-'  in sub TwoPortInterpolateToNewRange, doPhase=1 :doParams=3 are not used, delete.'ver117c38
-'  delete both subroutines: sub calSortFreq and sub calSortMag. Modify function calLoadFromEditor$() 'ver117c38a
-'  function uDegreesPerRad() is not used. Delete it 'ver117c38
-'  function function uNatLog10() is not used. Delete it 'ver117c38
-'  function function uE() is not used. Delete it 'ver117c38
-'  global uKE is not used, delete it 'ver117c38
-'  delete function uPi(), instead, use uKPi 'ver117c38
-'  delete function uRadsPerDegree(), instead, use uKRadsPerDegree 'ver117c38
-'39. Fix crash if LPT Test Window is clicked twice 'ver117c39
-'  Change [LPTportTest]. One button to change to high or low. 'ver117c39
-'40. Re-write [CommandAllSlims] for simplification.  'ver117c40
-'41. Change sub CommandFilterSlimCBUSB to extend pulse time in USB  'ver117c41
-'42. Change code to allow Config Mgr save without having to restart the software. 'ver117c42
-'  MSANumFilters  fix error caused by my previous change in ver117c36 'ver117c42
-'-------------------Above included in ver118Beta0
-'43. Change values for Freq Bands: 0-1050, 960-2050, 1979-3070 'ver117c43 now
-'44. Reposition buttons on bottom of Main Window. see 'ver117c44 was -
-'  playwave "default.wav" inside sub SelectLatchedSwitches, is used for testing
-'  Modify code in [menuRunConfig]. Path switching does not occur. 'ver117c44
-'  No change to code. Eric changed EEPROM from Eric12msa-fw-cb.hex to Eric14 to fix Latch 3 setting using "A0..." string.
-'  Changed EEPROM from Eric14 to v16. It changes auto clocking during module commanding.
-'  Changed EEPROM from v16 to v17. It deleted Read Mag only and Read Phase only. Always read both. UsbAdcControl.Adcs.struct = 3
-'  Changed [CommandAllSlims] to long version of commanding all modules. 'ver117c44 5-9-17
-'  Changed EEPROM v21 to send back Firmware version as: fwver = USBrBuf.numreads.struct  'ver117c44
-'  Add: "USB Firmware Version = ";fwver to Variables Window 'ver117c44
-'  Add: thisfreq to Variables Window 'ver117c44
-'  Tested with USB Firmware Version 25 5-19-17
-'45. Change [CreateCmdAllArray] and [CommandAllSlimsUSB] from A1 to A7. Must use EEPROM ver 28 or later 'ver117c45
-'  The new A7 (EEPROM firmware) will command all modules and send LE's and FQUDs at the same time.
-'  Add: if adcsamples >255 then adcsamples = 25  'ver117c45
-'46. Add adc1mux value to UsbAdcControl structure to be used by new EEPROM fw version 31
-'47. Delete use of adc1mux in UsbAdcControl structure, not used by new EEPROM fw version 33 'ver117c47
 
 '------------Changes and additions for version 117 Rev B------------
 'changes are marked    'ver117b  Released  2-17-14
